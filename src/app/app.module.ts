@@ -8,11 +8,13 @@ import { AppComponent } from './app.component';
 import { EditorComponent } from './components/editor/editor.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgJsonEditorModule } from '../../ang-jsoneditor/src/public_api';
+import { DialogComponent } from './components/dialog/dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    EditorComponent
+    EditorComponent,
+    DialogComponent
   ],
   imports: [
     BrowserModule,

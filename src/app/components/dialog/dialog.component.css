@@ -1,0 +1,11 @@
+.mat-dialog-title {
+  font-size: 12pt;
+}
+
+.mat-dialog-content {
+  overflow: unset
+}
+
+::ng-deep div.mat-radio-label-content {
+  padding-right: 15px;
+}
