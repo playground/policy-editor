@@ -1,16 +1,26 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
+import { MaterialModule } from './modules/material/material.module';
 import { AppComponent } from './app.component';
+import { EditorComponent } from './components/editor/editor.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NgJsonEditorModule } from '../../ang-jsoneditor/src/public_api';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    EditorComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    MaterialModule,
+    HttpClientModule,
+    BrowserAnimationsModule,
+    NgJsonEditorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -3,7 +3,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "types": [],
+    "paths": {
+      "ang-jsoneditor": [ "../ang-jsoneditor/src/public_api.ts" ]
+    }
   },
   "files": [
     "src/main.ts",
