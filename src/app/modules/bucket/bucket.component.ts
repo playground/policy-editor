@@ -15,8 +15,8 @@ import { ISession } from '../../interface/session';
   styleUrls: ['./bucket.component.css']
 })
 export class BucketComponent implements OnInit, OnDestroy {
-  bucketName = ''; // 's-dev.w-x.co'; // 'intellicast';
-  bucketApi = ''; // 'c4110d5ff704485dc3cd42f1cf6c6bb49ce75e748ddee3e56abacd327c8c880d/cosapi/';
+  bucketName = 'ieam-labs'; // 's-dev.w-x.co'; // 'intellicast';
+  bucketApi = 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/'; // 'c4110d5ff704485dc3cd42f1cf6c6bb49ce75e748ddee3e56abacd327c8c880d/cosapi/';
   // '646d429a9e5f06572b1056ccc9f5ba4de6f5c30159f10fcd1f1773f58d35579b/cosapi/'
   bucketBase = '/bucket';
   filePath!: string;
@@ -27,11 +27,11 @@ export class BucketComponent implements OnInit, OnDestroy {
   highlightRows: any[] = [];
   dataSource!: any[];
   checkAll = false;
-  gateway = 'https://openwhisk.ng.bluemix.net/api/v1/web/';
+  gateway =  ''; //'https://openwhisk.ng.bluemix.net/api/v1/web/';
   // gateway = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/';
   routerObserver: Subscription;
   method = {
-    list: 'get?method=list',
+    list: '?action=list',
     post: 'post'
   };
   dialogRef?: MatDialogRef<DialogComponent, any>;
@@ -127,7 +127,7 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   listAssets(delimiter = '', directory = '') {
-    this.appService.get(`${this.gateway}${this.bucketApi}${this.method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.appService.get(`${this.bucketApi}${this.method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       this.result = [];
       Object.keys(data).map((key) => {

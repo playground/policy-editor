@@ -6,10 +6,15 @@ import { SigninComponent } from './components/signin/signin.component';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
-  { path: 'bucket', loadChildren: () => import('./modules/bucket/bucket.module').then(m => m.BucketModule) },
+  { path: 'bucket',
+    children: [{
+      path: '**',
+      loadChildren: () => import('./modules/bucket/bucket.module').then(m => m.BucketModule)
+    }]
+  },
   { path: 'editor', component: EditorComponent },
   { path: 'signin', component: SigninComponent },
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: '/', pathMatch: 'full' },
 ];
 
 @NgModule({

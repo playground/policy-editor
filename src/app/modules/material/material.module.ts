@@ -10,6 +10,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @NgModule({
   exports: [
@@ -23,6 +26,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatIconModule,
     MatInputModule,
     MatCardModule,
+    MatRadioModule,
+    MatSnackBarModule,
+    MatDialogModule,
     MatCheckboxModule
   ]
 })

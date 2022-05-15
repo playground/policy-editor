@@ -1,1 +1,64 @@
-<p>bucket works!</p>
+<div class="table-container mat-elevation-z8">
+  <div [ngSwitch]="currentRoute">
+    <div *ngSwitchCase="bucketBase">
+      <form fxLayout="column">
+        <div fxLayout="column" fxLayoutGap="20px" fxLayoutGap.lt-md="20px">
+          <mat-form-field fxFlex>
+            <input matInput class="full-width" placeholder="Name of bucket"
+              name="name"
+              [(ngModel)]="bucketName"
+              >
+          </mat-form-field>
+          <mat-form-field fxFlex>
+            <input matInput class="full-width" placeholder="Bucket api"
+              name="api"
+              [(ngModel)]="bucketApi"
+              >
+          </mat-form-field>
+          <div mat-card-actions class="center">
+            <button mat-raised-button color="primary" (click)="getBucket()" type="submit">Continue</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div *ngSwitchDefault>
+      <mat-table #table [dataSource]="dataSource">
+        <!--- Note that these columns can be defined in any order.
+        The actual rendered columns are set as a property on the row definition" -->
+        <ng-container [matColumnDef]="column" *ngFor="let column of displayColumns">
+          <mat-header-cell *matHeaderCellDef>
+            <div [ngSwitch]="column">
+              <div *ngSwitchCase="'check'">
+                <mat-checkbox (change)="checkAllItem($event)" [(ngModel)]="checkAll"></mat-checkbox>
+              </div>
+              <div *ngSwitchDefault>
+                {{column}}
+              </div>
+            </div>
+          </mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <div [ngSwitch]="column">
+              <div *ngSwitchCase="'check'">
+                  <mat-checkbox [ngModel]="element.check" (change)="checkItem(element, $event)"></mat-checkbox>
+              </div>
+              <div *ngSwitchCase="'type'">
+                <button mat-icon-button>
+                  <mat-icon>{{fileType[element[column]]}}</mat-icon>
+                </button>
+              </div>
+              <div *ngSwitchDefault>
+                {{element[column]}}
+              </div>
+            </div>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayColumns;"
+                (click)="selectRow(row)"
+                (dblclick)="fetchRow(row)"
+                [style.background]="highlightRows.indexOf(row) != -1 ? 'lightblue' : ''">
+        </mat-row>
+      </mat-table>
+    </div>
+  </div>
+</div>
