@@ -14,7 +14,9 @@ export class AppComponent implements OnInit {
   @ViewChild(MatSidenav)
   sidenav!: MatSidenav;
   to = Navigate;
-  
+  login = 'login'
+  titleText = 'IEAM'
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -32,6 +34,9 @@ export class AppComponent implements OnInit {
     })
   }
 
+  isLoggedIn() {
+    return !this.ieamService.isLoggedIn()
+  }
   toggle(sidenav: any) {
     if(this.sidenav.mode = 'over') {
       sidenav.toggle()

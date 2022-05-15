@@ -8,7 +8,8 @@
           close
       </mat-icon>
     </button>
-    <div class="store-name" innerText="IEAM">
+    <div class="title-text">
+      {{titleText}}
     </div>
   </div>
 </mat-toolbar>
@@ -17,11 +18,25 @@
   <mat-sidenav #sidenav="matSidenav" class="mat-elevation-z8" (click)="toggle(sidenav)">
 
       <div class="nav-routes">
-        <button mat-button class="menu-button" (click)="navigate(to.editor)">
-            <mat-icon>shopping_bag</mat-icon>
-            <span>Editor</span>
+        <button mat-button class="menu-button" (click)="navigate(to.home)">
+            <mat-icon>home</mat-icon>
+            <span>Home</span>
         </button>
-      </div>
+        <button mat-button class="menu-button" (click)="navigate(to.bucket)" [disabled]="isLoggedIn()">
+          <mat-icon>folder</mat-icon>
+          <span>Bucket</span>
+      </button>
+      <button mat-button class="menu-button" (click)="navigate(to.editor)" [disabled]="isLoggedIn()">
+          <mat-icon>edit</mat-icon>
+          <span>Editor</span>
+      </button>
+      <button mat-button class="menu-button" (click)="navigate(to.signin)">
+        <mat-icon>login</mat-icon>
+        <span class="material-symbols-outlined">
+          {{login}}
+        </span>
+    </button>
+</div>
   </mat-sidenav>
 
   <mat-sidenav-content>

@@ -12,7 +12,7 @@ import { ISession } from '../../interface/session';
 @Component({
   selector: 'app-bucket',
   templateUrl: './bucket.component.html',
-  styleUrls: ['./bucket.component.scss']
+  styleUrls: ['./bucket.component.css']
 })
 export class BucketComponent implements OnInit, OnDestroy {
   bucketName = ''; // 's-dev.w-x.co'; // 'intellicast';
@@ -136,7 +136,7 @@ export class BucketComponent implements OnInit, OnDestroy {
             this.result.push({check: false, type: 1, name: this.appService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
           });
         } else {
-          data[key].map((f: string | string[]) => {
+          data[key].map((f: string) => {
             if (f.indexOf('\/\/') < 0 && f !== '\/') {
               this.result.push({check: false, type: 0, name: this.appService.getDirectory(f), directory: f});
             }

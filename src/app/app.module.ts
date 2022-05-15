@@ -9,12 +9,16 @@ import { EditorComponent } from './components/editor/editor.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgJsonEditorModule } from '../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from './components/dialog/dialog.component';
+import { HomeComponent } from './components/home/home.component';
+import { SigninComponent } from './components/signin/signin.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     EditorComponent,
-    DialogComponent
+    DialogComponent,
+    HomeComponent,
+    SigninComponent
   ],
   imports: [
     BrowserModule,

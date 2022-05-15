@@ -1,9 +1,15 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { EditorComponent } from './components/editor/editor.component';
+import { HomeComponent } from './components/home/home.component';
+import { SigninComponent } from './components/signin/signin.component';
 
 const routes: Routes = [
-  { path: 'editor', component: EditorComponent }
+  { path: 'home', component: HomeComponent },
+  { path: 'bucket', loadChildren: () => import('./modules/bucket/bucket.module').then(m => m.BucketModule) },
+  { path: 'editor', component: EditorComponent },
+  { path: 'signin', component: SigninComponent },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
 ];
 
 @NgModule({
