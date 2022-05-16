@@ -7,7 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { DialogComponent } from '../../components/dialog/dialog.component';
-import { ISession } from '../../interface/session';
+import { Enum, Navigate } from '../../models/ieam-model';
 
 @Component({
   selector: 'app-bucket',
@@ -80,25 +80,33 @@ export class BucketComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.noneSelected();
     this.result = [];
-    this.psAgent = this.appService.broadcastAgent.subscribe((msg: Broadcast) => {
-      switch (msg.type) {
-        case 'delete':
-          this.delete();
-          break;
-        case 'upload':
-          this.upload(msg.payload);
-          break;
-        case 'changeAccess':
-          this.changeAccess(msg.payload);
-          break;
-        case 'folder':
-          this.folder();
-          break;
-        case 'jumpTo':
-          this.jumpTo();
-          break;
+    this.psAgent = this.appService.broadcastAgent.subscribe((msg: any) => {
+      console.log(msg, msg.type)
+      if(msg.type == Enum.NAVIGATE) {
+        this.router.navigate([`/${msg.to}`])
+      } else {
+        switch (msg.type) {
+          case 'delete':
+            this.delete();
+            break;
+          case 'upload':
+            this.upload(msg.payload);
+            break;
+          case 'changeAccess':
+            this.changeAccess(msg.payload);
+            break;
+          case 'folder':
+            this.folder();
+            break;
+          case 'jumpTo':
+            this.jumpTo();
+            break;
+        }
       }
     });
+    if(!this.appService.signIn()) {
+      return
+    }
   }
 
   ngOnDestroy() {
@@ -160,13 +168,15 @@ export class BucketComponent implements OnInit, OnDestroy {
     this.highlightRows = [row];
   }
 
-  fetchRow(row: { type: any; directory: any; }) {
-    if (row.type === this.appService.fileType.enum.DIRECTORY) {
+  fetchRow(row: { type: any; directory: any; name: string}) {
+    if(row.type === this.appService.fileType.getEnum('DIRECTORY')) {
       this.appService.selectedRow = row;
       // this.router.navigate([`bucket/${this.bucketName}/${row.directory}`]);
       this.router.navigateByUrl(`${this.bucketBase}/${this.bucketName}/${row.directory}`,
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
-
+    } else if(row.type === this.appService.fileType.getEnum('FILE')) {
+      this.appService.getSignedUrl(row.name, this.bucketName)
+      .subscribe((res: any) => console.log(res.url))
     }
   }
 

@@ -12,7 +12,9 @@
       {{titleText}}
     </div>
   </div>
-  <app-breadcrumb></app-breadcrumb>
+  <app-breadcrumb *ngIf="isBucket()"></app-breadcrumb>
+  <app-buttons *ngIf="isBucket()"></app-buttons>
+
 </mat-toolbar>
 
 <mat-sidenav-container>
@@ -26,18 +28,18 @@
         <button mat-button class="menu-button" (click)="navigate(to.bucket)" [disabled]="isLoggedIn()">
           <mat-icon>folder</mat-icon>
           <span>Bucket</span>
-      </button>
-      <button mat-button class="menu-button" (click)="navigate(to.editor)" [disabled]="isLoggedIn()">
-          <mat-icon>edit</mat-icon>
-          <span>Editor</span>
-      </button>
-      <button mat-button class="menu-button" (click)="navigate(to.signin)">
-        <mat-icon>login</mat-icon>
-        <span class="material-symbols-outlined">
-          {{login}}
-        </span>
-    </button>
-</div>
+        </button>
+        <button mat-button class="menu-button" (click)="navigate(to.editor)" [disabled]="isLoggedIn()">
+            <mat-icon>edit</mat-icon>
+            <span>Editor</span>
+        </button>
+        <button mat-button class="menu-button" (click)="navigate(to.signin)">
+          <mat-icon>login</mat-icon>
+          <span class="material-symbols-outlined">
+            {{login}}
+          </span>
+        </button>
+    </div>
   </mat-sidenav>
 
   <mat-sidenav-content>

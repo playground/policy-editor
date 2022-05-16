@@ -1,0 +1,15 @@
+<div mat-card-actions class="center" [hidden]="noBucket">
+  <!-- <input hidden="true" type="file" multiple="multiple" (change)="download($event)"/> -->
+  <input #uploadInput hidden="true" type="file" multiple="multiple" (change)="upload($event)"/>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="accent" (click)="uploadInput.click()">Upload</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" [color]="'folder'" (click)="folder()">Folder</button>
+  <button mat-raised-button [color]="'jumpto'" (click)="jumpTo()">Filter</button>
+</div>
+<div mat-card-actions class="center" [hidden]="noneSelected">
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" (click)="delete()" color="warn" type="button">Delete</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" (click)="changeAccess('public')" type="button">Public</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="primary" (click)="changeAccess('private')" type="button">Private</button>
+</div>
+<div mat-card-actions class="center" [hidden]="!ieamService.offline">
+  <button mat-raised-button color="warn" type="button">Offline</button>
+</div>

@@ -1,0 +1,27 @@
+.full-width {
+  width: 100%
+}
+
+::ng-deep div.mat-form-field-wrapper {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+::ng-deep button.mat-raised-button {
+  margin-top: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.center {
+  text-align: center;
+  float: right;
+}
+
+.mat-folder {
+  background-color: yellow;
+}
+
+.mat-jumpto {
+  background-color: rgb(0, 132, 255);
+}

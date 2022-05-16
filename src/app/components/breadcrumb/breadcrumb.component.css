@@ -1,4 +1,5 @@
 .breadcrumb {
+  float: left;
   padding: 10px 12px;
   list-style: none !important;
   list-style-type: none;

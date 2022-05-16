@@ -15,3 +15,17 @@ export const Navigate = {
   about: 'about',
   signin: 'signin'
 } as const;
+
+export class EnumClass {
+  private enum: any = {};
+  constructor(private eArray: any[] = []) {
+    eArray.map((el, idx) => {
+      this.enum[el] = idx;
+    });
+  }
+
+  getEnum(key: string) {
+    return this.enum[key];
+  }
+}
+

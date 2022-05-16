@@ -1,15 +1,15 @@
 import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
-import { Enum } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass } from '../models/ieam-model';
 
 const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud' : 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud'
 
 export interface Broadcast {
-  type: string;
+  type: string | Enum;
   payload?: any;
 }
 @Injectable({
@@ -18,13 +18,16 @@ export interface Broadcast {
 export class IeamService {
   @Output() broadcastAgent = new EventEmitter<Broadcast>();
   selectedRow!: { directory: any; type?: any; } | null;
-  fileType!: { enum: { DIRECTORY: any; }; };
+  fileType!: EnumClass;
   offline = false;
   session!: string;
   loggedIn: boolean = false;
   welcome: string = ''
+  loginSession: any;
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private http: HttpClient
   ) {
     (window as any).ethereum.on('accountsChanged', () => {
@@ -32,6 +35,8 @@ export class IeamService {
       this.loggedIn = false;
       this.broadcast({type: Enum.LOGGED_OUT})
     })
+    this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
+    this.signIn()
   }
 
   broadcast(data: any) {
@@ -90,6 +95,11 @@ export class IeamService {
     sessionStorage.removeItem(key);
   }
 
+  getSignedUrl(filename: string, bucket: string, expires = 60) {
+    let url = `${backendUrl}?action=get_signed_url&filename=${filename}&expires=${expires}&bucket=${bucket}`;
+    return this.get(url)
+    // 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/?action=get_signed_url&filename=20160414_112151.jpg&expires=60&bucket=ieam-labs'
+  }
   getUserSession() {
     if(this.session) {
       return of(this.session)
@@ -110,6 +120,7 @@ export class IeamService {
               next: (res: any) => {
                 this.loggedIn = true;
                 this.welcome = res.msg;
+                this.setSession('loggedIn', JSON.stringify({sessionId: sessionId, addr: addr, timestamp: Date.now()}));
                 this.broadcast({type: Enum.LOGGED_IN, payload: res})
               }, error: (err) => {
                 console.log(err)
@@ -159,6 +170,42 @@ export class IeamService {
   }
 
   isLoggedIn() {
+    return this.loggedIn
+  }
+  isLoggedIn2() {
+    return new Observable((observer: any) => {
+      let session: any = this.getSession('loggedIn');
+      if(session) {
+        session = JSON.parse(session);
+
+        let url = `?action=validate_session&sessionId=${encodeURIComponent(session.sessionId)}`
+        this.get(`${backendUrl}${url}`)
+        .subscribe({
+          next: (res: any) => {
+            observer.next(res)
+            observer.complete()
+          }, error: (err) => observer.error(err)
+        })
+      } else {
+        observer.next({validate: false})
+        observer.complete()
+      }
+    })
+  }
+
+  signIn() {
+    let session: any = this.getSession('loggedIn');
+    if(session) {
+      session = JSON.parse(session);
+      this.loggedIn = Date.now() - session.timestamp <= 300000
+      this.loginSession = session;
+      this.welcome = `Welcome ${session.addr}`
+    }
+    if(!this.loggedIn) {
+      console.log('is loggedin', this.loggedIn)
+
+      this.router.navigate([`/${Navigate.signin}`])
+    }
     return this.loggedIn;
   }
 }

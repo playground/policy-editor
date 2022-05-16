@@ -12,6 +12,7 @@ import { DialogComponent } from './components/dialog/dialog.component';
 import { HomeComponent } from './components/home/home.component';
 import { SigninComponent } from './components/signin/signin.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
+import { ButtonsComponent } from './components/buttons/buttons.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
     DialogComponent,
     HomeComponent,
     SigninComponent,
-    BreadcrumbComponent
+    BreadcrumbComponent,
+    ButtonsComponent
   ],
   imports: [
     BrowserModule,
