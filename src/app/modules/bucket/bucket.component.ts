@@ -145,7 +145,11 @@ export class BucketComponent implements OnInit, OnDestroy {
       });
       this.dataSource = this.result;
       this.noneSelected();
-    });
+      this.appService.broadcast({
+        type: 'setBreadcrumb',
+        payload: location.pathname
+      });
+  });
   }
 
   getSize(size: string) {

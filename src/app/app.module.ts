@@ -11,6 +11,7 @@ import { NgJsonEditorModule } from '../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from './components/dialog/dialog.component';
 import { HomeComponent } from './components/home/home.component';
 import { SigninComponent } from './components/signin/signin.component';
+import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { SigninComponent } from './components/signin/signin.component';
     EditorComponent,
     DialogComponent,
     HomeComponent,
-    SigninComponent
+    SigninComponent,
+    BreadcrumbComponent
   ],
   imports: [
     BrowserModule,
