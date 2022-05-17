@@ -8,6 +8,15 @@ import { Enum, Navigate, EnumClass } from '../models/ieam-model';
 
 const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud' : 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud'
 
+export const method = {
+  list: `${backendUrl}?action=list`,
+  mkdir: `${backendUrl}`,
+  session: `${backendUrl}?action=session`,
+  sigUrl: `${backendUrl}?action=get_signed_url`,
+  signature: `${backendUrl}?action=signature`,
+  post: 'post'
+};
+
 export interface Broadcast {
   type: string | Enum;
   payload?: any;
@@ -47,10 +56,34 @@ export class IeamService {
     return this.http.get<Params>(url);
   }
 
-  post(url: string, data: any) {
-    return this.http.post<Params>(url, data);
+  post(url: string, body: any, options = {}) {
+    return this.http.post<Params>(url, body, options);
   }
 
+  fetchPost(url: string, body: any) {
+    return new Observable((observer: any) => {
+      let headers = new Headers();
+      headers.append("Content-Type", "application/json");
+      headers.append('Access-Control-Allow-Credentials', 'true')
+      headers.append('Access-Control-Allow-Origin', '*')
+      let requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: body,
+        mode: 'cors',
+        credentials: 'include'
+      };
+      // @ts-ignore
+      fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+        console.log(result)
+        observer.next(result)
+        observer.complete()
+      })
+      .catch(error => console.log('error', error));
+    })
+  }
   fetchCors(path: string) {
     return new Observable((observer: any) => {
       let myHeaders = new Headers();
@@ -96,7 +129,7 @@ export class IeamService {
   }
 
   getSignedUrl(filename: string, bucket: string, expires = 60) {
-    let url = `${backendUrl}?action=get_signed_url&filename=${filename}&expires=${expires}&bucket=${bucket}`;
+    let url = `${method.sigUrl}&filename=${filename}&expires=${expires}&bucket=${bucket}`;
     return this.get(url)
     // 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/?action=get_signed_url&filename=20160414_112151.jpg&expires=60&bucket=ieam-labs'
   }
@@ -104,12 +137,18 @@ export class IeamService {
     if(this.session) {
       return of(this.session)
     } else {
-      return this.get(`${backendUrl}?action=session`)
+      return this.get(method.session)
     }
   }
+  mkdir() {
 
+  }
+  logOut() {
+    this.removeSession('loggedIn')
+    // TODO, should logout of Metamask too?
+  }
   logIn() {
-    this.get(`${backendUrl}?action=session`)
+    this.get(method.session)
     .subscribe({
       next: (sessionId: any) => {
         this.connectMetamask()
@@ -157,8 +196,8 @@ export class IeamService {
           method: "personal_sign",
           params: [`My session ID: ${sessionId}`, addr, ""]
         })
-        const sigUrl = `?action=signature&sig=${encodeURIComponent(walletResp)}&addr=${encodeURIComponent(addr)}&sessionId=${encodeURIComponent(sessionId)}`
-        this.get(`${backendUrl}${sigUrl}`)
+        const sigUrl = `&sig=${encodeURIComponent(walletResp)}&addr=${encodeURIComponent(addr)}&sessionId=${encodeURIComponent(sessionId)}`
+        this.get(`${method.signature}${sigUrl}`)
         .subscribe({
           next: (res: any) => {
             observer.next(res)
@@ -203,7 +242,7 @@ export class IeamService {
     }
     if(!this.loggedIn) {
       console.log('is loggedin', this.loggedIn)
-
+      this.loginSession = null;
       this.router.navigate([`/${Navigate.signin}`])
     }
     return this.loggedIn;

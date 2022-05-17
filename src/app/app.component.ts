@@ -14,7 +14,6 @@ export class AppComponent implements OnInit {
   @ViewChild(MatSidenav)
   sidenav!: MatSidenav;
   to = Navigate;
-  login = 'login'
   titleText = 'IEAM'
 
   constructor(
@@ -44,6 +43,9 @@ export class AppComponent implements OnInit {
     if(this.sidenav.mode = 'over') {
       sidenav.toggle()
     }
+  }
+  loginText() {
+    return this.ieamService.isLoggedIn() ? 'Logout' : 'Login'
   }
   navigate(to: string) {
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: to})

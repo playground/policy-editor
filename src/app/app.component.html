@@ -35,8 +35,7 @@
         </button>
         <button mat-button class="menu-button" (click)="navigate(to.signin)">
           <mat-icon>login</mat-icon>
-          <span class="material-symbols-outlined">
-            {{login}}
+          <span class="material-symbols-outlined" [innerText]="loginText()">
           </span>
         </button>
     </div>

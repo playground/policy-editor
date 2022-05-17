@@ -17,7 +17,10 @@ export class SigninComponent implements OnInit {
 
   ngOnInit(): void {
     this.ieamService.broadcastAgent.subscribe((data: any) => {
-      if(data.type == Enum.LOGGED_IN || data.type == Enum.LOGGED_OUT) {
+      if(data.type == Enum.LOGGED_IN) {
+
+      } else if(data.type == Enum.LOGGED_OUT) {
+        
       }
     })
   }

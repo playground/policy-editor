@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { forkJoin, Observable, Subscription, zip } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { IeamService, Broadcast } from '../../services/ieam.service';
+import { IeamService, Broadcast, method } from '../../services/ieam.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
@@ -32,6 +32,7 @@ export class BucketComponent implements OnInit, OnDestroy {
   routerObserver: Subscription;
   method = {
     list: '?action=list',
+    folder: '?action=makd_folder',
     post: 'post'
   };
   dialogRef?: MatDialogRef<DialogComponent, any>;
@@ -66,10 +67,18 @@ export class BucketComponent implements OnInit, OnDestroy {
           directory = `&directory=${this.appService.selectedRow.directory}`;
           this.appService.selectedRow = null;
         } else {
-          directory = this.getCurrentDirectory();
+          if(this.bucketName === 'ieam-labs') {
+            directory = this.getUserDirectory();
+          } else {
+            directory = this.getCurrentDirectory();
+          }
         }
         if (this.bucketApi && this.bucketName) {
-          this.listAssets('&delimiter=/', directory);
+          if(this.bucketName === 'ieam-labs') {
+            this.listUserDirectory(directory);
+          } else {
+            this.listAssets('&delimiter=/', directory);
+          }
         } else {
           this.router.navigateByUrl('');
         }
@@ -117,6 +126,21 @@ export class BucketComponent implements OnInit, OnDestroy {
     this.routerObserver.unsubscribe();
   }
 
+  getUserDirectory() {
+    let directory = '';
+    if(this.appService.signIn()) {
+      const basePath = `${this.bucketBase}/${this.bucketName}`;
+      directory = basePath === this.currentRoute ? '' : this.currentRoute.replace(`${basePath}/`, '');
+      if(directory.indexOf(this.appService.loginSession.addr) < 0) {
+        directory = this.appService.loginSession.addr
+      }
+      if (directory.length > 0) {
+        const filePath = directory + (directory[directory.length - 1] !== '/' ? '/' : '');
+        directory = filePath;
+      }
+    }
+    return directory;
+  }
   getCurrentDirectory() {
     const basePath = `${this.bucketBase}/${this.bucketName}`;
     let directory = basePath === this.currentRoute ? '' : this.currentRoute.replace(`${basePath}/`, '');
@@ -134,8 +158,41 @@ export class BucketComponent implements OnInit, OnDestroy {
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
   }
 
+  listUserDirectory(directory: string, delimiter = '&delimiter=/') {
+    this.appService.get(`${method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
+    .subscribe((data: any) => {
+      if(data.directories && data.directories.length == 0) {
+        this.mkdir(directory)
+      } else {
+        this.showContent(data);
+      }
+    })
+  }
+  showContent(data: any) {
+    this.result = [];
+    Object.keys(data).map((key) => {
+      if (key === 'files') {
+        data[key].map((f: { key: string; date: any; size: any; }) => {
+          this.result.push({check: false, type: 1, name: this.appService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
+        });
+      } else {
+        data[key].map((f: string) => {
+          if (f.indexOf('\/\/') < 0 && f !== '\/') {
+            this.result.push({check: false, type: 0, name: this.appService.getDirectory(f), directory: f});
+          }
+        });
+      }
+    });
+    this.dataSource = this.result;
+    this.noneSelected();
+    this.appService.broadcast({
+      type: 'setBreadcrumb',
+      payload: location.pathname
+    });
+  }
+
   listAssets(delimiter = '', directory = '') {
-    this.appService.get(`${this.bucketApi}${this.method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.appService.get(`${method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       this.result = [];
       Object.keys(data).map((key) => {
@@ -157,7 +214,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         type: 'setBreadcrumb',
         payload: location.pathname
       });
-  });
+    });
   }
 
   getSize(size: string) {
@@ -349,7 +406,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         let directory = resp.name.replace(/\//g, '');
         let options = {
           bucket: this.bucketName,
-          acl: 'public-read',
+          acl: 'private', //'public-read',
           directory: path.length > 0 ? `${path}/${directory}/placeholder.txt` : `${directory}/placeholder.txt`,
           method: 'makeFolder'
         };
@@ -364,6 +421,33 @@ export class BucketComponent implements OnInit, OnDestroy {
           error: (error: any) => this.showSnackBar(error, 'Rock')
         });
       }
+    });
+  }
+
+  mkdir(directory: string) {
+    const regex = new RegExp(`${this.bucketBase}/${this.bucketName}/?`);
+    const path = this.currentRoute.replace(regex, '').replace(/\/+$/, '');
+    let body = {
+      bucket: this.bucketName,
+      acl: 'private', //'public-read',
+      directory: path.length > 0 ? `${path}/${directory}placeholder.txt` : `${directory}placeholder.txt`,
+      action: 'mkdir'
+    };
+    let options = {
+      headers: {
+        'Access-Control-Allow-Credentials': true,
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
+    this.appService.post(method.mkdir, JSON.stringify(body), options)
+    .subscribe({
+      next: (data: any) => {
+        this.showSnackBar(data, 'Rock');
+        this.checkAll = false;
+        this.result.map((res) => res.check = false);
+        this.refreshItems();
+      },
+      error: (error: any) => this.showSnackBar(error, 'Rock')
     });
   }
 
