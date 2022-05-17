@@ -72,6 +72,7 @@ h2 {
 .main-button {
   background: #C3F2B6;
   border: none;
+  cursor: pointer;
   /* padding: 1rem 3rem; */
   width: 18rem;
   height: 4rem;

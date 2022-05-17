@@ -11,6 +11,7 @@ const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.
 export const method = {
   list: `${backendUrl}?action=list`,
   mkdir: `${backendUrl}`,
+  upload: `${backendUrl}/upload`,
   session: `${backendUrl}?action=session`,
   sigUrl: `${backendUrl}?action=get_signed_url`,
   signature: `${backendUrl}?action=signature`,
@@ -232,7 +233,7 @@ export class IeamService {
     })
   }
 
-  signIn() {
+  signIn(currentRoute: string = '') {
     let session: any = this.getSession('loggedIn');
     if(session) {
       session = JSON.parse(session);
@@ -240,11 +241,16 @@ export class IeamService {
       this.loginSession = session;
       this.welcome = `Welcome ${session.addr}`
     }
-    if(!this.loggedIn) {
+    if(!this.loggedIn && currentRoute !== '/signin') {
       console.log('is loggedin', this.loggedIn)
       this.loginSession = null;
       this.router.navigate([`/${Navigate.signin}`])
     }
     return this.loggedIn;
+  }
+  navigateByUrl(url: string, state: any) {
+    if(this.loggedIn) {
+      this.router.navigateByUrl(url, state)
+    }
   }
 }
