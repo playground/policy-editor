@@ -59,6 +59,10 @@ export class IeamService {
   }
 
   post(url: string, body: any, options = {}) {
+    options = {headers: {
+      'Access-Control-Allow-Credentials': true,
+      'Access-Control-Allow-Origin': '*'
+    }}
     return this.http.post<Params>(url, body, options);
   }
 

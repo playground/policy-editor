@@ -246,7 +246,11 @@ export class BucketComponent implements OnInit, OnDestroy {
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
     } else if(row.type === this.appService.fileType.getEnum('FILE')) {
       this.appService.getSignedUrl(row.name, this.bucketName)
-      .subscribe((res: any) => console.log(res.url))
+      .subscribe((res: any) => {
+        console.log(res.url)
+        this.appService.navigateByUrl('/editor',
+          {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
+      })
     }
   }
 

@@ -1,4 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 
 @Component({
@@ -15,9 +18,16 @@ export class EditorComponent implements OnInit {
   public showData: any;
   public data: any;
   public EditedData: any;
+  routerObserver: any;
+  bucketName: any;
+  bucketApi: any;
+  state: any;
 
-
-  constructor() {
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private ieamService: IeamService,
+  ) {
     this.editorOptions = new JsonEditorOptions()
     this.editorOptions.modes = ['code', 'text', 'tree', 'view'];
 
@@ -26,6 +36,20 @@ export class EditorComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
+    .subscribe((event: any) => {
+      const currentState = this.router.getCurrentNavigation();
+      this.state = currentState ? currentState.extras.state : null;
+      if (this.state) {
+        this.ieamService.get(this.state.url)
+        .subscribe({
+          next: (res: any) => {
+            console.log(res)
+          }, error: (err: any) => console.log(err)
+        })
+      }
+    })
+
     this.showData = this.data = {
       'randomNumber': 2,
       'products': [
