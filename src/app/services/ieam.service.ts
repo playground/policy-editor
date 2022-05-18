@@ -34,6 +34,7 @@ export class IeamService {
   loggedIn: boolean = false;
   welcome: string = ''
   loginSession: any;
+  sessionExpiry = 1800000;
 
   constructor(
     private route: ActivatedRoute,
@@ -237,7 +238,7 @@ export class IeamService {
     let session: any = this.getSession('loggedIn');
     if(session) {
       session = JSON.parse(session);
-      this.loggedIn = Date.now() - session.timestamp <= 300000
+      this.loggedIn = Date.now() - session.timestamp <= this.sessionExpiry
       this.loginSession = session;
       this.welcome = `Welcome ${session.addr}`
     }

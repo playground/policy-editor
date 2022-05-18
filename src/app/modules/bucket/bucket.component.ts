@@ -73,7 +73,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         if (this.bucketApi && this.bucketName) {
           if(this.bucketName === 'ieam-labs') {
             directory = this.getUserDirectory();
-            this.listUserDirectory(directory, '');
+            this.listUserDirectory(directory, '&delimiter=/');
           } else {
             directory = this.getCurrentDirectory();
             this.listAssets('&delimiter=/', directory);
@@ -92,7 +92,7 @@ export class BucketComponent implements OnInit, OnDestroy {
       console.log(msg, msg.type)
       if(msg.type == Enum.NAVIGATE) {
         this.router.navigate([`/${msg.to}`])
-      } else {
+      } else if(this.appService.signIn()) {
         switch (msg.type) {
           case 'delete':
             this.delete();
@@ -134,7 +134,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         directory = this.appService.loginSession.addr
       }
       if (directory.length > 0) {
-        directory = `&directory=${directory}`;
+        directory = `&directory=${directory}` + (directory[directory.length - 1] !== '/' ? '/' : '');
       }
     }
     return directory;
@@ -161,14 +161,18 @@ export class BucketComponent implements OnInit, OnDestroy {
     this.appService.get(`${method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       if(data.directories && data.directories.length == 0 && data.files && data.files.length == 0) {
-        this.mkdir(userDirectory)
-        .subscribe(() => {
-          if(count < 3) {
+        if(count == 0) {
+          this.mkdir(userDirectory)
+          .subscribe(() => {
             setTimeout(() => {
               this.listUserDirectory(directory, delimiter, ++count)
             }, 2000)
-          }
-        })
+          })
+        } else if(count < 3) {
+          setTimeout(() => {
+            this.listUserDirectory(directory, delimiter, ++count)
+          }, 2000)
+        }
       } else {
         this.currentRoute = `${this.bucketBase}/${this.bucketName}/${userDirectory}`
         this.appService.navigateByUrl(this.currentRoute,
@@ -280,6 +284,10 @@ export class BucketComponent implements OnInit, OnDestroy {
     this.checkAll = true;
     this.result.map((res) => res.check = event.checked);
     this.noneSelected();
+  }
+
+  refreshUserItems() {
+    this.listAssets('&delimiter=/', this.getUserDirectory());
   }
 
   refreshItems() {
@@ -438,10 +446,11 @@ export class BucketComponent implements OnInit, OnDestroy {
       this.appService.post(method.mkdir, JSON.stringify(body), options)
       .subscribe({
         next: (data: any) => {
+          console.log('rock', data)
           this.showSnackBar(data, 'Rock');
           this.checkAll = false;
           this.result.map((res) => res.check = false);
-          this.refreshItems();
+          this.refreshUserItems();
           observer.next(data)
           observer.complete()
         },
