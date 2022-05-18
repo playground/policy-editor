@@ -30,11 +30,6 @@ export class BucketComponent implements OnInit, OnDestroy {
   gateway =  ''; //'https://openwhisk.ng.bluemix.net/api/v1/web/';
   // gateway = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/';
   routerObserver: Subscription;
-  method = {
-    list: '?action=list',
-    folder: '?action=makd_folder',
-    post: 'post'
-  };
   dialogRef?: MatDialogRef<DialogComponent, any>;
   psAgent!: { unsubscribe: () => void; };
   constructor(
@@ -245,16 +240,26 @@ export class BucketComponent implements OnInit, OnDestroy {
       this.appService.navigateByUrl(`${this.bucketBase}/${this.bucketName}/${row.directory}`,
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
     } else if(row.type === this.appService.fileType.getEnum('FILE')) {
-      this.appService.getSignedUrl(row.name, this.bucketName)
+      let file = this.appService.getFilePath(`${this.bucketBase}/${this.bucketName}/`, this.currentRoute) + row.name
+      this.appService.getSignedUrl(file, this.bucketName)
       .subscribe((res: any) => {
         console.log(res.url)
-        this.appService.navigateByUrl('/editor',
-          {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
+        this.appService.get(res.url)
+        .subscribe({
+          next: (res: any) => {
+            console.log(res)
+            this.appService.editorStorage = {json: res, filename: file};
+            this.appService.navigateByUrl('/editor',
+            {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
+          }, error: (err: any) => {
+            console.log(err)
+          }
+        })
       })
     }
   }
 
-  broadcast(type: string, payload: boolean) {
+  broadcast(type: string | Enum, payload: boolean) {
     this.appService.broadcast({
       type: type,
       payload: payload
@@ -264,11 +269,11 @@ export class BucketComponent implements OnInit, OnDestroy {
   noneSelected() {
     if (this.result) {
       const found = this.result.filter((res) => res.check);
-      this.broadcast('noneSelected', found.length === 0);
-      this.broadcast('noBucket', false);
+      this.broadcast(Enum.NONE_SELECTED, found.length === 0);
+      this.broadcast(Enum.NO_BUCKET, false);
     } else {
-      this.broadcast('noneSelected', true);
-      this.broadcast('noBucket', true);
+      this.broadcast(Enum.NONE_SELECTED, true);
+      this.broadcast(Enum.NO_BUCKET, true);
     }
   }
 
@@ -351,7 +356,7 @@ export class BucketComponent implements OnInit, OnDestroy {
               filename: filename,
               method: 'delete'
             };
-            this.appService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
+            this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -368,7 +373,7 @@ export class BucketComponent implements OnInit, OnDestroy {
               directory: dirname,
               method: 'deleteFolder'
             };
-            this.appService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
+            this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -405,7 +410,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         filename: filename,
         method: type === 'public' ? 'makePublic' : 'makePrivate'
       };
-      this.appService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
+      this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
       .subscribe({
         next: (data: any) => {
           this.showSnackBar(data.result, 'Rock');

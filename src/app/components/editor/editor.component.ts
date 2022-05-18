@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { Enum } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 
@@ -9,8 +10,8 @@ import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsonedit
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.css']
 })
-export class EditorComponent implements OnInit {
-  @ViewChild('editor', { static: false, read: ElementRef })
+export class EditorComponent implements OnInit, AfterViewInit {
+  @ViewChild('editor', { static: false, read: JsonEditorComponent })
   editor: JsonEditorComponent;
   public editorOptions: JsonEditorOptions;
   public initialData: any;
@@ -18,10 +19,43 @@ export class EditorComponent implements OnInit {
   public showData: any;
   public data: any;
   public EditedData: any;
+  psAgent!: { unsubscribe: () => void; };
+  modified = false;
   routerObserver: any;
   bucketName: any;
   bucketApi: any;
   state: any;
+  currentPolicy = '';
+  editorJson: any;
+  template = {
+    "org": "$HZN_ORG_ID",
+    "label": "$SERVICE_NAME for $ARCH",
+    "url": "$SERVICE_NAME",
+    "version": "$SERVICE_VERSION",
+    "arch": "$ARCH",
+    "public": true,
+    "sharable": "singleton",
+    "requiredServices": [],
+    "userInput": [],
+    "deployment": {
+      "services": {
+        "$SERVICE_NAME": {
+          "image": "$SERVICE_CONTAINER",
+          "binds": [
+            "$MMS_SHARED_VOLUME:$VOLUME_MOUNT:rw"
+          ],
+          "ports": [
+            {
+            "HostIP": "0.0.0.0",
+            "HostPort": "3000:3000/tcp"
+            }
+          ],
+          "privileged": true
+        }
+      }
+    }
+  }
+
 
   constructor(
     private router: Router,
@@ -31,48 +65,67 @@ export class EditorComponent implements OnInit {
     this.editorOptions = new JsonEditorOptions()
     this.editorOptions.modes = ['code', 'text', 'tree', 'view'];
 
-    this.initialData = {"products":[{"name":"car","product":[{"name":"honda","model":[{"id":"civic","name":"civic"},{"id":"accord","name":"accord"},{"id":"crv","name":"crv"},{"id":"pilot","name":"pilot"},{"id":"odyssey","name":"odyssey"}]}]}]}
-    this.visibleData = this.initialData;
+    // this.initialData = {"products":[{"name":"car","product":[{"name":"honda","model":[{"id":"civic","name":"civic"},{"id":"accord","name":"accord"},{"id":"crv","name":"crv"},{"id":"pilot","name":"pilot"},{"id":"odyssey","name":"odyssey"}]}]}]}
+    // this.visibleData = this.initialData;
   }
 
   ngOnInit(): void {
+    if(!this.ieamService.signIn('/editor')) {
+      return
+    }
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
-      const currentState = this.router.getCurrentNavigation();
-      this.state = currentState ? currentState.extras.state : null;
-      if (this.state) {
-        this.ieamService.get(this.state.url)
-        .subscribe({
-          next: (res: any) => {
-            console.log(res)
-          }, error: (err: any) => console.log(err)
-        })
+      if('/editor' !== this.router.routerState.snapshot.url) {
+        return;
       }
     })
+    if(this.ieamService.editorStorage) {
+      this.showData = this.data = this.ieamService.editorStorage.json;
+    } else {
+      this.showData = this.data = this.template;
+    }
 
-    this.showData = this.data = {
-      'randomNumber': 2,
-      'products': [
-        {
-          'name': 'car',
-          'product':
-            [
-              {
-                'name': 'honda',
-                'model': [
-                  { 'id': 'civic', 'name': 'civic' },
-                  { 'id': 'accord', 'name': 'accord' }, { 'id': 'crv', 'name': 'crv' },
-                  { 'id': 'pilot', 'name': 'pilot' }, { 'id': 'odyssey', 'name': 'odyssey' }
-                ]
-              }
-            ]
-        }
-      ]
-    };
+    this.psAgent = this.ieamService.broadcastAgent.subscribe((msg: any) => {
+      if(msg.type == Enum.SAVE) {
+        this.save()
+      }
+    });
+
+    // this.showData = this.data = {
+    //   'randomNumber': 2,
+    //   'products': [
+    //     {
+    //       'name': 'car',
+    //       'product':
+    //         [
+    //           {
+    //             'name': 'honda',
+    //             'model': [
+    //               { 'id': 'civic', 'name': 'civic' },
+    //               { 'id': 'accord', 'name': 'accord' }, { 'id': 'crv', 'name': 'crv' },
+    //               { 'id': 'pilot', 'name': 'pilot' }, { 'id': 'odyssey', 'name': 'odyssey' }
+    //             ]
+    //           }
+    //         ]
+    //     }
+    //   ]
+    // };
+  }
+  ngAfterViewInit() {
+    // if(this.editor && !this.data) {
+    //   this.showData = this.data = this.template;
+    //   this.editor.getEditor().set(this.showData);
+    // }
+    setTimeout(() => {
+      this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
+    }, 0)
+  }
+  save() {
+    
   }
   changeLog(event = null) {
     console.log(event);
-    console.log('change:', this.editor);
+    console.log('change:', this.editor.get());
 
     /**
      * Manual validation based on the schema
@@ -81,12 +134,13 @@ export class EditorComponent implements OnInit {
      */
     const editorJson = this.editor.getEditor()
     editorJson.validate()
-    const errors = editorJson.validateSchema.errors
+    const errors = editorJson.validateSchema ? editorJson.validateSchema.errors : null;
     if (errors && errors.length > 0) {
       console.log('Errors found', errors)
       editorJson.set(this.showData);
     } else {
       this.showData = this.editor.get();
+      this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: true});
     }
   }
   changeEvent(event) {

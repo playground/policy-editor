@@ -6,7 +6,18 @@ export enum Enum {
   THEME_CHANGED,
   LOGGED_IN,
   LOGGED_OUT,
-  SHOW_FOOTER
+  SHOW_FOOTER,
+  DELETE,
+  UPLOAD,
+  CHANGE_ACCESS,
+  FOLDER,
+  JUMP_TO,
+  SAVE,
+  NONE_SELECTED,
+  NO_BUCKET,
+  NOT_EDITOR,
+  NETWORK,
+  JSON_MODIFIED
 }
 export const Navigate = {
   home: 'home',

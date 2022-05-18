@@ -55,7 +55,7 @@ mat-sidenav-content {
 .mat-drawer {
   /* height: fit-content; */
   height: auto;
-  background-color: var(--background-default);
+  background-color: white;
 }
 
 mat-sidenav {

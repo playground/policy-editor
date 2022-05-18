@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
   }
 
   isBucket() {
-    return location.pathname.indexOf('/bucket/') >= 0
+    return location.pathname.indexOf('/bucket/') >= 0 || location.pathname.indexOf('/editor') >= 0
   }
   isLoggedIn() {
     return !this.ieamService.isLoggedIn()

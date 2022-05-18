@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Enum } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 @Component({
@@ -9,6 +10,8 @@ import { IeamService, Broadcast } from '../../services/ieam.service';
 export class ButtonsComponent implements OnInit {
   noBucket = true;
   noneSelected = true;
+  notEditor = true;
+  isJsonModified = false;
 
   constructor(
     public ieamService: IeamService
@@ -17,13 +20,19 @@ export class ButtonsComponent implements OnInit {
   ngOnInit() {
     this.ieamService.broadcastAgent.subscribe((msg: Broadcast) => {
       switch (msg.type) {
-        case 'noBucket':
+        case Enum.NO_BUCKET:
           this.noBucket = msg.payload;
           break;
-        case 'noneSelected':
+        case Enum.NONE_SELECTED:
           this.noneSelected = msg.payload;
           break;
-        case 'network':
+        case Enum.NOT_EDITOR:
+          this.notEditor = msg.payload;
+          break;
+        case Enum.JSON_MODIFIED:
+          this.isJsonModified = msg.payload;
+          break;
+        case Enum.NETWORK:
           this.ieamService.offline = msg.payload;
           break;
         }
@@ -56,5 +65,9 @@ export class ButtonsComponent implements OnInit {
 
   jumpTo() {
     this.broadcast('jumpTo');
+  }
+
+  save() {
+    this.broadcast('save')
   }
 }

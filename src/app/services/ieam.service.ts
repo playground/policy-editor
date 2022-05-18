@@ -35,6 +35,8 @@ export class IeamService {
   welcome: string = ''
   loginSession: any;
   sessionExpiry = 1800000;
+  urlExpiry = 600;
+  editorStorage: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -90,7 +92,7 @@ export class IeamService {
       .catch(error => console.log('error', error));
     })
   }
-  fetchCors(path: string) {
+  fetchCors(url: string) {
     return new Observable((observer: any) => {
       let myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
@@ -101,7 +103,7 @@ export class IeamService {
         redirect: 'follow'
       };
       // @ts-ignore
-      fetch(`${backendUrl}/${path}`, requestOptions)
+      fetch(url, requestOptions)
         .then(response => response.json())
         .then(result => {
           console.log(result)
@@ -122,6 +124,9 @@ export class IeamService {
     return match ? match[1] : f;
   }
 
+  getFilePath(root: string, f: string) {
+    return f.replace(root, '')
+  }
   setSession(key: string, value: string) {
     sessionStorage.setItem(key, value);
   }
@@ -134,7 +139,7 @@ export class IeamService {
     sessionStorage.removeItem(key);
   }
 
-  getSignedUrl(filename: string, bucket: string, expires = 60) {
+  getSignedUrl(filename: string, bucket: string, expires = this.urlExpiry) {
     let url = `${method.sigUrl}&filename=${filename}&expires=${expires}&bucket=${bucket}`;
     return this.get(url)
     // 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/?action=get_signed_url&filename=20160414_112151.jpg&expires=60&bucket=ieam-labs'
