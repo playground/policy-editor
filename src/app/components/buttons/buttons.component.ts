@@ -28,6 +28,8 @@ export class ButtonsComponent implements OnInit {
           break;
         case Enum.NOT_EDITOR:
           this.notEditor = msg.payload;
+          this.noBucket = true;
+          this.noneSelected = true;
           break;
         case Enum.JSON_MODIFIED:
           this.isJsonModified = msg.payload;
