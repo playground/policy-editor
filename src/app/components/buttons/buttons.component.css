@@ -25,3 +25,12 @@
 .mat-jumpto {
   background-color: rgb(0, 132, 255);
 }
+
+.mat-publish {
+  background-color: rgb(41, 8, 152);
+  color: #fff;
+}
+.mat-save {
+  background-color: rgb(10, 121, 80);
+  color: #fff;
+}

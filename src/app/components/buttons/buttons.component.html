@@ -14,5 +14,6 @@
   <button mat-raised-button color="warn" type="button">Offline</button>
 </div>
 <div mat-card-actions class="center" [hidden]="notEditor">
-  <button mat-raised-button color="green" type="button" (click)="save()" [disabled]="!isJsonModified">Save</button>
+  <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="!isJsonModified">Save</button>
+  <button mat-raised-button color="publish" type="button" (click)="save()" [disabled]="!isJsonModified">Publish</button>
 </div>
