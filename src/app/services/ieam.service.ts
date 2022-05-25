@@ -5,7 +5,9 @@ import { Observable, of } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
 import { Enum, Navigate, EnumClass } from '../models/ieam-model';
+import { ObserversModule } from '@angular/cdk/observers';
 
+declare const window: any;
 const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud' : 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud'
 
 export const method = {
@@ -16,6 +18,19 @@ export const method = {
   sigUrl: `${backendUrl}?action=get_signed_url`,
   signature: `${backendUrl}?action=signature`,
   post: 'post'
+};
+
+export const pickerOptions: any = {
+  types: [
+    {
+      description: 'Json files',
+      accept: {
+        'application/json': ['.json']
+      }
+    },
+  ],
+  excludeAcceptAllOption: true,
+  multiple: false
 };
 
 export interface Broadcast {
@@ -37,6 +52,8 @@ export class IeamService {
   sessionExpiry = 1800000;
   urlExpiry = 600;
   editorStorage: any = null;
+  configJson: any = {};
+  editingConfig = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -262,5 +279,66 @@ export class IeamService {
     if(this.loggedIn) {
       this.router.navigateByUrl(url, state)
     }
+  }
+  readOpenFile(fhandle: FileSystemFileHandle) {
+    const reader = new FileReader();
+    return new Observable((observer: { next: (arg0: any) => void; complete: () => void; }) => {
+      (async () => {
+        const file = await fhandle.getFile();
+        const content = await file.text();
+        observer.next(content)
+        observer.complete()
+      })()
+    });
+  }
+  showOpenFilePicker(pickerOpts = pickerOptions) {
+    return new Observable((observer) => {
+      (async () => {
+        let fhandle = await window.showOpenFilePicker(pickerOpts);
+        observer.next(fhandle)
+        observer.complete()
+      })()
+    })
+  }
+  isObject(value: any) {
+    return !!(value && typeof value === "object" && !Array.isArray(value));
+  }
+  getObjectByValue(object: any, value: string) {
+    if(this.isObject(object)) {
+      const entries = Object.entries(object);
+      for(let i=0; i<entries.length; i++) {
+        const [objKey, objValue] = entries[i];
+        if(objValue === value) {
+          return object;
+        }
+        if(this.isObject(objValue)) {
+          const child = this.getObjectByValue(objValue, value);
+
+          if(child !== null) {
+            return child;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  getObjectByKey(object: any, key: string) {
+    if(this.isObject(object)) {
+      const entries = Object.entries(object);
+      for(let i=0; i<entries.length; i++) {
+        const [objKey, objValue] = entries[i];
+        if(objKey === key) {
+          return object;
+        }
+        if(this.isObject(objValue)) {
+          const child = this.getObjectByValue(objValue, key);
+
+          if(child !== null) {
+            return child;
+          }
+        }
+      }
+    }
+    return null;
   }
 }

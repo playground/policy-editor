@@ -12,6 +12,10 @@ export enum Enum {
   CHANGE_ACCESS,
   FOLDER,
   JUMP_TO,
+  LOAD_CONFIG,
+  LOAD_POLICY,
+  CONFIG_LOADED,
+  ORG_SELECTED,
   SAVE,
   NONE_SELECTED,
   NO_BUCKET,
@@ -38,5 +42,10 @@ export class EnumClass {
   getEnum(key: string) {
     return this.enum[key];
   }
+}
+
+export class Organization {
+  id?: string = '';
+  name?: string = '';
 }
 

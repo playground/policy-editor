@@ -14,6 +14,16 @@
   <button mat-raised-button color="warn" type="button">Offline</button>
 </div>
 <div mat-card-actions class="center" [hidden]="notEditor">
-  <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="!isJsonModified">Save</button>
+  <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
+    <mat-label>Org</mat-label>
+    <mat-select [(value)]="selectedOrg" name="server" required>
+      <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
+        {{org.name}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="accent" (click)="loadPolicy()">Policy</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="accent" (click)="loadConfig()">Config</button>
+  <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldEnable()">Save</button>
   <button mat-raised-button color="publish" type="button" (click)="save()" [disabled]="!isJsonModified">Publish</button>
 </div>

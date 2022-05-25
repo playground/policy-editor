@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
+import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
 import { Enum } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
@@ -88,6 +89,17 @@ export class EditorComponent implements OnInit, AfterViewInit {
     this.psAgent = this.ieamService.broadcastAgent.subscribe((msg: any) => {
       if(msg.type == Enum.SAVE) {
         this.save()
+      } else if(msg.type == Enum.LOAD_CONFIG) {
+        this.ieamService.editingConfig = true;
+        console.log(msg.payload)
+        this.loadFile(msg.payload, Enum.LOAD_CONFIG)
+      } else if(msg.type == Enum.LOAD_POLICY) {
+        this.ieamService.editingConfig = false;
+        console.log(msg.payload)
+        this.loadFile(msg.payload, Enum.LOAD_POLICY)
+      } else if(msg.type == Enum.ORG_SELECTED) {
+        console.log(msg.payload)
+        this.updateEditor(msg.payload)
       }
     });
 
@@ -120,8 +132,65 @@ export class EditorComponent implements OnInit, AfterViewInit {
       this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
     }, 0)
   }
+  updateEditor(org: string) {
+    let envVars = this.ieamService.configJson[org].envVars;
+    Object.keys(envVars).forEach((key) => {
+      let obj = this.ieamService.getObjectByKey(this.data, `${key}`)
+      console.log(obj)
+    })
+  }
+  loadFile(fhandle: FileSystemFileHandle[], type: Enum) {
+    let $upload: any = {};
+    let $files: any = {};
+
+    for (let i = fhandle.length - 1; i >= 0; i--) {
+      $files[fhandle[i].name] = this.ieamService.readOpenFile(fhandle[i]);
+    }
+    forkJoin($files)
+    .subscribe((res: any) => {
+      Object.keys(res).forEach((key: any, idx: number) => {
+        if(type == Enum.LOAD_CONFIG) {
+          this.ieamService.configJson = JSON.parse(res[key]);
+          this.showData = this.data = this.ieamService.configJson;
+          this.ieamService.broadcast({type: Enum.CONFIG_LOADED});
+        } else if(type == Enum.LOAD_POLICY) {
+          this.ieamService.editorStorage = {json: JSON.parse(res[key]), filename: key};
+          this.showData = this.data = this.ieamService.editorStorage.json;
+        }
+      });
+    })
+  }
+  loadFile2(fhandle: FileSystemFileHandle[]) {
+    let $upload: any = {};
+    let $files: any = {};
+
+    for (let i = fhandle.length - 1; i >= 0; i--) {
+      $files[fhandle[i].name] = this.readFile(fhandle[i]);
+    }
+    forkJoin($files)
+    .subscribe((res: any) => {
+      Object.keys(res).forEach((key: any, idx: number) => {
+        let b64 = res[key].replace(/^data:.+;base64,/, '');
+        this.ieamService.configJson = JSON.parse(atob(b64));
+        this.showData = this.data = this.ieamService.configJson;
+      });
+    })
+  }
+  readFile(file: any) {
+    const reader = new FileReader();
+    return new Observable((observer: { next: (arg0: any) => void; complete: () => void; }) => {
+      reader.onload = (e: any) => {
+        observer.next(e.target.result);
+        observer.complete();
+      };
+      reader.onloadend = (e) => {
+        console.log(reader);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
   save() {
-    
+
   }
   changeLog(event = null) {
     console.log(event);
@@ -200,20 +269,20 @@ export class EditorComponent implements OnInit, AfterViewInit {
     /**
    * Example on how get the json changed from the jsoneditor
    */
-     getData() {
-      const changedJson = this.editor.get();
-      console.log(changedJson);
-    }
+    getData() {
+    const changedJson = this.editor.get();
+    console.log(changedJson);
+  }
 
-    print(v) {
-      return JSON.stringify(v, null, 2);
-    }
-    showJson(d) {
-      console.log(d)
-      this.EditedData = JSON.stringify(d, null, 2);
-    }
+  print(v) {
+    return JSON.stringify(v, null, 2);
+  }
+  showJson(d) {
+    console.log(d)
+    this.EditedData = JSON.stringify(d, null, 2);
+  }
 
-    makeOptions = () => {
-      return new JsonEditorOptions();
-    }
+  makeOptions = () => {
+    return new JsonEditorOptions();
+  }
 }

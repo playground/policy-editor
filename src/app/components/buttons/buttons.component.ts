@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Enum } from 'src/app/models/ieam-model';
+import { Enum, Organization } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
+
+declare const window: any;
 
 @Component({
   selector: 'app-buttons',
@@ -12,6 +14,8 @@ export class ButtonsComponent implements OnInit {
   noneSelected = true;
   notEditor = true;
   isJsonModified = false;
+  selectedOrg: string;
+  orgs: Organization[];
 
   constructor(
     public ieamService: IeamService
@@ -37,11 +41,21 @@ export class ButtonsComponent implements OnInit {
         case Enum.NETWORK:
           this.ieamService.offline = msg.payload;
           break;
-        }
+        case Enum.CONFIG_LOADED:
+          this.populateOrgs()
+          break;
+      }
     });
   }
 
-  broadcast(type: string, payload?: any) {
+  populateOrgs() {
+    this.orgs = [];
+    Object.keys(this.ieamService.configJson).forEach((key) => {
+      this.orgs.push({name: key, id: key})
+    })
+  }
+
+  broadcast(type: any, payload?: any) {
     this.ieamService.broadcast({
       type: type,
       payload: payload
@@ -50,26 +64,59 @@ export class ButtonsComponent implements OnInit {
 
   delete() {
     console.log('none');
-    this.broadcast('delete');
+    this.broadcast(Enum.DELETE);
   }
 
   changeAccess(access) {
-    this.broadcast('changeAccess', access);
+    this.broadcast(Enum.CHANGE_ACCESS, access);
+  }
+
+  loadPolicy() {
+    this.ieamService.showOpenFilePicker()
+    .subscribe({
+      next: (fhandle) => {
+        this.broadcast(Enum.LOAD_POLICY, fhandle);
+      }
+    })
   }
 
   upload(event) {
-    this.broadcast('upload', event);
+    this.broadcast(Enum.UPLOAD, event);
+  }
+
+  loadConfig() {
+    this.ieamService.showOpenFilePicker()
+    .subscribe({
+      next: (fhandle) => {
+        this.broadcast(Enum.LOAD_CONFIG, fhandle);
+      }
+    })
   }
 
   folder() {
-    this.broadcast('folder');
+    this.broadcast(Enum.FOLDER);
   }
 
   jumpTo() {
-    this.broadcast('jumpTo');
+    this.broadcast(Enum.JUMP_TO);
   }
 
   save() {
-    this.broadcast('save')
+    this.broadcast(Enum.SAVE)
+  }
+
+  shouldEnable() {
+    return !this.isJsonModified && !this.ieamService.editingConfig
+  }
+
+  onChange(evt: any) {
+    if(evt.isUserInput) {
+      console.log(evt.source.value)
+      this.broadcast(Enum.ORG_SELECTED, evt.source.value);
+    }
+  }
+
+  hasConfig() {
+    return Object.keys(this.ieamService.configJson).length > 0 && !this.ieamService.editingConfig
   }
 }

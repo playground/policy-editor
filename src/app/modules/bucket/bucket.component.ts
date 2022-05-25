@@ -89,19 +89,19 @@ export class BucketComponent implements OnInit, OnDestroy {
         this.router.navigate([`/${msg.to}`])
       } else if(this.appService.signIn()) {
         switch (msg.type) {
-          case 'delete':
+          case Enum.DELETE:
             this.delete();
             break;
-          case 'upload':
+          case Enum.UPLOAD:
             this.upload(msg.payload);
             break;
-          case 'changeAccess':
+          case Enum.CHANGE_ACCESS:
             this.changeAccess(msg.payload);
             break;
-          case 'folder':
+          case Enum.FOLDER:
             this.folder();
             break;
-          case 'jumpTo':
+          case Enum.JUMP_TO:
             this.jumpTo();
             break;
         }
