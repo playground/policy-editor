@@ -352,11 +352,15 @@ export class BucketComponent implements OnInit, OnDestroy {
           });
           if (filename.length > 0) {
             let options = {
+              headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Origin': '*'
+              },
               bucket: this.bucketName,
               filename: filename,
-              method: 'delete'
+              action: 'delete'
             };
-            this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
+            this.appService.post(method.delete, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -371,9 +375,10 @@ export class BucketComponent implements OnInit, OnDestroy {
             let options = {
               bucket: this.bucketName,
               directory: dirname,
-              method: 'deleteFolder'
+              action: 'deleteFolder'
             };
-            this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
+            this.appService.post(method.delete, options)
+            // this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -496,6 +501,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     const path = this.currentRoute.replace(regex, '');
     const files = event.target.files;
     let options = {
+      action: 'upload',
       headers: {
         'Access-Control-Allow-Credentials': true,
         'Access-Control-Allow-Origin': '*'
@@ -513,7 +519,7 @@ export class BucketComponent implements OnInit, OnDestroy {
       forkJoin($upload)
       .subscribe({
         next: (data: any) => {
-          this.showSnackBar(`${data.length} file(s) uploaded.`, 'Rock');
+          this.showSnackBar(`${Object.keys(data).length} file(s) uploaded.`, 'Rock');
           this.refreshItems();
         },
         error: (error: any) => this.showSnackBar(error, 'Rock')

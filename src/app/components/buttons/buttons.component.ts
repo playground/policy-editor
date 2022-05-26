@@ -105,8 +105,8 @@ export class ButtonsComponent implements OnInit {
     this.broadcast(Enum.SAVE)
   }
 
-  shouldEnable() {
-    return !this.isJsonModified && this.ieamService.editingConfig
+  shouldDisenable() {
+    return !this.isJsonModified || this.ieamService.editingConfig
   }
 
   onChange(evt: any) {

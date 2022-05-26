@@ -17,6 +17,7 @@ export const method = {
   session: `${backendUrl}?action=session`,
   sigUrl: `${backendUrl}?action=get_signed_url`,
   signature: `${backendUrl}?action=signature`,
+  delete: `${backendUrl}/delete`,
   post: 'post'
 };
 

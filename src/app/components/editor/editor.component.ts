@@ -29,7 +29,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   bucketApi: any;
   state: any;
   currentPolicy = '';
-  editorJson: any;
+  orginalJson: any;
   template = {
     "org": "$HZN_ORG_ID",
     "label": "$SERVICE_NAME for $ARCH",
@@ -90,7 +90,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.showData = this.data = this.template;
     }
 
-    this.psAgent = this.ieamService.broadcastAgent.subscribe((msg: any) => {
+    this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
       if(msg.type == Enum.SAVE) {
         this.save()
       } else if(msg.type == Enum.LOAD_CONFIG) {
@@ -105,9 +105,16 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.loadFile(msg.payload, Enum.LOAD_POLICY)
       } else if(msg.type == Enum.ORG_SELECTED) {
-        console.log(msg.payload)
-        this.selectedOrg = msg.payload;
-        this.updateEditorData(this.selectedOrg)
+        if(this.isModified()) {
+          const resp:any = await this.promptDialog('Would you to discard your changes?', 'confirm')
+          if(resp) {
+            this.selectedOrg = msg.payload;
+            this.updateEditorData(this.selectedOrg)
+          }
+        } else {
+          this.selectedOrg = msg.payload;
+          this.updateEditorData(this.selectedOrg)
+        }
       }
     });
 
@@ -132,10 +139,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     // };
   }
   ngAfterViewInit() {
-    // if(this.editor && !this.data) {
-    //   this.showData = this.data = this.template;
-    //   this.editor.getEditor().set(this.showData);
-    // }
     setTimeout(() => {
       this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
     }, 0)
@@ -152,6 +155,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
     }
     this.showData = JSON.parse(policy)
+    this.orginalJson = this.showData;
     console.log(this.showData)
     this.editor.getEditor().set(this.showData)
   }
@@ -176,7 +180,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     })
   }
-  promptDialog(title: string, type: string, placeholder: string) {
+  promptDialog(title: string, type: string, placeholder?: string) {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
     return new Promise((resolve, reject) => {
       this.openDialog({title: title, type: type, placeholder: placeholder}, (resp: any) => {
@@ -252,8 +256,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       editorJson.set(this.showData);
     } else {
       this.showData = this.editor.get();
-      this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: true});
+      this.isModified()
     }
+  }
+  isModified() {
+    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) && this.selectedOrg.length > 0;
+    this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: modified});
+    return modified;
   }
   changeEvent(event) {
     console.log(event);
@@ -315,14 +324,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     getData() {
     const changedJson = this.editor.get();
     console.log(changedJson);
-  }
-
-  print(v) {
-    return JSON.stringify(v, null, 2);
-  }
-  showJson(d) {
-    console.log(d)
-    this.EditedData = JSON.stringify(d, null, 2);
   }
 
   makeOptions = () => {
