@@ -1,17 +1,19 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
 import { Enum } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
+import { DialogComponent } from '../dialog/dialog.component';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-editor',
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.css']
 })
-export class EditorComponent implements OnInit, AfterViewInit {
+export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('editor', { static: false, read: JsonEditorComponent })
   editor: JsonEditorComponent;
   public editorOptions: JsonEditorOptions;
@@ -56,12 +58,14 @@ export class EditorComponent implements OnInit, AfterViewInit {
       }
     }
   }
-
+  dialogRef?: MatDialogRef<DialogComponent, any>;
+  selectedOrg = '';
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private ieamService: IeamService,
+    private dialog: MatDialog
   ) {
     this.editorOptions = new JsonEditorOptions()
     this.editorOptions.modes = ['code', 'text', 'tree', 'view'];
@@ -96,10 +100,14 @@ export class EditorComponent implements OnInit, AfterViewInit {
       } else if(msg.type == Enum.LOAD_POLICY) {
         this.ieamService.editingConfig = false;
         console.log(msg.payload)
+        if(this.selectedOrg.length > 0) {
+          this.updateEditorData(this.selectedOrg)
+        }
         this.loadFile(msg.payload, Enum.LOAD_POLICY)
       } else if(msg.type == Enum.ORG_SELECTED) {
         console.log(msg.payload)
-        this.updateEditor(msg.payload)
+        this.selectedOrg = msg.payload;
+        this.updateEditorData(this.selectedOrg)
       }
     });
 
@@ -132,12 +140,20 @@ export class EditorComponent implements OnInit, AfterViewInit {
       this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
     }, 0)
   }
-  updateEditor(org: string) {
+  async updateEditorData(org: string) {
     let envVars = this.ieamService.configJson[org].envVars;
+    let policy = JSON.stringify(this.data)
+    policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
     Object.keys(envVars).forEach((key) => {
-      let obj = this.ieamService.getObjectByKey(this.data, `${key}`)
-      console.log(obj)
+      policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
     })
+    if(policy.indexOf('$ARCH') >= 0) {
+      const arch:any = await this.promptDialog('What platform?', 'folder', 'Architecture type')
+      policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
+    }
+    this.showData = JSON.parse(policy)
+    console.log(this.showData)
+    this.editor.getEditor().set(this.showData)
   }
   loadFile(fhandle: FileSystemFileHandle[], type: Enum) {
     let $upload: any = {};
@@ -159,6 +175,30 @@ export class EditorComponent implements OnInit, AfterViewInit {
         }
       });
     })
+  }
+  promptDialog(title: string, type: string, placeholder: string) {
+    // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
+    return new Promise((resolve, reject) => {
+      this.openDialog({title: title, type: type, placeholder: placeholder}, (resp: any) => {
+        if (resp) {
+          console.log(resp);
+          resolve(resp);
+        }
+      });
+    })
+  }
+  openDialog(payload: { title: string; type: string; placeholder?: string; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
+    this.dialogRef = this.dialog.open(DialogComponent, {
+      hasBackdrop: false,
+      width: '350px',
+      height: '250px',
+      data: payload
+    });
+
+    this.dialogRef.afterClosed().subscribe((result: any) => {
+      cb(result);
+      this.dialog.closeAll();
+    });
   }
   loadFile2(fhandle: FileSystemFileHandle[]) {
     let $upload: any = {};
@@ -195,13 +235,16 @@ export class EditorComponent implements OnInit, AfterViewInit {
   changeLog(event = null) {
     console.log(event);
     console.log('change:', this.editor.get());
+    this.updateEditor()
+  }
 
+  updateEditor() {
     /**
      * Manual validation based on the schema
      * if the change does not meet the JSON Schema, it will use the last data
      * and will revert the user change.
      */
-    const editorJson = this.editor.getEditor()
+     const editorJson = this.editor.getEditor()
     editorJson.validate()
     const errors = editorJson.validateSchema ? editorJson.validateSchema.errors : null;
     if (errors && errors.length > 0) {
@@ -284,5 +327,13 @@ export class EditorComponent implements OnInit, AfterViewInit {
 
   makeOptions = () => {
     return new JsonEditorOptions();
+  }
+
+  ngOnDestroy() {
+    delete this.dialogRef;
+    if (this.psAgent) {
+      this.psAgent.unsubscribe();
+    }
+    this.routerObserver.unsubscribe();
   }
 }

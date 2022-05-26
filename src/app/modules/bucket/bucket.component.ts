@@ -248,7 +248,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (res: any) => {
             console.log(res)
-            this.appService.editorStorage = {json: res, filename: file};
+            this.appService.editorStorage = {data: res, filename: file};
             this.appService.navigateByUrl('/editor',
             {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
           }, error: (err: any) => {

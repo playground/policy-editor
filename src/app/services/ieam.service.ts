@@ -308,8 +308,9 @@ export class IeamService {
       const entries = Object.entries(object);
       for(let i=0; i<entries.length; i++) {
         const [objKey, objValue] = entries[i];
-        if(objValue === value) {
-          return object;
+        if(typeof objValue == 'string' && objValue.indexOf(value) >= 0) {
+          let obj = {}
+          return obj[objKey] = object;
         }
         if(this.isObject(objValue)) {
           const child = this.getObjectByValue(objValue, value);
@@ -328,7 +329,8 @@ export class IeamService {
       for(let i=0; i<entries.length; i++) {
         const [objKey, objValue] = entries[i];
         if(objKey === key) {
-          return object;
+          let obj = {}
+          return obj[objKey] = object;
         }
         if(this.isObject(objValue)) {
           const child = this.getObjectByValue(objValue, key);
@@ -340,5 +342,12 @@ export class IeamService {
       }
     }
     return null;
+  }
+  tokenReplace(template, obj) {
+    //  template = 'Where is ${movie} playing?',
+    //  tokenReplace(template, {movie: movie});
+    return template.replace(/\$\{([^\s\:\}]+)(?:\:([^\s\:\}]+))?\}/g, function(match, key) {
+      return obj[key];
+    });
   }
 }

@@ -106,7 +106,7 @@ export class ButtonsComponent implements OnInit {
   }
 
   shouldEnable() {
-    return !this.isJsonModified && !this.ieamService.editingConfig
+    return !this.isJsonModified && this.ieamService.editingConfig
   }
 
   onChange(evt: any) {
