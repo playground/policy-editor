@@ -501,7 +501,6 @@ export class BucketComponent implements OnInit, OnDestroy {
     const path = this.currentRoute.replace(regex, '');
     const files = event.target.files;
     let options = {
-      action: 'upload',
       headers: {
         'Access-Control-Allow-Credentials': true,
         'Access-Control-Allow-Origin': '*'
