@@ -15,6 +15,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   noBucket = true;
   noneSelected = true;
   notEditor = true;
+  notExchange = true;
   isJsonModified = false;
   selectedOrg: string;
   orgs: Organization[];
@@ -28,14 +29,16 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
+      this.notEditor = true;
+      this.noBucket = true;
+      this.noneSelected = true;
+      this.notExchange = true;
       if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
         this.notEditor = false;
-        this.noBucket = true;
-        this.noneSelected = true;
       } else if(this.router.routerState.snapshot.url.indexOf('/bucket') == 0) {
-        this.notEditor = true;
         this.noBucket = false;
-        this.noneSelected = true;
+      } else if(this.router.routerState.snapshot.url.indexOf('/exchange') == 0) {
+        this.notExchange = false;
       }
     })
 
@@ -49,8 +52,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
           break;
         case Enum.NOT_EDITOR:
           this.notEditor = msg.payload;
-          // this.noBucket = true;
-          // this.noneSelected = true;
+          break;
+        case Enum.NOT_EXCHANGE:
+          this.notExchange = msg.payload;
           break;
         case Enum.JSON_MODIFIED:
           this.isJsonModified = msg.payload;

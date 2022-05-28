@@ -13,6 +13,7 @@ import { HomeComponent } from './components/home/home.component';
 import { SigninComponent } from './components/signin/signin.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 import { ButtonsComponent } from './components/buttons/buttons.component';
+import { ExchangeComponent } from './components/exchange/exchange.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { ButtonsComponent } from './components/buttons/buttons.component';
     HomeComponent,
     SigninComponent,
     BreadcrumbComponent,
-    ButtonsComponent
+    ButtonsComponent,
+    ExchangeComponent
   ],
   imports: [
     BrowserModule,

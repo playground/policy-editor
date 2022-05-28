@@ -80,16 +80,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
-      if('/editor' !== this.router.routerState.snapshot.url) {
-        return;
-      }
+      // if('/editor' !== this.router.routerState.snapshot.url) {
+      //   return;
+      // }
     })
-    if(this.ieamService.editorStorage) {
-      this.showData = this.data = this.ieamService.editorStorage.json;
-      this.shouldLoadConfig()
-    } else {
-      this.showData = this.data = this.template;
-    }
 
     this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
       if(msg.type == Enum.SAVE) {
@@ -152,6 +146,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   ngAfterViewInit() {
     setTimeout(() => {
+      if(this.ieamService.editorStorage) {
+        this.showData = this.data = this.ieamService.editorStorage.json;
+        this.shouldLoadConfig()
+      } else {
+        this.showData = this.data = this.template;
+      }
+
       this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
     }, 0)
   }

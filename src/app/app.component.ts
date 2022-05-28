@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
   sidenav!: MatSidenav;
   to = Navigate;
   titleText = 'IEAM'
+  lock = 'lock'
 
   constructor(
     private route: ActivatedRoute,
@@ -34,6 +35,9 @@ export class AppComponent implements OnInit {
   }
 
   isBucket() {
+    return location.pathname.indexOf('/bucket/') >= 0
+  }
+  showButtons() {
     return location.pathname.indexOf('/bucket/') >= 0 || location.pathname.indexOf('/editor') >= 0
   }
   isLoggedIn() {
@@ -45,6 +49,9 @@ export class AppComponent implements OnInit {
     }
   }
   loginText() {
+    setTimeout(() => {
+      this.lock = this.ieamService.isLoggedIn() ? 'lock_open' : 'lock'
+    }, 0)
     return this.ieamService.isLoggedIn() ? 'Logout' : 'Login'
   }
   navigate(to: string) {

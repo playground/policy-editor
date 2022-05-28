@@ -22,6 +22,7 @@ export enum Enum {
   NONE_SELECTED,
   NO_BUCKET,
   NOT_EDITOR,
+  NOT_EXCHANGE,
   NETWORK,
   JSON_MODIFIED
 }
@@ -30,6 +31,7 @@ export const Navigate = {
   bucket: 'bucket',
   editor: 'editor',
   about: 'about',
+  exchange: 'exchange',
   signin: 'signin'
 } as const;
 
