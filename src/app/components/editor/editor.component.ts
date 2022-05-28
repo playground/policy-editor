@@ -78,6 +78,19 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!this.ieamService.signIn('/editor')) {
       return
     }
+    if(this.ieamService.editorStorage) {
+      this.showData = this.data = this.ieamService.editorStorage.json;
+      this.shouldLoadConfig()
+    } else {
+      this.showData = this.data = this.template;
+    }
+
+    this.route.data.subscribe((data) => {
+      if(!this.route.snapshot.queryParamMap.get('fromMenu')) {
+        // this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
+      } else {
+      }
+    })
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
       // if('/editor' !== this.router.routerState.snapshot.url) {
@@ -98,8 +111,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         if(Object.keys(this.ieamService.configJson).length == 0) {
           this.shouldLoadConfig()
         } else {
-          if(this.selectedOrg.length > 0) {
-            this.updateEditorData(this.selectedOrg)
+          if(this.ieamService.selectedOrg.length > 0) {
+            this.updateEditorData(this.ieamService.selectedOrg)
           }
         }
         this.loadFile(msg.payload, Enum.LOAD_POLICY)
@@ -107,12 +120,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         if(this.isModified()) {
           const resp:any = await this.promptDialog('Would you to discard your changes?', 'confirm')
           if(resp) {
-            this.selectedOrg = msg.payload;
-            this.updateEditorData(this.selectedOrg)
+            this.ieamService.selectedOrg = msg.payload;
+            this.updateEditorData(this.ieamService.selectedOrg)
           }
         } else {
-          this.selectedOrg = msg.payload;
-          this.updateEditorData(this.selectedOrg)
+          this.ieamService.selectedOrg = msg.payload;
+          this.updateEditorData(this.ieamService.selectedOrg)
         }
       } else if(msg.type == Enum.REMOTE_POLICY) {
         this.ieamService.editingConfig = false;
@@ -145,16 +158,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     // };
   }
   ngAfterViewInit() {
-    setTimeout(() => {
-      if(this.ieamService.editorStorage) {
-        this.showData = this.data = this.ieamService.editorStorage.json;
-        this.shouldLoadConfig()
-      } else {
-        this.showData = this.data = this.template;
-      }
-
-      this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
-    }, 0)
+    if(this.ieamService.selectedOrg.length > 0) {
+      this.updateEditorData(this.ieamService.selectedOrg)
+    }
   }
   async shouldLoadConfig() {
     if(Object.keys(this.ieamService.configJson).length == 0) {
@@ -288,7 +294,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   isModified() {
-    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) && this.selectedOrg.length > 0;
+    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) && this.ieamService.selectedOrg.length > 0;
     this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: modified});
     return modified;
   }

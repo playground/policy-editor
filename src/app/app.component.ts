@@ -27,7 +27,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.ieamService.broadcastAgent.subscribe((data: any) => {
       if(data.type == Enum.NAVIGATE) {
-        this.router.navigate([`/${data.to}`])
+        this.router.navigate([`/${data.to}`], {queryParams: data.payload})
       } else if(data.type == Enum.JSON_LOADED) {
 
       }

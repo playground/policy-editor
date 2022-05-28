@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router, NavigationEnd} from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { filter } from 'rxjs';
 import { Enum, Organization } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
@@ -17,16 +17,22 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   notEditor = true;
   notExchange = true;
   isJsonModified = false;
-  selectedOrg: string;
-  orgs: Organization[];
+  orgs: Organization[] = [];
   routerObserver: any;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     public ieamService: IeamService
   ) { }
 
   ngOnInit() {
+    this.route.data.subscribe((data) => {
+      if('/editor' == this.router.routerState.snapshot.url) {
+        this.populateOrgs()
+      }
+    })
+
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
       this.notEditor = true;
@@ -34,6 +40,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       this.noneSelected = true;
       this.notExchange = true;
       if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
+        this.populateOrgs()
         this.notEditor = false;
       } else if(this.router.routerState.snapshot.url.indexOf('/bucket') == 0) {
         this.noBucket = false;
@@ -146,11 +153,24 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   onChange(evt: any) {
     if(evt.isUserInput) {
       console.log(evt.source.value)
-      this.broadcast(Enum.ORG_SELECTED, evt.source.value);
+      this.ieamService.selectedOrg = evt.source.value
+      this.broadcast(Enum.ORG_SELECTED, this.ieamService.selectedOrg);
     }
   }
 
   hasConfig() {
     return Object.keys(this.ieamService.configJson).length > 0 && !this.ieamService.editingConfig
+  }
+
+  isEditor() {
+    return !(location.pathname.indexOf('/editor') == 0)
+  }
+
+  isExchange() {
+    return !(location.pathname.indexOf('/exchange') == 0)
+  }
+
+  isBucket() {
+    return !(location.pathname.indexOf('/bucket') == 0)
   }
 }

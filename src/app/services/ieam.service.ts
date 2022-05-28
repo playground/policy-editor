@@ -58,6 +58,7 @@ export class IeamService {
   configJson: any = {};
   editingConfig = false;
   dialogRef?: MatDialogRef<DialogComponent, any>;
+  selectedOrg: string = '';
 
   constructor(
     private route: ActivatedRoute,

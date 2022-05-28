@@ -1,4 +1,4 @@
-<div mat-card-actions class="center" [hidden]="noBucket">
+<div mat-card-actions class="center" [hidden]="isBucket()">
   <!-- <input hidden="true" type="file" multiple="multiple" (change)="download($event)"/> -->
   <input #uploadInput hidden="true" type="file" multiple="multiple" (change)="upload($event)"/>
   <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="accent" (click)="uploadInput.click()">Upload</button>
@@ -13,11 +13,11 @@
 <div mat-card-actions class="center" [hidden]="!ieamService.offline">
   <button mat-raised-button color="warn" type="button">Offline</button>
 </div>
-<div mat-card-actions class="center" [hidden]="notEditor">
+<div mat-card-actions class="center" [hidden]="isEditor()">
   <div class="align-elements">
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
       <mat-label>Org</mat-label>
-      <mat-select [(value)]="selectedOrg" name="server" required>
+      <mat-select [(value)]="ieamService.selectedOrg" name="server" required>
         <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
           {{org.name}}
         </mat-option>
@@ -31,11 +31,11 @@
   </div>
 </div>
 
-<div mat-card-actions class="center" [hidden]="notExchange">
+<div mat-card-actions class="center" [hidden]="isExchange()">
   <div class="align-elements">
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Org</mat-label>
-      <mat-select [(value)]="selectedOrg" name="exchange" required>
+      <mat-select [(value)]="ieamService.selectedOrg" name="exchange" required>
         <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
           {{org.name}}
         </mat-option>
