@@ -299,9 +299,13 @@ export class IeamService {
   showOpenFilePicker(pickerOpts = pickerOptions) {
     return new Observable((observer) => {
       (async () => {
-        let fhandle = await window.showOpenFilePicker(pickerOpts);
-        observer.next(fhandle)
-        observer.complete()
+        try {
+          let fhandle = await window.showOpenFilePicker(pickerOpts);
+          observer.next(fhandle)
+          observer.complete()
+        } catch(e) {
+          observer.error(e)
+        }
       })()
     })
   }

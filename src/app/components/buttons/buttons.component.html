@@ -14,17 +14,19 @@
   <button mat-raised-button color="warn" type="button">Offline</button>
 </div>
 <div mat-card-actions class="center" [hidden]="notEditor">
-  <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
-    <mat-label>Org</mat-label>
-    <mat-select [(value)]="selectedOrg" name="server" required>
-      <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
-        {{org.name}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
-  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadPolicy()">Local Policy</button>
-  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="config" (click)="loadConfig()">Config</button>
-  <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
-  <button mat-raised-button color="publish" type="button" (click)="save()" [disabled]="shouldDisenable()">Publish</button>
+  <div class="align-elements">
+    <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
+      <mat-label>Org</mat-label>
+      <mat-select [(value)]="selectedOrg" name="server" required>
+        <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
+          {{org.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
+    <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadPolicy()">Local Policy</button>
+    <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="config" (click)="loadConfig()">Config</button>
+    <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
+    <button mat-raised-button color="publish" type="button" (click)="save()" [disabled]="shouldDisenable()">Publish</button>
+  </div>
 </div>

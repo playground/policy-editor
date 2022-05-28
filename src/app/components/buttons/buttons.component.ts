@@ -42,13 +42,13 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.ieamService.broadcastAgent.subscribe((msg: Broadcast) => {
       switch (msg.type) {
         case Enum.NO_BUCKET:
-          // this.noBucket = msg.payload;
+          this.noBucket = msg.payload;
           break;
         case Enum.NONE_SELECTED:
           this.noneSelected = msg.payload;
           break;
         case Enum.NOT_EDITOR:
-          // this.notEditor = msg.payload;
+          this.notEditor = msg.payload;
           // this.noBucket = true;
           // this.noneSelected = true;
           break;
@@ -95,11 +95,12 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.broadcast(Enum.CHANGE_ACCESS, access);
   }
 
-  loadPolicy() {
+  loadPolicy(payload: any = {}) {
     this.ieamService.showOpenFilePicker()
     .subscribe({
-      next: (fhandle) => {
-        this.broadcast(Enum.LOAD_POLICY, fhandle);
+      next: (fhandle: any) => {
+        payload.fhandle = fhandle;
+        this.broadcast(Enum.LOAD_POLICY, payload);
       }
     })
   }
@@ -115,7 +116,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   loadConfig(payload:any = {}) {
     this.ieamService.showOpenFilePicker()
     .subscribe({
-      next: (fhandle) => {
+      next: (fhandle: any) => {
         payload.fhandle = fhandle;
         this.broadcast(Enum.LOAD_CONFIG, payload);
       }

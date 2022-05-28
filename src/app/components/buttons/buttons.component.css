@@ -42,3 +42,13 @@
   background-color: rgb(206, 190, 21);
   color: #fff;
 }
+.align-elements {
+  display: flex;
+  gap: 1px;
+  height: 45px;
+}
+::ng-deep div.align-elements mat-form-field div.mat-form-field-flex {
+  height: 42px;
+  font-size: 12px;
+  margin-top: 4px;
+}

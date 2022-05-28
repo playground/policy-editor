@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
-import { Enum } from '../../models/ieam-model';
+import { Enum, Navigate } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from '../dialog/dialog.component';
@@ -86,12 +86,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     })
     if(this.ieamService.editorStorage) {
       this.showData = this.data = this.ieamService.editorStorage.json;
-      if(Object.keys(this.ieamService.configJson).length == 0) {
-        const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
-        if(answer) {
-          this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: {toEditor: true}});
-        }
-      }
+      this.shouldLoadConfig()
     } else {
       this.showData = this.data = this.template;
     }
@@ -107,7 +102,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         this.ieamService.editingConfig = false;
         console.log(msg.payload)
         if(Object.keys(this.ieamService.configJson).length == 0) {
-          this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG});
+          this.shouldLoadConfig()
         } else {
           if(this.selectedOrg.length > 0) {
             this.updateEditorData(this.selectedOrg)
@@ -130,7 +125,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         if(this.ieamService.editorStorage && this.ieamService.editorStorage.json) {
           this.showData = this.data = this.ieamService.editorStorage.json;
         } else {
-
+          this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.bucket})
         }
       }
     });
@@ -159,6 +154,15 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
     }, 0)
+  }
+  async shouldLoadConfig() {
+    if(Object.keys(this.ieamService.configJson).length == 0) {
+      const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+      if(answer) {
+        // payload indicates we are in editor route
+        this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: {toEditor: true}});
+      }
+    }
   }
   async updateEditorData(org: string) {
     let envVars = this.ieamService.configJson[org].envVars;
@@ -189,8 +193,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       Object.keys(res).forEach((key: any, idx: number) => {
         if(type == Enum.LOAD_CONFIG) {
           this.ieamService.configJson = JSON.parse(res[key]);
-          this.showData = this.data = this.ieamService.configJson;
-          this.ieamService.broadcast({type: Enum.CONFIG_LOADED});
+          if(payload.toEditor) {
+            // go to editor with existing policy
+            this.showData = this.data = this.ieamService.editorStorage.json;
+          } else {
+            this.showData = this.data = this.ieamService.configJson;
+          }
+          this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
         } else if(type == Enum.LOAD_POLICY) {
           this.ieamService.editorStorage = {json: JSON.parse(res[key]), filename: key};
           this.showData = this.data = this.ieamService.editorStorage.json;
