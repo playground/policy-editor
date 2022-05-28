@@ -13,7 +13,9 @@ export enum Enum {
   FOLDER,
   JUMP_TO,
   LOAD_CONFIG,
+  TRIGGER_LOAD_CONFIG,
   LOAD_POLICY,
+  REMOTE_POLICY,
   CONFIG_LOADED,
   ORG_SELECTED,
   SAVE,
@@ -49,3 +51,7 @@ export class Organization {
   name?: string = '';
 }
 
+export const HeaderOptions = {
+  'Access-Control-Allow-Credentials': true,
+  'Access-Control-Allow-Origin': '*'
+}

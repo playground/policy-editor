@@ -22,7 +22,8 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadPolicy()">Policy</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
+  <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="policy" (click)="loadPolicy()">Local Policy</button>
   <button mat-raised-button *ngIf="ieamService.isLoggedIn()" color="config" (click)="loadConfig()">Config</button>
   <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
   <button mat-raised-button color="publish" type="button" (click)="save()" [disabled]="shouldDisenable()">Publish</button>

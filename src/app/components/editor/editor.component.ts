@@ -74,7 +74,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     // this.visibleData = this.initialData;
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
     if(!this.ieamService.signIn('/editor')) {
       return
     }
@@ -86,6 +86,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     })
     if(this.ieamService.editorStorage) {
       this.showData = this.data = this.ieamService.editorStorage.json;
+      if(Object.keys(this.ieamService.configJson).length == 0) {
+        const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+        if(answer) {
+          this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: {toEditor: true}});
+        }
+      }
     } else {
       this.showData = this.data = this.template;
     }
@@ -94,14 +100,18 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       if(msg.type == Enum.SAVE) {
         this.save()
       } else if(msg.type == Enum.LOAD_CONFIG) {
-        this.ieamService.editingConfig = true;
+        this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
         console.log(msg.payload)
         this.loadFile(msg.payload, Enum.LOAD_CONFIG)
       } else if(msg.type == Enum.LOAD_POLICY) {
         this.ieamService.editingConfig = false;
         console.log(msg.payload)
-        if(this.selectedOrg.length > 0) {
-          this.updateEditorData(this.selectedOrg)
+        if(Object.keys(this.ieamService.configJson).length == 0) {
+          this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG});
+        } else {
+          if(this.selectedOrg.length > 0) {
+            this.updateEditorData(this.selectedOrg)
+          }
         }
         this.loadFile(msg.payload, Enum.LOAD_POLICY)
       } else if(msg.type == Enum.ORG_SELECTED) {
@@ -114,6 +124,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.selectedOrg = msg.payload;
           this.updateEditorData(this.selectedOrg)
+        }
+      } else if(msg.type == Enum.REMOTE_POLICY) {
+        this.ieamService.editingConfig = false;
+        if(this.ieamService.editorStorage && this.ieamService.editorStorage.json) {
+          this.showData = this.data = this.ieamService.editorStorage.json;
+        } else {
+
         }
       }
     });
@@ -151,7 +168,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
     })
     if(policy.indexOf('$ARCH') >= 0) {
-      const arch:any = await this.promptDialog('What platform?', 'folder', 'Architecture type')
+      const arch:any = await this.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
       policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
     }
     this.showData = JSON.parse(policy)
@@ -159,9 +176,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log(this.showData)
     this.editor.getEditor().set(this.showData)
   }
-  loadFile(fhandle: FileSystemFileHandle[], type: Enum) {
+  loadFile(payload: any, type: Enum) {
     let $upload: any = {};
     let $files: any = {};
+    let fhandle: FileSystemFileHandle[] = payload.fhandle;
 
     for (let i = fhandle.length - 1; i >= 0; i--) {
       $files[fhandle[i].name] = this.ieamService.readOpenFile(fhandle[i]);
@@ -180,10 +198,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     })
   }
-  promptDialog(title: string, type: string, placeholder?: string) {
+  promptDialog(title: string, type: string, options: any = {}) {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
     return new Promise((resolve, reject) => {
-      this.openDialog({title: title, type: type, placeholder: placeholder}, (resp: any) => {
+      this.openDialog({title: title, type: type, options: options}, (resp: any) => {
         if (resp) {
           console.log(resp);
           resolve(resp);
@@ -191,7 +209,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     })
   }
-  openDialog(payload: { title: string; type: string; placeholder?: string; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
+  openDialog(payload: { title: string; type: string; options: any; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
     this.dialogRef = this.dialog.open(DialogComponent, {
       hasBackdrop: false,
       width: '350px',

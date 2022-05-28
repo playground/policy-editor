@@ -7,7 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { DialogComponent } from '../../components/dialog/dialog.component';
-import { Enum, Navigate } from '../../models/ieam-model';
+import { Enum, Navigate, HeaderOptions } from '../../models/ieam-model';
 
 @Component({
   selector: 'app-bucket',
@@ -248,7 +248,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (res: any) => {
             console.log(res)
-            this.appService.editorStorage = {data: res, filename: file};
+            this.appService.editorStorage = {json: res, filename: file};
             this.appService.navigateByUrl('/editor',
             {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
           }, error: (err: any) => {
@@ -317,7 +317,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     });
   }
 
-  delete() {
+  async delete() {
     console.log('delete');
     let dir: any[] = [];
     let file: any[] = [];
@@ -335,7 +335,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     });
     let msg = dir.length > 0 ? `${dir.length} folder(s)` : '';
     msg += file.length > 0 ? `& ${file.length} file(s)` : '';
-    this.openDialog({title: `Deleting ${msg}.  Are you sure?`, type: 'delete'}, (resp: any) => {
+    let resp: any = await this.appService.promptDialog(`Deleting ${msg}.  Are you sure?`, 'delete')
       if (resp) {
         if (found.length > 0) {
           let filename: unknown[] = [];
@@ -373,9 +373,13 @@ export class BucketComponent implements OnInit, OnDestroy {
           }
           if (dirname.length > 0) {
             let options = {
+              headers: {
+                'Access-Control-Allow-Credentials': true,
+                'Access-Control-Allow-Origin': '*'
+              },
               bucket: this.bucketName,
               directory: dirname,
-              action: 'deleteFolder'
+              action: 'delete_folder'
             };
             this.appService.post(method.delete, options)
             // this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
@@ -391,7 +395,6 @@ export class BucketComponent implements OnInit, OnDestroy {
           }
         }
       }
-    });
   }
 
   showSnackBar(message: string, action: string | undefined) {
@@ -428,17 +431,16 @@ export class BucketComponent implements OnInit, OnDestroy {
     }
   }
 
-  folder() {
-    this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
-      if (resp) {
-        console.log(resp);
-        let directory = resp.name.replace(/\//g, '');
-        this.mkdir(directory)
-        .subscribe((res) => {
-          console.log(res)
-        })
-      }
-    });
+  async folder() {
+    let resp: any = await this.appService.promptDialog(`What is the name of the new folder?`, 'folder', {placeholder: 'Folder name'})
+    if (resp) {
+      console.log(resp);
+      let directory = resp.options.name.replace(/\//g, '');
+      this.mkdir(directory)
+      .subscribe((res) => {
+        console.log(res)
+      })
+    }
   }
 
   mkdir(directory: string) {
@@ -461,7 +463,7 @@ export class BucketComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data: any) => {
           console.log('rock', data)
-          this.showSnackBar(data, 'Rock');
+          this.showSnackBar(data.result, 'Rock');
           this.checkAll = false;
           this.result.map((res) => res.check = false);
           this.refreshUserItems();

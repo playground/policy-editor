@@ -6,6 +6,8 @@ import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
 import { Enum, Navigate, EnumClass } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { DialogComponent } from '../components/dialog/dialog.component';
 
 declare const window: any;
 const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud' : 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud'
@@ -55,11 +57,13 @@ export class IeamService {
   editorStorage: any = null;
   configJson: any = {};
   editingConfig = false;
+  dialogRef?: MatDialogRef<DialogComponent, any>;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private dialog: MatDialog
   ) {
     (window as any).ethereum.on('accountsChanged', () => {
       console.log('lock')
@@ -349,6 +353,30 @@ export class IeamService {
     //  tokenReplace(template, {movie: movie});
     return template.replace(/\$\{([^\s\:\}]+)(?:\:([^\s\:\}]+))?\}/g, function(match, key) {
       return obj[key];
+    });
+  }
+  promptDialog(title: string, type: string, options: any = {}) {
+    // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
+    return new Promise((resolve, reject) => {
+      this.openDialog({title: title, type: type, options: options}, (resp: any) => {
+        if (resp) {
+          console.log(resp);
+          resolve(resp);
+        }
+      });
+    })
+  }
+  openDialog(payload: { title: string; type: string; options: any; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
+    this.dialogRef = this.dialog.open(DialogComponent, {
+      hasBackdrop: false,
+      width: '350px',
+      height: '250px',
+      data: payload
+    });
+
+    this.dialogRef.afterClosed().subscribe((result: any) => {
+      cb(result);
+      this.dialog.closeAll();
     });
   }
 }

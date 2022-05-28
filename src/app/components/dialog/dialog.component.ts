@@ -1,12 +1,16 @@
 import { Component, OnInit, Inject, NgZone } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
+export class Option {
+  name: string;
+  placeholder: string;
+  okButton: string;
+  cancelButton: string;
+}
 export interface DialogData {
   title: string;
   type: string;
-  name: string;
-  placeholder: string;
-  path: string;
+  options: Option;
 }
 
 @Component({
@@ -33,6 +37,12 @@ export class DialogComponent implements OnInit {
   ngOnInit() {
     if (this.data.type !== 'folder') {
       this.notOK = false;
+    }
+    if(!this.data.options.okButton) {
+      this.data.options.okButton = 'OK'
+    }
+    if(!this.data.options.cancelButton) {
+      this.data.options.cancelButton = 'Cancel'
     }
   }
 

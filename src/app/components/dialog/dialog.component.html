@@ -8,15 +8,15 @@
           <mat-radio-button value="absolute">Absolute</mat-radio-button>
       </mat-radio-group> -->
       <mat-form-field>
-        <input matInput class="full-width" placeholder="{{data.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="data.name"
+        <input matInput class="full-width" placeholder="{{data.options.placeholder}}" (ngModelChange)="isOK($event)"
+        name="name" [(ngModel)]="data.options.name"
         >
       </mat-form-field>
     </div>
   </div>
 </div>
 <div mat-dialog-actions>
-  <button mat-raised-button (click)="ok()" [disabled]="notOK" cdkFocusInitial>Ok</button>
-  <button mat-raised-button (click)="onNoClick()">Cancel</button>
+  <button mat-raised-button (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
+  <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
 </div>
 </form>

@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd} from '@angular/router';
+import { filter } from 'rxjs';
 import { Enum, Organization } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
@@ -9,31 +11,46 @@ declare const window: any;
   templateUrl: './buttons.component.html',
   styleUrls: ['./buttons.component.css']
 })
-export class ButtonsComponent implements OnInit {
+export class ButtonsComponent implements OnInit, OnDestroy {
   noBucket = true;
   noneSelected = true;
   notEditor = true;
   isJsonModified = false;
   selectedOrg: string;
   orgs: Organization[];
+  routerObserver: any;
 
   constructor(
+    private router: Router,
     public ieamService: IeamService
   ) { }
 
   ngOnInit() {
+    this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
+    .subscribe((event: any) => {
+      if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
+        this.notEditor = false;
+        this.noBucket = true;
+        this.noneSelected = true;
+      } else if(this.router.routerState.snapshot.url.indexOf('/bucket') == 0) {
+        this.notEditor = true;
+        this.noBucket = false;
+        this.noneSelected = true;
+      }
+    })
+
     this.ieamService.broadcastAgent.subscribe((msg: Broadcast) => {
       switch (msg.type) {
         case Enum.NO_BUCKET:
-          this.noBucket = msg.payload;
+          // this.noBucket = msg.payload;
           break;
         case Enum.NONE_SELECTED:
           this.noneSelected = msg.payload;
           break;
         case Enum.NOT_EDITOR:
-          this.notEditor = msg.payload;
-          this.noBucket = true;
-          this.noneSelected = true;
+          // this.notEditor = msg.payload;
+          // this.noBucket = true;
+          // this.noneSelected = true;
           break;
         case Enum.JSON_MODIFIED:
           this.isJsonModified = msg.payload;
@@ -44,8 +61,15 @@ export class ButtonsComponent implements OnInit {
         case Enum.CONFIG_LOADED:
           this.populateOrgs()
           break;
-      }
+        case Enum.TRIGGER_LOAD_CONFIG:
+          this.loadConfig(msg.payload)
+          break;
+        }
     });
+  }
+
+  ngOnDestroy() {
+    this.routerObserver.unsubscribe();
   }
 
   populateOrgs() {
@@ -80,15 +104,20 @@ export class ButtonsComponent implements OnInit {
     })
   }
 
+  loadRemotePolicy() {
+    this.broadcast(Enum.REMOTE_POLICY);
+  }
+
   upload(event) {
     this.broadcast(Enum.UPLOAD, event);
   }
 
-  loadConfig() {
+  loadConfig(payload:any = {}) {
     this.ieamService.showOpenFilePicker()
     .subscribe({
       next: (fhandle) => {
-        this.broadcast(Enum.LOAD_CONFIG, fhandle);
+        payload.fhandle = fhandle;
+        this.broadcast(Enum.LOAD_CONFIG, payload);
       }
     })
   }
