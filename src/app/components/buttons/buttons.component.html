@@ -34,12 +34,13 @@
 <div mat-card-actions class="center" [hidden]="isExchange()">
   <div class="align-elements">
     <mat-form-field appearance="fill" class="device-form-field">
-      <mat-label>Org</mat-label>
-      <mat-select [(value)]="ieamService.selectedOrg" name="exchange" required>
-        <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
-          {{org.name}}
+      <mat-label>Call</mat-label>
+      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
+        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onChange($event)">
+          {{call.name}}
         </mat-option>
       </mat-select>
     </mat-form-field>
+    <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
   </div>
 </div>

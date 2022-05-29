@@ -172,20 +172,22 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   async updateEditorData(org: string) {
-    let envVars = this.ieamService.configJson[org].envVars;
-    let policy = JSON.stringify(this.data)
-    policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
-    Object.keys(envVars).forEach((key) => {
-      policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
-    })
-    if(policy.indexOf('$ARCH') >= 0) {
-      const arch:any = await this.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
-      policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
+    if(this.ieamService.configJson[org]) {
+      let envVars = this.ieamService.configJson[org].envVars;
+      let policy = JSON.stringify(this.data)
+      policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
+      Object.keys(envVars).forEach((key) => {
+        policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
+      })
+      if(policy.indexOf('$ARCH') >= 0) {
+        const arch:any = await this.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
+        policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
+      }
+      this.showData = JSON.parse(policy)
+      this.orginalJson = this.showData;
+      console.log(this.showData)
+      this.editor.getEditor().set(this.showData)
     }
-    this.showData = JSON.parse(policy)
-    this.orginalJson = this.showData;
-    console.log(this.showData)
-    this.editor.getEditor().set(this.showData)
   }
   loadFile(payload: any, type: Enum) {
     let $upload: any = {};

@@ -38,7 +38,8 @@ export class AppComponent implements OnInit {
     return location.pathname.indexOf('/bucket/') >= 0
   }
   showButtons() {
-    return location.pathname.indexOf('/bucket/') >= 0 || location.pathname.indexOf('/editor') >= 0
+    return location.pathname.match(/\/bucket\/|\/editor|\exchange/)
+    // return location.pathname.indexOf('/bucket/') >= 0 || location.pathname.indexOf('/editor') >= 0
   }
   isLoggedIn() {
     return !this.ieamService.isLoggedIn()

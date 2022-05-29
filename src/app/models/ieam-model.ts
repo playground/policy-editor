@@ -23,6 +23,7 @@ export enum Enum {
   NO_BUCKET,
   NOT_EDITOR,
   NOT_EXCHANGE,
+  EXCHANGE_CALL,
   NETWORK,
   JSON_MODIFIED
 }
@@ -56,4 +57,15 @@ export class Organization {
 export const HeaderOptions = {
   'Access-Control-Allow-Credentials': true,
   'Access-Control-Allow-Origin': '*'
+}
+
+export class Option {
+  id?: string = '';
+  name?: string = '';
+}
+
+export const Exchange = {
+  status: {name: 'Status', url: '/v1/admin/orgstatus'},
+  version: {name: 'Version', url: '/v1/admin/orgstatus'},
+  orgStatus: {name: 'Org Status', url: '/v1/admin/orgstatus'}
 }

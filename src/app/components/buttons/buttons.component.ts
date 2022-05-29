@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { filter } from 'rxjs';
-import { Enum, Organization } from 'src/app/models/ieam-model';
+import { Enum, Organization, Exchange, Option } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -19,6 +19,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   isJsonModified = false;
   orgs: Organization[] = [];
   routerObserver: any;
+  exchangeCalls: Option[] = [];
 
   constructor(
     private router: Router,
@@ -27,6 +28,10 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    Object.keys(Exchange).forEach((key) => {
+      this.exchangeCalls.push({name: Exchange[key].name, id: key})
+    })
+
     this.route.data.subscribe((data) => {
       if('/editor' == this.router.routerState.snapshot.url) {
         this.populateOrgs()
@@ -150,11 +155,23 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     return !this.isJsonModified || this.ieamService.editingConfig
   }
 
+  shouldNotRun() {
+    return this.ieamService.selectedCall.length == 0
+  }
+
   onChange(evt: any) {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedOrg = evt.source.value
       this.broadcast(Enum.ORG_SELECTED, this.ieamService.selectedOrg);
+    }
+  }
+
+  onExchangeChange(evt: any) {
+    if(evt.isUserInput) {
+      console.log(evt.source.value)
+      this.ieamService.selectedCall = evt.source.value
+      this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
     }
   }
 
@@ -172,5 +189,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
 
   isBucket() {
     return !(location.pathname.indexOf('/bucket') == 0)
+  }
+
+  run() {
+
   }
 }

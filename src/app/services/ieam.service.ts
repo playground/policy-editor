@@ -59,6 +59,7 @@ export class IeamService {
   editingConfig = false;
   dialogRef?: MatDialogRef<DialogComponent, any>;
   selectedOrg: string = '';
+  selectedCall: string = '';
 
   constructor(
     private route: ActivatedRoute,

@@ -1,6 +1,6 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 
 @Component({
@@ -8,7 +8,7 @@ import { IeamService } from 'src/app/services/ieam.service';
   templateUrl: './exchange.component.html',
   styleUrls: ['./exchange.component.css']
 })
-export class ExchangeComponent implements OnInit, AfterViewInit {
+export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
@@ -16,14 +16,25 @@ export class ExchangeComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
+    if(!this.ieamService.signIn('/exchange')) {
+      return
+    }
+
     this.route.data.subscribe((data) => {
-      if(!this.route.snapshot.queryParamMap.get('fromMenu')) {
-        this.ieamService.broadcast({type: Enum.NOT_EXCHANGE, payload: false});
-      }
     })
 
+    this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
+      if(msg.type == Enum.EXCHANGE_CALL) {
+        this.run(msg.payload)
+      }
+    })
+  }
+  run(task: string) {
+    console.log(task, Exchange[task].url)
   }
   ngAfterViewInit() {
+  }
+  ngOnDestroy() {
   }
 
 }
