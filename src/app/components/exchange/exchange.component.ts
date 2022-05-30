@@ -23,14 +23,20 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.route.data.subscribe((data) => {
     })
 
-    this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
-      if(msg.type == Enum.EXCHANGE_CALL) {
-        this.run(msg.payload)
+    this.ieamService.broadcastAgent.subscribe({
+      next: async (msg: any) => {
+        if(msg.type == Enum.EXCHANGE_CALL) {
+          this.run(msg.payload)
+        }
       }
     })
   }
   run(task: string) {
     console.log(task, Exchange[task].url)
+    this.ieamService.getCall(Exchange[task].url)
+    .subscribe((res) => {
+      console.log(res)
+    })
   }
   ngAfterViewInit() {
   }

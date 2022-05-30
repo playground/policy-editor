@@ -36,7 +36,7 @@
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Call</mat-label>
       <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
-        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onChange($event)">
+        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
           {{call.name}}
         </mat-option>
       </mat-select>

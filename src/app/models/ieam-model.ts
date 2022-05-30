@@ -56,8 +56,9 @@ export class Organization {
 
 export const HeaderOptions = {
   'Access-Control-Allow-Credentials': true,
-  'Access-Control-Allow-Origin': '*'
-}
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': '*'
+} as const;
 
 export class Option {
   id?: string = '';
@@ -65,7 +66,7 @@ export class Option {
 }
 
 export const Exchange = {
-  status: {name: 'Status', url: '/v1/admin/orgstatus'},
-  version: {name: 'Version', url: '/v1/admin/orgstatus'},
-  orgStatus: {name: 'Org Status', url: '/v1/admin/orgstatus'}
-}
+  status: {name: 'Status', url: 'admin/status'},
+  version: {name: 'Version', url: 'admin/version'},
+  orgStatus: {name: 'Org Status', url: 'admin/orgstatus'}
+} as const;

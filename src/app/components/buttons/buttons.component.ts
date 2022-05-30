@@ -156,7 +156,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    return this.ieamService.selectedCall.length == 0
+    return this.ieamService.selectedCall.length == 0 || Object.keys(this.ieamService.configJson).length == 0
   }
 
   onChange(evt: any) {
@@ -171,7 +171,6 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value
-      this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
     }
   }
 
@@ -192,6 +191,6 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   run() {
-
+    this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
   }
 }

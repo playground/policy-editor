@@ -181,7 +181,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       if(policy.indexOf('$ARCH') >= 0) {
         const arch:any = await this.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
-        policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.name)
+        policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
       }
       this.showData = JSON.parse(policy)
       this.orginalJson = this.showData;

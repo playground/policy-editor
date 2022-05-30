@@ -1,10 +1,10 @@
 import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
@@ -43,7 +43,7 @@ export interface Broadcast {
 @Injectable({
   providedIn: 'root'
 })
-export class IeamService {
+export class IeamService implements HttpInterceptor {
   @Output() broadcastAgent = new EventEmitter<Broadcast>();
   selectedRow!: { directory: any; type?: any; } | null;
   fileType!: EnumClass;
@@ -52,7 +52,7 @@ export class IeamService {
   loggedIn: boolean = false;
   welcome: string = ''
   loginSession: any;
-  sessionExpiry = 1800000;
+  sessionExpiry = 3600000;
   urlExpiry = 600;
   editorStorage: any = null;
   configJson: any = {};
@@ -75,15 +75,23 @@ export class IeamService {
     this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
     this.signIn()
   }
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    req = req.clone({
+      setHeaders: {
+
+      }
+    })
+
+    throw new Error('Method not implemented.');
+  }
 
   broadcast(data: any) {
     this.broadcastAgent.emit(data);
   }
 
-  get(url: string) {
-    return this.http.get<Params>(url);
+  get(url: string, options: any = {}) {
+    return this.http.get<Params>(url, options);
   }
-
   post(url: string, body: any, options = {}) {
     options = {headers: {
       'Access-Control-Allow-Credentials': true,
@@ -116,14 +124,14 @@ export class IeamService {
       .catch(error => console.log('error', error));
     })
   }
-  fetchCors(url: string) {
+  fetchCors(url: string, headers: any) {
     return new Observable((observer: any) => {
       let myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
 
       let requestOptions = {
         method: 'GET',
-        headers: myHeaders,
+        headers: headers,
         redirect: 'follow'
       };
       // @ts-ignore
@@ -186,9 +194,11 @@ export class IeamService {
     this.get(method.session)
     .subscribe({
       next: (sessionId: any) => {
+        console.log('connecting to metammask')
         this.connectMetamask()
         .subscribe({
           next: (addr: any) => {
+            console.log('sign metammask')
             this.signMetamask(sessionId, addr)
             .subscribe({
               next: (res: any) => {
@@ -218,9 +228,10 @@ export class IeamService {
         observer.next(addr)
         observer.complete()
       }, (err: any) => {
+        console.log('connect metamask:', err)
         observer.error(err.message)
       }).catch((err: any) => {
-        console.log(err)
+        console.log('connect metamask:', err)
       })
     })
   }
@@ -314,13 +325,13 @@ export class IeamService {
   isObject(value: any) {
     return !!(value && typeof value === "object" && !Array.isArray(value));
   }
-  getObjectByValue(object: any, value: string) {
+  getObjectByValue(object: any, value: string): any {
     if(this.isObject(object)) {
       const entries = Object.entries(object);
       for(let i=0; i<entries.length; i++) {
         const [objKey, objValue] = entries[i];
         if(typeof objValue == 'string' && objValue.indexOf(value) >= 0) {
-          let obj = {}
+          let obj: any = {}
           return obj[objKey] = object;
         }
         if(this.isObject(objValue)) {
@@ -384,5 +395,20 @@ export class IeamService {
       cb(result);
       this.dialog.closeAll();
     });
+  }
+  getCall(endpoint: string) {
+    const credential = this.configJson[this.selectedOrg]['credential']
+    const b64 = btoa(`${this.selectedOrg}:${credential['HZN_EXCHANGE_USER_AUTH']}`)
+    const url = credential['HZN_EXCHANGE_URL']
+    let headerOptions: any = {};
+    Object.keys(HeaderOptions).forEach((key) => {
+      headerOptions[key] = HeaderOptions[key]
+    })
+    headerOptions['Authorization'] = `Basic ${b64}`;
+    let header = new HttpHeaders ()
+    header = header.append('Authorization', `Basic ${b64}`)
+    header = header.append('Access-Control-Allow-Credentials', 'true')
+    header = header.append('Access-Control-Allow-Origin', '*')
+    return this.get(`${url}/${endpoint}`, {headers: header})
   }
 }
