@@ -31,6 +31,7 @@ const fileUpload = require("express-fileupload");
 const path = require("path");
 const fs_1 = require("fs");
 const cors = require("cors");
+const cos_client_1 = require("@common/cos-client");
 const utility_1 = require("./utility");
 const express = require("express");
 const stream_1 = require("stream");
@@ -56,6 +57,7 @@ pEnv.region = _env_local_json_1.default[env]['region'];
 let cosClient;
 class Server {
     constructor() {
+        this.cosClient = new cos_client_1.CosClient(pEnv);
         this.app = express();
         this.apiUrl = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/96fd655207897b11587cfcf2b3f58f6e0792f788cf2a04daa79b53fc3d4efb32/liquidprep-cf-api';
         this.initialise();
@@ -67,7 +69,7 @@ class Server {
         }));
         app.use(fileUpload());
         app.use('/static', express.static('public'));
-        app.use('/', express.static('dist/liquid-prep-app'));
+        app.use('/', express.static('dist/policy-editor'));
         app.get('/', (req, res, next) => {
             res.sendFile(path.resolve(__dirname, "index.html"));
             // next();
@@ -198,7 +200,7 @@ class Server {
             const sessionId = utility_1.util.encryptAES();
             const seed = utility_1.util.decryptAES(sessionId);
             console.log(sessionId, seed);
-            res.send(sessionId);
+            res.send({ sessionId: sessionId });
         });
         app.get('/signature', (req, res, next) => {
             let params = req.query;
@@ -211,6 +213,9 @@ class Server {
         app.get('/validate_session', (req, res) => {
             let params = req.query;
             res.send({ valid: utility_1.util.validateSession(params.sessionId) });
+        });
+        app.get("*", (req, res) => {
+            res.redirect(301, '/');
         });
         app.listen(3000, () => {
             console.log('Started on 3000');

@@ -10,15 +10,15 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
 declare const window: any;
-const backendUrl = isDevMode() ? 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud' : 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud'
+let backendUrl = '';
 
 export const method = {
-  list: `${backendUrl}?action=list`,
+  list: `${backendUrl}/list`,
   mkdir: `${backendUrl}`,
   upload: `${backendUrl}/upload`,
-  session: `${backendUrl}?action=session`,
-  sigUrl: `${backendUrl}?action=get_signed_url`,
-  signature: `${backendUrl}?action=signature`,
+  session: `${backendUrl}/session`,
+  sigUrl: `${backendUrl}/get_signed_url`,
+  signature: `${backendUrl}/signature`,
   delete: `${backendUrl}/delete`,
   post: 'post'
 };
@@ -67,6 +67,8 @@ export class IeamService implements HttpInterceptor {
     private http: HttpClient,
     private dialog: MatDialog
   ) {
+    backendUrl = isDevMode() ? '' : '';
+
     (window as any).ethereum.on('accountsChanged', () => {
       console.log('lock')
       this.loggedIn = false;
@@ -193,12 +195,13 @@ export class IeamService implements HttpInterceptor {
   logIn() {
     this.get(method.session)
     .subscribe({
-      next: (sessionId: any) => {
+      next: (body: any) => {
         console.log('connecting to metammask')
         this.connectMetamask()
         .subscribe({
           next: (addr: any) => {
             console.log('sign metammask')
+            let sessionId = body.sessionId;
             this.signMetamask(sessionId, addr)
             .subscribe({
               next: (res: any) => {
@@ -242,7 +245,7 @@ export class IeamService implements HttpInterceptor {
           method: "personal_sign",
           params: [`My session ID: ${sessionId}`, addr, ""]
         })
-        const sigUrl = `&sig=${encodeURIComponent(walletResp)}&addr=${encodeURIComponent(addr)}&sessionId=${encodeURIComponent(sessionId)}`
+        const sigUrl = `?sig=${encodeURIComponent(walletResp)}&addr=${encodeURIComponent(addr)}&sessionId=${encodeURIComponent(sessionId)}`
         this.get(`${method.signature}${sigUrl}`)
         .subscribe({
           next: (res: any) => {

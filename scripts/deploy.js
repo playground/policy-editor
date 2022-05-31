@@ -13,8 +13,8 @@ let build = {
       let arg = `ng build --output-hashing=none --configuration production`;
       let child = exec(arg, {maxBuffer: 1024 * 2000}, (err, stdout, stderr) => {
         if(!err) {
-          console.log(`done building policy-editor`);
-          arg = `cp -rf dist ../policy-editor-express`
+          console.log(`done building policy-editor`, process.cwd(), __dirname);
+          arg = `cp -rf dist policy-editor-express`
           exec(arg, {maxBuffer: 1024 * 2000}, (err, stdout, stderr) => {
             if(!err) {
               console.log(`done deploying policy-editor`);

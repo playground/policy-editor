@@ -35,6 +35,7 @@ pEnv.region = cosAccess[env]['region'];
 let cosClient: CosClient;
 
 export class Server {
+  cosClient = new CosClient(pEnv as unknown as Params);
   app = express();
   apiUrl = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/96fd655207897b11587cfcf2b3f58f6e0792f788cf2a04daa79b53fc3d4efb32/liquidprep-cf-api'
   constructor() {
@@ -50,7 +51,7 @@ export class Server {
 
     app.use('/static', express.static('public'));
 
-    app.use('/', express.static('dist/liquid-prep-app'))
+    app.use('/', express.static('dist/policy-editor'))
 
     app.get('/', (req: express.Request, res: express.Response, next) => { //here just add next parameter
       res.sendFile(
@@ -182,7 +183,7 @@ export class Server {
       const sessionId = util.encryptAES()
       const seed = util.decryptAES(sessionId)
       console.log(sessionId, seed)
-      res.send(sessionId);
+      res.send({sessionId: sessionId});
     })
     app.get('/signature', (req: express.Request, res: express.Response, next) => {
       let params = req.query as unknown as Params;
@@ -195,6 +196,9 @@ export class Server {
     app.get('/validate_session', (req: express.Request, res: express.Response) => {
       let params = req.query as unknown as Params;
       res.send({valid: util.validateSession(params.sessionId)})
+    })
+    app.get("*",  (req, res) => {
+      res.redirect(301, '/')
     })
     app.listen(3000, () => {
       console.log('Started on 3000');

@@ -6,7 +6,7 @@ const find = (name) => {
         .then(function (list) {
         if (!list.find(exist)) {
             clearInterval(timer);
-            let child = exec('node index.js', { maxBuffer: 1024 * 2000 }, (err, stdout, stderr) => {
+            let child = exec('node dist/policy-editor-express/src/index.js', { maxBuffer: 1024 * 2000 }, (err, stdout, stderr) => {
                 console.log('restarting node server.js');
                 console.log('there are %s node process(es)', list.length);
                 sleep(5000).then(() => {
@@ -21,7 +21,7 @@ const find = (name) => {
     });
 };
 const exist = (instance) => {
-    return instance.cmd === 'node index.js';
+    return instance.cmd === 'node dist/policy-editor-express/src/index.js';
 };
 const setCheckInterval = (ms) => {
     timer = setInterval(() => {

@@ -19,10 +19,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!this.ieamService.signIn('/exchange')) {
       return
     }
-
     this.route.data.subscribe((data) => {
     })
-
     this.ieamService.broadcastAgent.subscribe({
       next: async (msg: any) => {
         if(msg.type == Enum.EXCHANGE_CALL) {
@@ -42,5 +40,4 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   ngOnDestroy() {
   }
-
 }

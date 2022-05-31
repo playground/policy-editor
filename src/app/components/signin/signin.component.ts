@@ -20,7 +20,7 @@ export class SigninComponent implements OnInit {
       if(data.type == Enum.LOGGED_IN) {
 
       } else if(data.type == Enum.LOGGED_OUT) {
-        
+
       }
     })
   }

@@ -27,7 +27,7 @@ export class CosClient {
   ls(bucket: string, directory: string, delimiter = null)  {
     return new Observable((observer: any) => {
       let data;
-      let config: any = { 
+      let config: any = {
         Bucket: bucket,
         MaxKeys: 1000,
         Prefix: directory
@@ -46,7 +46,7 @@ export class CosClient {
           observer.complete();
         }
       });
-    });  
+    });
   }
   listAll(params: Params, token, keys) {
     return new Observable((observer) => {
@@ -63,18 +63,18 @@ export class CosClient {
           // console.log('$$$data',  data, err);
           if(data) {
             keys = keys.concat(data.Contents);
-            
+
             if (data.IsTruncated) {
               list(params, data.NextContinuationToken, keys);
             } else {
               observer.next(keys);
               observer.complete();
-            }  
+            }
           } else {
             observer.next(keys);
             observer.complete();
-          }  
-        });    
+          }
+        });
       };
       list(params, token, keys);
     });
@@ -86,26 +86,26 @@ export class CosClient {
       const bucket = params.bucket;
       const acl = params.acl ? params.acl : 'private';
       this.client.putObject(
-        { 
-          Bucket: bucket, 
+        {
+          Bucket: bucket,
           ACL: acl,
           Key: directory,
-          Body: 'content does not matter' 
+          Body: 'content does not matter'
         }, (err, data) => {
-          if (err) { 
+          if (err) {
             console.error(`mkdir failed: ` + err);
             observer.next({result: `unable to mkidr: ${directory}`});
             observer.complete();
-          } else { 
+          } else {
             observer.next({result: `${directory} was created successfully.`});
             observer.complete();
-          }  
+          }
       });
     });
   }
   copyFiles(params: Params) {
     return new Observable((observer) => {
-      const files = Array.isArray(params.filename) ? params.filename : [params.filename]; 
+      const files = Array.isArray(params.filename) ? params.filename : [params.filename];
       let $files = [];
       let config = {
         Bucket: params.bucket,
@@ -128,7 +128,7 @@ export class CosClient {
         observer.next({result: `${files.length} file(s) copied successfully, ${config.CopySource}, ${config.Key}, ${config.Bucket}`});
         observer.complete();
       });
-    }); 
+    });
   }
   deleteDir(params: Params) {
     return new Observable((observer) => {
@@ -140,7 +140,7 @@ export class CosClient {
         let config = <Params>{
           key: dir,
           bucket: params.bucket
-        }  
+        }
         $dir[idx] = this.listAll(config, null, []);
       });
       forkJoin($dir)
@@ -164,7 +164,7 @@ export class CosClient {
   delete(params: Params) {
     return new Observable((observer) => {
       // console.log('$$$$$$file', params.filename)
-      const files = params.filename instanceof Array ? params.filename : [params.filename]; 
+      const files = params.filename instanceof Array ? params.filename : [params.filename];
       let $files: any = {};
       let config = {
         Bucket: params.bucket,
@@ -179,7 +179,7 @@ export class CosClient {
         observer.next({result: `${files.length} file(s) deleted successfully`});
         observer.complete();
       });
-    }); 
+    });
   }
   upload(params: Params) {
     return new Observable((observer) => {
@@ -216,7 +216,7 @@ export class CosClient {
           observer.complete();
         }
       });
-    });  
+    });
   }
   downloadFile(params: Params) {
     return new Observable((observer) => {
@@ -241,7 +241,7 @@ export class CosClient {
           }
         }
       });
-    });  
+    });
   }
   download(params: Params) {
     return new Observable((observer) => {
@@ -262,7 +262,7 @@ export class CosClient {
         observer.next({result: `unable to download: ${f}`});
         observer.complete();
       }
-    });  
+    });
   }
   uploadBuffer(params: Params) {
     return new Observable((observer) => {
@@ -303,7 +303,7 @@ export class CosClient {
   setFileAcl(params: Params) {
     // console.log(params.filename, params.bucket, params.acl)
     return new Observable((observer) => {
-      const files = params['__ow_method'] === 'post' ? params.filename : [params.filename]; 
+      const files = params['__ow_method'] === 'post' ? params.filename : [params.filename];
       let $files = [];
       let config = {
         Bucket: params.bucket,
@@ -320,7 +320,7 @@ export class CosClient {
         observer.next({result: `${files.length} file(s) set to ${params.acl}`});
         observer.complete();
       });
-    }); 
+    });
   }
   getSignedUrl(params: Params) {
     return new Observable((observer) => {
@@ -337,7 +337,7 @@ export class CosClient {
           error: (err) => observer.error(err),
           complete: () => {
             observer.next({url: url});
-            observer.complete();  
+            observer.complete();
           }
         })
       } catch (err) {
@@ -369,7 +369,7 @@ export class CosClient {
   putBucketCors(params: Params) {
     let config = {
       Bucket: params.bucket,
-      CORSConfiguration: { 
+      CORSConfiguration: {
         CORSRules: [{
           AllowedHeaders: ["*"],
           AllowedMethods: [
@@ -391,7 +391,7 @@ export class CosClient {
             observer.complete();
           } else {
             observer.next({res: res});
-            observer.complete();  
+            observer.complete();
           }
         })
       } catch (err) {

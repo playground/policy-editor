@@ -68,10 +68,10 @@ export class BucketComponent implements OnInit, OnDestroy {
         if (this.bucketApi && this.bucketName) {
           if(this.bucketName === 'ieam-labs') {
             directory = this.getUserDirectory();
-            this.listUserDirectory(directory, '&delimiter=/');
+            this.listUserDirectory(directory, 'delimiter=/');
           } else {
             directory = this.getCurrentDirectory();
-            this.listAssets('&delimiter=/', directory);
+            this.listAssets('delimiter=/', directory);
           }
         } else {
           // this.router.navigateByUrl('');
@@ -153,7 +153,7 @@ export class BucketComponent implements OnInit, OnDestroy {
 
   listUserDirectory(directory: string, delimiter = '', count = 0) {
     let userDirectory = directory.replace('&directory=', '');
-    this.appService.get(`${method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.appService.get(`${method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       if(data.directories && data.directories.length == 0 && data.files && data.files.length == 0) {
         if(count == 0) {
@@ -200,7 +200,7 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   listAssets(delimiter = '', directory = '') {
-    this.appService.get(`${method.list}${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.appService.get(`${method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       this.result = [];
       Object.keys(data).map((key) => {
@@ -296,11 +296,11 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   refreshUserItems() {
-    this.listAssets('&delimiter=/', this.getUserDirectory());
+    this.listAssets('delimiter=/', this.getUserDirectory());
   }
 
   refreshItems() {
-    this.listAssets('&delimiter=/', this.getCurrentDirectory());
+    this.listAssets('delimiter=/', this.getCurrentDirectory());
   }
 
   openDialog(payload: { title: string; type: string; placeholder?: string; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
