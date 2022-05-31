@@ -10,39 +10,37 @@ import express = require('express');
 import { Stream } from 'stream';
 import * as readline from 'readline';
 import * as https from 'https';
-import cosAccess from './.env-local.json';
+import EnvJson from './.env-local.json';
 import * as dotenv from 'dotenv';
 
-if(existsSync('./.env-local')) {
-  const localEnv = dotenv.parse(readFileSync('./.env-local'));
-  for(var i in localEnv) {
-    process.env[i] = localEnv[i];
-  }
-}
+declare const process: any;
 
 // set env vars
 const env = process.env.npm_config_env || 'prod';
 
-let pEnv = process.env;
-pEnv.accessKeyId = cosAccess[env]['access_key_id'];
-pEnv.secretAccessKey = cosAccess[env]['secret_access_key'];
-pEnv.serviceInstanceId = cosAccess[env]['resource_instance_id'];
-pEnv.bucket = cosAccess[env]['bucket'];
-pEnv.ibmAuthEndpoint = cosAccess[env]['ibmAuthEndpoint'];
-pEnv.endpoint = cosAccess[env]['endpoint'];
-pEnv.region = cosAccess[env]['region'];
-
-let cosClient: CosClient;
-
 export class Server {
-  cosClient = new CosClient(pEnv as unknown as Params);
+  params: Params = <Params>{};
+  localJson = EnvJson as any;
+  cosClient: CosClient;
   app = express();
   apiUrl = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/96fd655207897b11587cfcf2b3f58f6e0792f788cf2a04daa79b53fc3d4efb32/liquidprep-cf-api'
   constructor() {
     this.initialise()
   }
 
+  getParams(params: Params) {
+    return Object.assign(this.params, params)
+  }
   initialise() {
+    this.params.accessKeyId = this.localJson[env]['access_key_id'];
+    this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
+    this.params.serviceInstanceId = this.localJson[env]['resource_instance_id'];
+    this.params.bucket = this.localJson[env]['bucket'];
+    this.params.ibmAuthEndpoint = this.localJson[env]['ibmAuthEndpoint'];
+    this.params.endpoint = this.localJson[env]['endpoint'];
+    this.params.region = this.localJson[env]['region'];
+    this.cosClient = new CosClient(this.params)
+
     let app = this.app;
     app.use(cors({
       origin: '*'
@@ -64,7 +62,7 @@ export class Server {
       res.json(["Jeff"]);
     });
     app.get('/get_signed_url', (req: express.Request, res: express.Response, next) => {
-      cosClient.getSignedUrl(req.query as unknown as Params)
+      this.cosClient.getSignedUrl(this.getParams(req.query as unknown as Params))
       .subscribe({
         next: (data: any) => res.send(data),
         error: (err: any) => next(err)
@@ -72,12 +70,12 @@ export class Server {
     });
     app.get('/list', (req: express.Request, res: express.Response) => {
       let result: any;
-      let params = req.query as unknown as Params;
-      console.log('bucket: ', params.bucket)
-      cosClient.ls(params.bucket, params.directory ? params.directory : '', params.delimiter ? params.delimiter : null)
+      let params = this.getParams(req.query as unknown as Params);
+      console.log('bucket: ', params.bucket, params.accessKeyId, params.ibmAuthEndpoint, params.directory, params.delimiter)
+      this.cosClient.ls(params.bucket, params.directory ? params.directory : '', params.delimiter ? params.delimiter : null)
       .subscribe({
         next: (data: any) => {
-          const directories = result.CommonPrefixes.map((p: any) => {
+          const directories = data.CommonPrefixes.map((p: any) => {
             return p.Prefix;
           });
           const files = data.Contents.map((f: any) => {
@@ -89,32 +87,32 @@ export class Server {
       })
     });
     app.get('/mkdir', (req: express.Request, res: express.Response, next) => {
-      let params = req.query as unknown as Params;
-      cosClient.mkdir(params)
+      let params = this.getParams(req.query as unknown as Params);
+      this.cosClient.mkdir(params)
       .subscribe({
         next: (data: any) => res.send(data),
         error: (err: any) => next(err)
       })
     })
     app.get('/delete', (req: express.Request, res: express.Response, next) => {
-      let params = req.query as unknown as Params;
-      cosClient.delete(params)
+      let params = this.getParams(req.query as unknown as Params);
+      this.cosClient.delete(params)
       .subscribe({
         next: (data: any) => res.send(data),
         error: (err: any) => next(err)
       })
     })
     app.get('/delete_folder', (req: express.Request, res: express.Response, next) => {
-      let params = req.query as unknown as Params;
+      let params = this.getParams(req.query as unknown as Params);
       console.log('$$$delete_folder')
-      cosClient.deleteDir(params)
+      this.cosClient.deleteDir(params)
       .subscribe({
         next: (data: any) => res.send(data),
         error: (err: any) => next(err)
       })
     })
     app.get('/upload', (req: express.Request, res: express.Response, next) => {
-      let params = req.query as unknown as Params;
+      let params = this.getParams(req.query as unknown as Params);
       // console.log('$$$stream')
       const stream = new Stream.PassThrough();
       // console.log('$$$stream through')
@@ -168,7 +166,7 @@ export class Server {
           params.body = Buffer.from(matches[2], 'base64');
           params.contentType = matches[1];
 
-          cosClient.upload(params)
+          this.cosClient.upload(params)
           .subscribe({
             next: (data: any) => res.send(data),
             error: (err: any) => next(err)
@@ -179,14 +177,14 @@ export class Server {
       })
     })
     app.get('/session', (req: express.Request, res: express.Response) => {
-      let params = req.query as unknown as Params;
+      let params = this.getParams(req.query as unknown as Params);
       const sessionId = util.encryptAES()
       const seed = util.decryptAES(sessionId)
       console.log(sessionId, seed)
       res.send({sessionId: sessionId});
     })
     app.get('/signature', (req: express.Request, res: express.Response, next) => {
-      let params = req.query as unknown as Params;
+      let params = this.getParams(req.query as unknown as Params);
       util.signature(params)
       .subscribe({
         next: (data: any) => res.send(data),
@@ -194,7 +192,7 @@ export class Server {
       })
     })
     app.get('/validate_session', (req: express.Request, res: express.Response) => {
-      let params = req.query as unknown as Params;
+      let params = this.getParams(req.query as unknown as Params);
       res.send({valid: util.validateSession(params.sessionId)})
     })
     app.get("*",  (req, res) => {

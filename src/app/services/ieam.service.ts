@@ -174,7 +174,7 @@ export class IeamService implements HttpInterceptor {
   }
 
   getSignedUrl(filename: string, bucket: string, expires = this.urlExpiry) {
-    let url = `${method.sigUrl}&filename=${filename}&expires=${expires}&bucket=${bucket}`;
+    let url = `${method.sigUrl}?filename=${filename}&expires=${expires}&bucket=${bucket}`;
     return this.get(url)
     // 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/?action=get_signed_url&filename=20160414_112151.jpg&expires=60&bucket=ieam-labs'
   }
