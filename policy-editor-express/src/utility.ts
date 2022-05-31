@@ -1,6 +1,6 @@
 import { Observable, of, forkJoin } from 'rxjs';
 import { existsSync, accessSync, chmod, constants, renameSync, copyFileSync, unlinkSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from 'fs';
-import { Params } from '@common/params/params';
+import { Params } from './params';
 import { https, http } from 'follow-redirects';
 // import * as http from 'http';
 import * as os from 'os';
