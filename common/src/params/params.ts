@@ -1,5 +1,3 @@
-import { Expression } from "ibm-cos-sdk/clients/s3";
-
 export interface Params {
   message: string;
   method: string;
