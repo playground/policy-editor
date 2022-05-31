@@ -13,14 +13,10 @@
       "outDir": "dist",
       "baseUrl": ".",
       "paths": {
-        "@common/*": [
-          "../common/src/*"
-        ]
       },
       "types": ["node"]
   },
   "include": [
-      "src/**/*.ts",
-      "../common/src/**/*.ts"
+      "src/**/*.ts"
   ]
 }
