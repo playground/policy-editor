@@ -103,7 +103,7 @@ h2 {
 
 }
 
-.main-button span {
+:host ::ng-deep.main-button span {
   font-weight: bold;
 }
 

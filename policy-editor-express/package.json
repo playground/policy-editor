@@ -33,6 +33,7 @@
     "express": "^4.17.2",
     "express-fileupload": "^1.2.1",
     "find-process": "^1.4.7",
+    "follow-redirects": "^1.15.1",
     "ibm-cos-sdk": "^1.11.0",
     "jsonfile": "^6.1.0",
     "rxjs": "^7.5.2"

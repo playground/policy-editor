@@ -58,4 +58,10 @@ export class AppComponent implements OnInit {
   navigate(to: string) {
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: to})
   }
+  login(evt: any) {
+    if(this.loginText() === 'Logout') {
+      this.ieamService.logOut()
+    }
+    this.navigate(Navigate.signin)
+  }
 }

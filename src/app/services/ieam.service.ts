@@ -69,13 +69,22 @@ export class IeamService implements HttpInterceptor {
   ) {
     backendUrl = isDevMode() ? '' : '';
 
+    this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
+
+    if(this.isMetaMaskInstalled()) {
+      this.listenEthereum()
+    } else {
+      console.log('install metamask')
+      this.broadcast({type: Enum.INSTALL_METAMASK, payload: {}})
+    }
+    this.signIn()
+  }
+  listenEthereum() {
     (window as any).ethereum.on('accountsChanged', () => {
       console.log('lock')
       this.loggedIn = false;
       this.broadcast({type: Enum.LOGGED_OUT})
     })
-    this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
-    this.signIn()
   }
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     req = req.clone({
@@ -190,7 +199,13 @@ export class IeamService implements HttpInterceptor {
   }
   logOut() {
     this.removeSession('loggedIn')
+    this.loggedIn = false;
     // TODO, should logout of Metamask too?
+  }
+  isMetaMaskInstalled() {
+    console.log('etherum')
+    const { ethereum } = window;
+    return Boolean(ethereum && ethereum.isMetaMask);
   }
   logIn() {
     this.get(method.session)

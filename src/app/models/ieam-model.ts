@@ -25,7 +25,8 @@ export enum Enum {
   NOT_EXCHANGE,
   EXCHANGE_CALL,
   NETWORK,
-  JSON_MODIFIED
+  JSON_MODIFIED,
+  INSTALL_METAMASK
 }
 export const Navigate = {
   home: 'home',
