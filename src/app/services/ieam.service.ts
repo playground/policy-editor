@@ -60,6 +60,8 @@ export class IeamService implements HttpInterceptor {
   dialogRef?: MatDialogRef<DialogComponent, any>;
   selectedOrg: string = '';
   selectedCall: string = '';
+  currentFilename = '';
+  configFilename = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -340,6 +342,18 @@ export class IeamService implements HttpInterceptor {
       })()
     })
   }
+  saveFile(filename: string, content: string) {
+    var element = window.document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    window.document.body.appendChild(element);
+
+    element.click();
+
+    window.document.body.removeChild(element);
+  }
   isObject(value: any) {
     return !!(value && typeof value === "object" && !Array.isArray(value));
   }
@@ -413,6 +427,9 @@ export class IeamService implements HttpInterceptor {
       cb(result);
       this.dialog.closeAll();
     });
+  }
+  getCurrentFilename() {
+    return this.editingConfig ? this.configFilename : this.currentFilename;
   }
   getCall(endpoint: string) {
     const credential = this.configJson[this.selectedOrg]['credential']

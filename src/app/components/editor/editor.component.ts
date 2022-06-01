@@ -201,6 +201,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     .subscribe((res: any) => {
       Object.keys(res).forEach((key: any, idx: number) => {
         if(type == Enum.LOAD_CONFIG) {
+          this.ieamService.configFilename = key
           this.ieamService.configJson = JSON.parse(res[key]);
           if(payload.toEditor) {
             // go to editor with existing policy
@@ -210,9 +211,11 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           }
           this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
         } else if(type == Enum.LOAD_POLICY) {
+          this.ieamService.currentFilename = key
           this.ieamService.editorStorage = {json: JSON.parse(res[key]), filename: key};
           this.showData = this.data = this.ieamService.editorStorage.json;
         }
+        this.orginalJson = this.showData;
       });
     })
   }
@@ -270,7 +273,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
   save() {
-
+    this.ieamService.saveFile(this.ieamService.getCurrentFilename(), JSON.stringify(this.editor.get()))
   }
   changeLog(event = null) {
     console.log(event);
@@ -296,7 +299,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   isModified() {
-    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) && this.ieamService.selectedOrg.length > 0;
+    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) //&& this.ieamService.selectedOrg.length > 0;
     this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: modified});
     return modified;
   }

@@ -13,6 +13,7 @@
     </div>
   </div>
   <app-breadcrumb *ngIf="isBucket()"></app-breadcrumb>
+  <div *ngIf="isEditor()" [innerHtml]="editFilename()"></div>
   <app-buttons *ngIf="showButtons()"></app-buttons>
 
 </mat-toolbar>

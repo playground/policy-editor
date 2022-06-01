@@ -152,7 +152,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldDisenable() {
-    return !this.isJsonModified || this.ieamService.editingConfig
+    return !this.isJsonModified  //|| this.ieamService.editingConfig
   }
 
   shouldNotRun() {

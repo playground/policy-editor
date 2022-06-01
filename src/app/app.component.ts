@@ -41,6 +41,12 @@ export class AppComponent implements OnInit {
     return location.pathname.match(/\/bucket\/|\/editor|\exchange/)
     // return location.pathname.indexOf('/bucket/') >= 0 || location.pathname.indexOf('/editor') >= 0
   }
+  isEditor() {
+    return location.pathname.indexOf('/editor') >= 0
+  }
+  editFilename() {
+    return this.ieamService.getCurrentFilename()
+  }
   isLoggedIn() {
     return !this.ieamService.isLoggedIn()
   }
