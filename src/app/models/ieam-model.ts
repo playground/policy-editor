@@ -65,10 +65,22 @@ export const HeaderOptions = {
 } as const;
 
 export class Option {
-  id?: string = '';
-  name?: string = '';
+  id: string = '';
+  name: string = '';
 }
 
+export interface IFile {
+  name: string;
+  modified: boolean;
+  remote: boolean;
+  content: Object;
+}
+export interface IEditorStorage {
+  type?: string;
+  files?: IFile[];
+  json: Object;
+  filename: string;
+}
 export interface IExchange {
   name: string;
   path: string;
@@ -82,4 +94,13 @@ export const Exchange = {
   adminVersion: {name: 'Admin Version', path: 'admin/version'},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
   addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'}
+} as const;
+export const Loader = {
+  service: {name: 'Service Definition', file: 'assets/templates/service.json', template: true},
+  topLevelService: {name: 'Top Level Service', file: 'assets/templates/top-level-service.json', template: true},
+  servicePolicy: {name: 'Service Policy', file: 'assets/templates/service.policy.json', template: true},
+  deploymentPolicy: {name: 'Deployment Policy', file: 'assets/templates/deployment.policy.json', template: true},
+  nodePolicy: {name: 'Node Policy', file: 'assets/templates/node.policy.json', template: true},
+  localPolicy: {name: 'Local File'},
+  remotePolicy: {name: 'Remote File'}
 } as const;

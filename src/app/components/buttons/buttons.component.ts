@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
-import { filter } from 'rxjs';
-import { Enum, Organization, Exchange, Option } from 'src/app/models/ieam-model';
+import { FormControl } from '@angular/forms';
+import { filter, Observable, map, startWith } from 'rxjs';
+import { Enum, Organization, Exchange, Option, Loader } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -19,8 +20,12 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   isJsonModified = false;
   orgs: Organization[] = [];
   routerObserver: any;
+  routeObserver: any;
+  loaders: Option[] = [];
   exchangeCalls: Option[] = [];
   psAgent!: { unsubscribe: () => void; };
+  loaderControl = new FormControl('');
+  filteredOptions: Observable<Option[]>;
 
   constructor(
     private router: Router,
@@ -28,12 +33,25 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     public ieamService: IeamService
   ) { }
 
+  private _filter(name: string): Option[] {
+    const filterValue = name.toLowerCase();
+    return this.loaders.filter(option => option.name.toLowerCase().includes(filterValue));
+  }
+
   ngOnInit() {
     Object.keys(Exchange).forEach((key) => {
       this.exchangeCalls.push({name: Exchange[key].name, id: key})
     })
+    Object.keys(Loader).forEach((key) => {
+      this.loaders.push({name: Loader[key].name, id: key})
+    })
 
-    this.route.data.subscribe((data) => {
+    this.filteredOptions = this.loaderControl.valueChanges.pipe(
+      startWith(''),
+      map(value => (typeof value === 'string' ? value : value?.id)),
+      map(name => (name ? this._filter(name) : this.loaders.slice()))
+    )
+    this.routeObserver = this.route.data.subscribe((data) => {
       if('/editor' == this.router.routerState.snapshot.url) {
         this.populateOrgs()
       }
@@ -91,6 +109,11 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       this.psAgent.unsubscribe();
     }
     this.routerObserver.unsubscribe();
+    this.routeObserver.unsubscribe();
+  }
+
+  displayFn(option: Option): string {
+    return option && option.name ? option.name : '';
   }
 
   populateOrgs() {

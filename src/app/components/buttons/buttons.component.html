@@ -15,6 +15,7 @@
 </div>
 <div mat-card-actions class="center" [hidden]="isEditor()">
   <div class="align-elements">
+    <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
       <mat-label>Org</mat-label>
       <mat-select [(value)]="ieamService.selectedOrg" name="server" required>
@@ -23,6 +24,22 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-form-field appearance="fill" class="device-form-field">
+      <mat-label>Load</mat-label>
+      <input
+        type="text"
+        matInput
+        aria-label="Load"
+        placeholder="Pick one"
+        [formControl]="loaderControl"
+        [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+          {{option.name}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadPolicy()">Local Policy</button>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>

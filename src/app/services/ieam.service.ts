@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
@@ -42,7 +42,7 @@ export class IeamService implements HttpInterceptor {
   loginSession: any;
   sessionExpiry = 3600000;
   urlExpiry = 600;
-  editorStorage: any = null;
+  editorStorage: IEditorStorage;
   configJson: any = {};
   editingConfig = false;
   dialogRef?: MatDialogRef<DialogComponent, any>;
@@ -450,7 +450,7 @@ export class IeamService implements HttpInterceptor {
     header = header.append('Authorization', `Basic ${b64}`)
     switch(exchange.method) {
       case 'GET':
-      default:  
+      default:
         return this.get(`${url}/${endpoint}`, {headers: header})
         break;
       case 'POST':

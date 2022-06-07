@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Enum, Navigate, Exchange, IExchange } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
+import prettyHtml from 'json-pretty-html';
 
 @Component({
   selector: 'app-exchange',
@@ -64,7 +65,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(typeof res == 'string') {
           html = res
         } else {
-          html = JSON.stringify(res)
+          html = prettyHtml(res)
         }
         this.content = html;
         console.log(res)
