@@ -1,0 +1,9 @@
+{
+  "label": "$SERVICE_NAME Deployment Policy",
+  "description": "A super-simple sample Horizon Deployment Policy",
+  "properties": [
+  ],
+  "constraints": [
+    "homehub == \"Home Automation\""
+  ]
+}

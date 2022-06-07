@@ -1,0 +1,49 @@
+{
+  "name": "policy-editor-express",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "rebuild": "del-cli --force dist && npm run build",
+    "build": "tsc",
+    "start": "node dist/find-node.js",
+    "npm-link-policy-editor-lib": "npm link policy-editor-lib",
+    "watch:deploy": "nodemon -e ts,js --watch 'src/**/*.ts' --watch 'dist/policy-editor/*.js' --exec 'npm run build && npm run start'",
+    "debug": "DEBUG=policy-editor npm run watch:deploy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playground/policy-editor.git"
+  },
+  "keywords": [
+    "sustainability",
+    "farming"
+  ],
+  "author": "ljeff@us.ibm.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/playground/policy-editor/issues"
+  },
+  "homepage": "https://github.com/playground/policy-editor#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "ethers": "^5.6.8",
+    "express": "^4.17.2",
+    "express-fileupload": "^1.2.1",
+    "find-process": "^1.4.7",
+    "follow-redirects": "^1.15.1",
+    "ibm-cos-sdk": "^1.11.0",
+    "jsonfile": "^6.1.0",
+    "rxjs": "^7.5.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.13",
+    "del-cli": "^4.0.1",
+    "dotenv": "^16.0.1",
+    "nodemon": "^2.0.15",
+    "typescript": "^4.5.5"
+  }
+}

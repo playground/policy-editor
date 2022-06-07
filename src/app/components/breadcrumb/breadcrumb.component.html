@@ -1,0 +1,7 @@
+<ul class="breadcrumb">
+  <li *ngFor="let breadcrumb of breadcrumbs">
+    <a routerLink="{{breadcrumb.url}}" [state]="{bucketName: bucketName, bucketApi: bucketApi}">
+      {{ breadcrumb.label }}
+    </a>
+  </li>
+</ul>

@@ -1,0 +1,54 @@
+.full-width {
+  width: 100%
+}
+
+::ng-deep div.mat-form-field-wrapper {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+::ng-deep button.mat-raised-button {
+  margin-top: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.center {
+  text-align: center;
+  float: right;
+}
+
+.mat-folder {
+  background-color: yellow;
+}
+
+.mat-jumpto {
+  background-color: rgb(0, 132, 255);
+}
+
+.mat-publish {
+  background-color: rgb(41, 8, 152);
+  color: #fff;
+}
+.mat-save {
+  background-color: rgb(10, 121, 80);
+  color: #fff;
+}
+.mat-policy {
+  background-color: rgb(44, 167, 122);
+  color: #fff;
+}
+.mat-config {
+  background-color: rgb(206, 190, 21);
+  color: #fff;
+}
+.align-elements {
+  display: flex;
+  gap: 1px;
+  height: 45px;
+}
+::ng-deep div.align-elements mat-form-field div.mat-form-field-flex {
+  height: 42px;
+  font-size: 12px;
+  margin-top: 4px;
+}

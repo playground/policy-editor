@@ -1,0 +1,73 @@
+<div mat-card-actions class="center" [hidden]="isBucket()">
+  <!-- <input hidden="true" type="file" multiple="multiple" (change)="download($event)"/> -->
+  <input #uploadInput hidden="true" type="file" multiple="multiple" (change)="upload($event)"/>
+  <button mat-raised-button *ngIf="ieamService.loggedIn" color="accent" (click)="uploadInput.click()">Upload</button>
+  <button mat-raised-button *ngIf="ieamService.loggedIn" [color]="'folder'" (click)="folder()">Folder</button>
+  <button mat-raised-button [color]="'jumpto'" (click)="jumpTo()">Filter</button>
+</div>
+<div mat-card-actions class="center" [hidden]="noneSelected">
+  <button mat-raised-button *ngIf="ieamService.loggedIn" (click)="delete()" color="warn" type="button">Delete</button>
+  <button mat-raised-button *ngIf="ieamService.loggedIn" (click)="changeAccess('public')" type="button">Public</button>
+  <button mat-raised-button *ngIf="ieamService.loggedIn" color="primary" (click)="changeAccess('private')" type="button">Private</button>
+</div>
+<div mat-card-actions class="center" [hidden]="!ieamService.offline">
+  <button mat-raised-button color="warn" type="button">Offline</button>
+</div>
+<div mat-card-actions class="center" [hidden]="isEditor()">
+  <div class="align-elements">
+    <form>
+    <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
+      <mat-label>Org</mat-label>
+      <mat-select [(value)]="ieamService.selectedOrg" name="server" required>
+        <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
+          {{org.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="device-form-field">
+      <mat-label>Load</mat-label>
+      <input
+        type="text"
+        matInput
+        aria-label="Load"
+        placeholder="Pick one"
+        [formControl]="loaderControl"
+        [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+          {{option.name}}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+  </form>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadPolicy()">Local Policy</button>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
+    <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
+    <button mat-raised-button color="publish" type="button" (click)="publish()" [disabled]="shouldDisenable()">Publish</button>
+  </div>
+</div>
+
+<div mat-card-actions class="center" [hidden]="isExchange()">
+  <div class="align-elements">
+    <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
+      <mat-label>Org</mat-label>
+      <mat-select [(value)]="ieamService.selectedOrg" name="organization" required>
+        <mat-option *ngFor="let org of orgs" [value]="org.id" (onSelectionChange)="onChange($event)">
+          {{org.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
+
+    <mat-form-field appearance="fill" class="device-form-field">
+      <mat-label>Call</mat-label>
+      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
+        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
+          {{call.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
+  </div>
+</div>
