@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 
 @Component({
@@ -10,6 +10,8 @@ import { IeamService } from 'src/app/services/ieam.service';
 })
 export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   content: string = '';
+  psAgent!: { unsubscribe: () => void; };
+
   constructor(
     private route: ActivatedRoute,
     private ieamService: IeamService
@@ -19,9 +21,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!this.ieamService.signIn('/exchange')) {
       return
     }
-    this.route.data.subscribe((data) => {
-    })
-    this.ieamService.broadcastAgent.subscribe({
+
+    this.psAgent = this.ieamService.broadcastAgent.subscribe({
       next: async (msg: any) => {
         if(msg.type == Enum.EXCHANGE_CALL) {
           this.run(msg.payload)
@@ -29,25 +30,41 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({
             complete: () => {
-              
+
             }
           })
         }
       }
     })
   }
-  run(task: string) {
-    console.log(task, Exchange[task].url)
-    this.ieamService.getCall(Exchange[task].url)
+  ngOnDestroy() {
+    if (this.psAgent) {
+      this.psAgent.unsubscribe();
+    }
+  }
+
+  async run(task: string) {
+    const exchange: IExchange = Exchange[task]
+    console.log(task, exchange.path)
+    if(exchange.prompt) {
+      const answer:any = await this.ieamService.promptDialog(exchange.title, 'folder', {placeholder: exchange.placeholder})
+      if(answer) {
+        const path = `${exchange.path}/${answer.options.name}`
+        this.callExchange(path, exchange)
+      }
+    } else {
+      this.callExchange(exchange.path, exchange)
+    }
+  }
+  callExchange(path: string, exchange: IExchange) {
+    this.ieamService.callExchange(path, exchange)
     .subscribe({
       next: (res: any) => {
         let html = ''
         if(typeof res == 'string') {
           html = res
         } else {
-          Object.keys(res).forEach((key) => {
-            html += `${key}: ${res[key]}<br>`
-          })
+          html = JSON.stringify(res)
         }
         this.content = html;
         console.log(res)
@@ -55,7 +72,5 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
   ngAfterViewInit() {
-  }
-  ngOnDestroy() {
   }
 }

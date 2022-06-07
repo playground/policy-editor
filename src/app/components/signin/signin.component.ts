@@ -8,18 +8,20 @@ import MetaMaskOnboarding from '@metamask/onboarding';
   templateUrl: './signin.component.html',
   styleUrls: ['./signin.component.css']
 })
-export class SigninComponent implements OnInit {
+export class SigninComponent implements OnInit, OnDestroy {
   @ViewChild('login', { static: false, read: ElementRef})
   loginButton: ElementRef;
   loginHtml = 'Log in with <span>MetaMask</span>';
   isWallet = () => typeof (window as any).ethereum !== 'undefined';
+  psAgent!: { unsubscribe: () => void; };
 
   constructor(
     public ieamService: IeamService,
   ) { }
 
   ngOnInit(): void {
-    this.ieamService.broadcastAgent.subscribe((data: any) => {
+    this.hasMetaMask()
+    this.psAgent = this.ieamService.broadcastAgent.subscribe((data: any) => {
       if(data.type == Enum.LOGGED_IN) {
 
       } else if(data.type == Enum.LOGGED_OUT) {
@@ -31,6 +33,11 @@ export class SigninComponent implements OnInit {
     })
   }
 
+  ngOnDestroy() {
+    if (this.psAgent) {
+      this.psAgent.unsubscribe();
+    }
+  }
   hasMetaMask() {
     if(!this.ieamService.isMetaMaskInstalled()) {
       this.loginHtml = 'Click here to install <span>MetaMask</span>';

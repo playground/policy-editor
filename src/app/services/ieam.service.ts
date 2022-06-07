@@ -4,25 +4,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass, HeaderOptions } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
 declare const window: any;
-let backendUrl = isDevMode() ? 'http://localhost:3000' : '';
-console.log(isDevMode(), backendUrl);
-
-export const method = {
-  list: `${backendUrl}/list`,
-  mkdir: `${backendUrl}`,
-  upload: `${backendUrl}/upload`,
-  session: `${backendUrl}/session`,
-  sigUrl: `${backendUrl}/get_signed_url`,
-  signature: `${backendUrl}/signature`,
-  delete: `${backendUrl}/delete`,
-  post: 'post'
-};
 
 export const pickerOptions: any = {
   types: [
@@ -64,6 +51,7 @@ export class IeamService implements HttpInterceptor {
   currentFilename = '';
   configFilename = '';
   isJsonModified = false;
+  method: any = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -71,6 +59,18 @@ export class IeamService implements HttpInterceptor {
     private http: HttpClient,
     private dialog: MatDialog
   ) {
+    const backendUrl = isDevMode() ? 'http://localhost:3000' : '';
+    this.method = {
+      list: `${backendUrl}/list`,
+      mkdir: `${backendUrl}`,
+      upload: `${backendUrl}/upload`,
+      session: `${backendUrl}/session`,
+      sigUrl: `${backendUrl}/get_signed_url`,
+      signature: `${backendUrl}/signature`,
+      delete: `${backendUrl}/delete`,
+      post: 'post'
+    };
+
     this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
 
     if(this.isMetaMaskInstalled()) {
@@ -185,7 +185,7 @@ export class IeamService implements HttpInterceptor {
   }
 
   getSignedUrl(filename: string, bucket: string, expires = this.urlExpiry) {
-    let url = `${method.sigUrl}?filename=${filename}&expires=${expires}&bucket=${bucket}`;
+    let url = `${this.method.sigUrl}?filename=${filename}&expires=${expires}&bucket=${bucket}`;
     return this.get(url)
     // 'https://ieam-action-prod.fux62nioj9a.us-south.codeengine.appdomain.cloud/?action=get_signed_url&filename=20160414_112151.jpg&expires=60&bucket=ieam-labs'
   }
@@ -193,7 +193,7 @@ export class IeamService implements HttpInterceptor {
     if(this.session) {
       return of(this.session)
     } else {
-      return this.get(method.session)
+      return this.get(this.method.session)
     }
   }
   mkdir() {
@@ -210,7 +210,7 @@ export class IeamService implements HttpInterceptor {
     return Boolean(ethereum && ethereum.isMetaMask);
   }
   logIn() {
-    this.get(method.session)
+    this.get(this.method.session)
     .subscribe({
       next: (body: any) => {
         console.log('connecting to metammask')
@@ -263,7 +263,7 @@ export class IeamService implements HttpInterceptor {
           params: [`My session ID: ${sessionId}`, addr, ""]
         })
         const sigUrl = `?sig=${encodeURIComponent(walletResp)}&addr=${encodeURIComponent(addr)}&sessionId=${encodeURIComponent(sessionId)}`
-        this.get(`${method.signature}${sigUrl}`)
+        this.get(`${this.method.signature}${sigUrl}`)
         .subscribe({
           next: (res: any) => {
             observer.next(res)
@@ -276,26 +276,6 @@ export class IeamService implements HttpInterceptor {
 
   isLoggedIn() {
     return this.loggedIn
-  }
-  isLoggedIn2() {
-    return new Observable((observer: any) => {
-      let session: any = this.getSession('loggedIn');
-      if(session) {
-        session = JSON.parse(session);
-
-        let url = `?action=validate_session&sessionId=${encodeURIComponent(session.sessionId)}`
-        this.get(`${backendUrl}${url}`)
-        .subscribe({
-          next: (res: any) => {
-            observer.next(res)
-            observer.complete()
-          }, error: (err) => observer.error(err)
-        })
-      } else {
-        observer.next({validate: false})
-        observer.complete()
-      }
-    })
   }
 
   signIn(currentRoute: string = '') {
@@ -454,7 +434,7 @@ export class IeamService implements HttpInterceptor {
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
-  getCall(endpoint: string) {
+  callExchange(endpoint: string, exchange: IExchange) {
     const credential = this.configJson[this.selectedOrg]['credential']
     const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = credential['HZN_EXCHANGE_URL']
@@ -463,8 +443,20 @@ export class IeamService implements HttpInterceptor {
       headerOptions[key] = HeaderOptions[key]
     })
     headerOptions['Authorization'] = `Basic ${b64}`;
+    if(!exchange.method) {
+      exchange.method = 'GET'
+    }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
+    switch(exchange.method) {
+      case 'GET':
+      default:  
+        return this.get(`${url}/${endpoint}`, {headers: header})
+        break;
+      case 'POST':
+        return this.http.post(`${url}/${endpoint}`, {headers: header})
+        break;
+    }
     // header = header.append('Access-Control-Allow-Credentials', 'true')
     // header = header.append('Access-Control-Allow-Origin', '*')
     // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');

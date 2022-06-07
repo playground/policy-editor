@@ -1,9 +1,9 @@
-<div *ngIf="!ieamService.isLoggedIn()" class="login-page">
+<div *ngIf="!ieamService.loggedIn" class="login-page">
   <h1>Sign In</h1>
   <h2>Get started easily with one click.</h2>
-  <button (click)="logIn()" class="main-button" #login [innerHtml]="hasMetaMask()"></button>
+  <button (click)="logIn()" class="main-button" #login [innerHtml]="loginHtml"></button>
   <h2>The simplest and quickest way to sign in with no hassle!</h2>
 </div>
-<div *ngIf="ieamService.isLoggedIn()" class="login-page" #signedIn>
+<div *ngIf="ieamService.loggedIn" class="login-page" #signedIn>
 {{ieamService.welcome}}
 </div>

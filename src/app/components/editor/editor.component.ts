@@ -195,7 +195,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
 
           if(policy.indexOf('$MMS_CONTAINER') > 0) {
-            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Architecture type'})
+            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})
             if(answer) {
               let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
               policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)

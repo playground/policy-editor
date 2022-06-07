@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { forkJoin, Observable, Subscription, zip } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { IeamService, Broadcast, method } from '../../services/ieam.service';
+import { IeamService, Broadcast } from '../../services/ieam.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
@@ -32,10 +32,11 @@ export class BucketComponent implements OnInit, OnDestroy {
   routerObserver: Subscription;
   dialogRef?: MatDialogRef<DialogComponent, any>;
   psAgent!: { unsubscribe: () => void; };
+  method;
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private appService: IeamService,
+    private ieamService: IeamService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private http: HttpClient
@@ -54,16 +55,16 @@ export class BucketComponent implements OnInit, OnDestroy {
           this.bucketName = state.bucketName;
           this.bucketApi = state.bucketApi;
         } else {
-          let session: any = this.appService.getSession('cos-dashboard');
+          let session: any = this.ieamService.getSession('cos-dashboard');
           if(session) {
             session = JSON.parse(session);
             this.bucketName = session.bucket;
             this.bucketApi = session.api;
           }
         }
-        if (this.appService.selectedRow) {
-          directory = `&directory=${this.appService.selectedRow.directory}`;
-          this.appService.selectedRow = null;
+        if (this.ieamService.selectedRow) {
+          directory = `&directory=${this.ieamService.selectedRow.directory}`;
+          this.ieamService.selectedRow = null;
         }
         if (this.bucketApi && this.bucketName) {
           if(this.bucketName === 'ieam-labs') {
@@ -83,11 +84,11 @@ export class BucketComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.noneSelected();
     this.result = [];
-    this.psAgent = this.appService.broadcastAgent.subscribe((msg: any) => {
+    this.psAgent = this.ieamService.broadcastAgent.subscribe((msg: any) => {
       console.log(msg, msg.type)
       if(msg.type == Enum.NAVIGATE) {
         this.router.navigate([`/${msg.to}`])
-      } else if(this.appService.signIn()) {
+      } else if(this.ieamService.signIn()) {
         switch (msg.type) {
           case Enum.DELETE:
             this.delete();
@@ -107,7 +108,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         }
       }
     });
-    if(!this.appService.signIn(this.currentRoute)) {
+    if(!this.ieamService.signIn(this.currentRoute)) {
       return
     }
   }
@@ -122,11 +123,11 @@ export class BucketComponent implements OnInit, OnDestroy {
 
   getUserDirectory() {
     let directory = '';
-    if(this.appService.signIn(this.currentRoute)) {
+    if(this.ieamService.signIn(this.currentRoute)) {
       const basePath = `${this.bucketBase}/${this.bucketName}`;
       directory = basePath === this.currentRoute ? '' : this.currentRoute.replace(`${basePath}/`, '');
-      if(directory.indexOf(this.appService.loginSession.addr) < 0) {
-        directory = this.appService.loginSession.addr
+      if(directory.indexOf(this.ieamService.loginSession.addr) < 0) {
+        directory = this.ieamService.loginSession.addr
       }
       if (directory.length > 0) {
         directory = `&directory=${directory}` + (directory[directory.length - 1] !== '/' ? '/' : '');
@@ -146,14 +147,14 @@ export class BucketComponent implements OnInit, OnDestroy {
 
   getBucket() {
     console.log(this.bucketName);
-    this.appService.setSession('cos-dashboard', JSON.stringify({bucket: this.bucketName, api: this.bucketApi}));
-    this.appService.navigateByUrl(`${this.bucketBase}/${this.bucketName}`,
+    this.ieamService.setSession('cos-dashboard', JSON.stringify({bucket: this.bucketName, api: this.bucketApi}));
+    this.ieamService.navigateByUrl(`${this.bucketBase}/${this.bucketName}`,
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
   }
 
   listUserDirectory(directory: string, delimiter = '', count = 0) {
     let userDirectory = directory.replace('&directory=', '');
-    this.appService.get(`${method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.ieamService.get(`${this.method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       if(data.directories && data.directories.length == 0 && data.files && data.files.length == 0) {
         if(count == 0) {
@@ -170,7 +171,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         }
       } else {
         this.currentRoute = `${this.bucketBase}/${this.bucketName}/${userDirectory}`
-        this.appService.navigateByUrl(this.currentRoute,
+        this.ieamService.navigateByUrl(this.currentRoute,
           {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
         this.showContent(data);
       }
@@ -181,44 +182,44 @@ export class BucketComponent implements OnInit, OnDestroy {
     Object.keys(data).map((key) => {
       if (key === 'files') {
         data[key].map((f: { key: string; date: any; size: any; }) => {
-          this.result.push({check: false, type: 1, name: this.appService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
+          this.result.push({check: false, type: 1, name: this.ieamService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
         });
       } else {
         data[key].map((f: string) => {
           if (f.indexOf('\/\/') < 0 && f !== '\/') {
-            this.result.push({check: false, type: 0, name: this.appService.getDirectory(f), directory: f});
+            this.result.push({check: false, type: 0, name: this.ieamService.getDirectory(f), directory: f});
           }
         });
       }
     });
     this.dataSource = this.result;
     this.noneSelected();
-    this.appService.broadcast({
+    this.ieamService.broadcast({
       type: 'setBreadcrumb',
       payload: location.pathname
     });
   }
 
   listAssets(delimiter = '', directory = '') {
-    this.appService.get(`${method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
+    this.ieamService.get(`${this.method.list}?${delimiter}${directory}&bucket=${this.bucketName}`)
     .subscribe((data: any) => {
       this.result = [];
       Object.keys(data).map((key) => {
         if (key === 'files') {
           data[key].map((f: { key: string; date: any; size: any; }) => {
-            this.result.push({check: false, type: 1, name: this.appService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
+            this.result.push({check: false, type: 1, name: this.ieamService.getFilename(f.key), date: f.date, size: this.getSize(f.size)});
           });
         } else {
           data[key].map((f: string) => {
             if (f.indexOf('\/\/') < 0 && f !== '\/') {
-              this.result.push({check: false, type: 0, name: this.appService.getDirectory(f), directory: f});
+              this.result.push({check: false, type: 0, name: this.ieamService.getDirectory(f), directory: f});
             }
           });
         }
       });
       this.dataSource = this.result;
       this.noneSelected();
-      this.appService.broadcast({
+      this.ieamService.broadcast({
         type: 'setBreadcrumb',
         payload: location.pathname
       });
@@ -234,22 +235,22 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   fetchRow(row: { type: any; directory: any; name: string}) {
-    if(row.type === this.appService.fileType.getEnum('DIRECTORY')) {
-      this.appService.selectedRow = row;
+    if(row.type === this.ieamService.fileType.getEnum('DIRECTORY')) {
+      this.ieamService.selectedRow = row;
       // this.router.navigate([`bucket/${this.bucketName}/${row.directory}`]);
-      this.appService.navigateByUrl(`${this.bucketBase}/${this.bucketName}/${row.directory}`,
+      this.ieamService.navigateByUrl(`${this.bucketBase}/${this.bucketName}/${row.directory}`,
       {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
-    } else if(row.type === this.appService.fileType.getEnum('FILE')) {
-      let file = this.appService.getFilePath(`${this.bucketBase}/${this.bucketName}/`, this.currentRoute) + row.name
-      this.appService.getSignedUrl(file, this.bucketName)
+    } else if(row.type === this.ieamService.fileType.getEnum('FILE')) {
+      let file = this.ieamService.getFilePath(`${this.bucketBase}/${this.bucketName}/`, this.currentRoute) + row.name
+      this.ieamService.getSignedUrl(file, this.bucketName)
       .subscribe((res: any) => {
         console.log(res.url)
-        this.appService.get(res.url)
+        this.ieamService.get(res.url)
         .subscribe({
           next: (res: any) => {
             console.log(res)
-            this.appService.editorStorage = {json: res, filename: file};
-            this.appService.navigateByUrl('/editor',
+            this.ieamService.editorStorage = {json: res, filename: file};
+            this.ieamService.navigateByUrl('/editor',
             {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
           }, error: (err: any) => {
             console.log(err)
@@ -260,7 +261,7 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   broadcast(type: string | Enum, payload: boolean) {
-    this.appService.broadcast({
+    this.ieamService.broadcast({
       type: type,
       payload: payload
     });
@@ -335,7 +336,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     });
     let msg = dir.length > 0 ? `${dir.length} folder(s)` : '';
     msg += file.length > 0 ? `& ${file.length} file(s)` : '';
-    let resp: any = await this.appService.promptDialog(`Deleting ${msg}.  Are you sure?`, 'delete')
+    let resp: any = await this.ieamService.promptDialog(`Deleting ${msg}.  Are you sure?`, 'delete')
       if (resp) {
         if (found.length > 0) {
           let filename: unknown[] = [];
@@ -360,7 +361,7 @@ export class BucketComponent implements OnInit, OnDestroy {
               filename: filename,
               action: 'delete'
             };
-            this.appService.post(method.delete, options)
+            this.ieamService.post(this.method.delete, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -381,8 +382,8 @@ export class BucketComponent implements OnInit, OnDestroy {
               directory: dirname,
               action: 'delete_folder'
             };
-            this.appService.post(method.delete, options)
-            // this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
+            this.ieamService.post(this.method.delete, options)
+            // this.ieamService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -418,7 +419,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         filename: filename,
         method: type === 'public' ? 'makePublic' : 'makePrivate'
       };
-      this.appService.post(`${this.gateway}${this.bucketApi}${method.post}`, options)
+      this.ieamService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
       .subscribe({
         next: (data: any) => {
           this.showSnackBar(data.result, 'Rock');
@@ -432,7 +433,7 @@ export class BucketComponent implements OnInit, OnDestroy {
   }
 
   async folder() {
-    let resp: any = await this.appService.promptDialog(`What is the name of the new folder?`, 'folder', {placeholder: 'Folder name'})
+    let resp: any = await this.ieamService.promptDialog(`What is the name of the new folder?`, 'folder', {placeholder: 'Folder name'})
     if (resp) {
       console.log(resp);
       let directory = resp.options.name.replace(/\//g, '');
@@ -459,7 +460,7 @@ export class BucketComponent implements OnInit, OnDestroy {
           'Access-Control-Allow-Origin': '*'
         }
       }
-      this.appService.post(method.mkdir, JSON.stringify(body), options)
+      this.ieamService.post(this.method.mkdir, JSON.stringify(body), options)
       .subscribe({
         next: (data: any) => {
           console.log('rock', data)
@@ -485,9 +486,9 @@ export class BucketComponent implements OnInit, OnDestroy {
         let directory = `${resp.name.replace(/\/S/, '')}`;
         this.currentRoute = directory.replace(/[^\/]+$/, '');
         let url = `${this.bucketBase}/${this.bucketName}/${directory}/`;
-        this.appService.navigateByUrl(url,
+        this.ieamService.navigateByUrl(url,
         {state: {bucketName: this.bucketName, bucketApi: this.bucketApi}});
-        this.appService.broadcast({
+        this.ieamService.broadcast({
           type: 'setBreadcrumb',
           payload: url
         });
@@ -515,7 +516,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     forkJoin($files)
     .subscribe((res: any) => {
       Object.keys(res).forEach((key: any, idx: number) => {
-        $upload[key] = this.appService.post(method.upload, res[key], options);
+        $upload[key] = this.ieamService.post(this.method.upload, res[key], options);
       });
       forkJoin($upload)
       .subscribe({

@@ -20,6 +20,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   orgs: Organization[] = [];
   routerObserver: any;
   exchangeCalls: Option[] = [];
+  psAgent!: { unsubscribe: () => void; };
 
   constructor(
     private router: Router,
@@ -55,7 +56,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       }
     })
 
-    this.ieamService.broadcastAgent.subscribe((msg: Broadcast) => {
+    this.psAgent = this.ieamService.broadcastAgent.subscribe((msg: Broadcast) => {
       switch (msg.type) {
         case Enum.NO_BUCKET:
           this.noBucket = msg.payload;
@@ -86,6 +87,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    if (this.psAgent) {
+      this.psAgent.unsubscribe();
+    }
     this.routerObserver.unsubscribe();
   }
 
@@ -207,7 +211,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    return this.ieamService.selectedCall.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+    return this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
   }
 
   onChange(evt: any) {

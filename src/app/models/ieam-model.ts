@@ -69,8 +69,17 @@ export class Option {
   name?: string = '';
 }
 
+export interface IExchange {
+  name: string;
+  path: string;
+  method: string;
+  prompt: boolean;
+  title: string;
+  placeholder: string;
+}
 export const Exchange = {
-  status: {name: 'Admin Status', url: 'admin/status'},
-  version: {name: 'Admin Version', url: 'admin/version'},
-  orgStatus: {name: 'Admin Org Status', url: 'admin/orgstatus'}
+  Admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
+  adminVersion: {name: 'Admin Version', path: 'admin/version'},
+  adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
+  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'}
 } as const;

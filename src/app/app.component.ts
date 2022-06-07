@@ -16,22 +16,32 @@ export class AppComponent implements OnInit {
   to = Navigate;
   titleText = 'IEAM'
   lock = 'lock'
+  loginStatus = ''
+  filename = ''
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private ieamService: IeamService,
+    public ieamService: IeamService,
     private observer: BreakpointObserver
   ) {}
 
   ngOnInit(): void {
+    this.setValues()
     this.ieamService.broadcastAgent.subscribe((data: any) => {
       if(data.type == Enum.NAVIGATE) {
+        this.setValues()
         this.router.navigate([`/${data.to}`], {queryParams: data.payload})
-      } else if(data.type == Enum.JSON_LOADED) {
-
+      } else if(data.type == Enum.LOGGED_IN) {
+        this.setValues()
       }
     })
+  }
+
+  setValues() {
+    this.ieamService.signIn()
+    this.editFilename()
+    this.loginText()
   }
 
   isBucket() {
@@ -45,7 +55,7 @@ export class AppComponent implements OnInit {
     return location.pathname.indexOf('/editor') >= 0
   }
   editFilename() {
-    return this.ieamService.getCurrentFilename()
+    this.filename = this.ieamService.getCurrentFilename()
   }
   isLoggedIn() {
     return !this.ieamService.isLoggedIn()
@@ -59,13 +69,13 @@ export class AppComponent implements OnInit {
     setTimeout(() => {
       this.lock = this.ieamService.isLoggedIn() ? 'lock_open' : 'lock'
     }, 0)
-    return this.ieamService.isLoggedIn() ? 'Logout' : 'Login'
+    this.loginStatus = this.ieamService.isLoggedIn() ? 'Logout' : 'Login'
   }
   navigate(to: string) {
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: to})
   }
   login(evt: any) {
-    if(this.loginText() === 'Logout') {
+    if(this.loginStatus === 'Logout') {
       this.ieamService.logOut()
     }
     this.navigate(Navigate.signin)
