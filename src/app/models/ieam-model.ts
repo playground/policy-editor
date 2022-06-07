@@ -13,12 +13,15 @@ export enum Enum {
   FOLDER,
   JUMP_TO,
   LOAD_CONFIG,
+  LOAD_EXISTING_CONFIG,
   TRIGGER_LOAD_CONFIG,
   LOAD_POLICY,
+  LOAD_EXISTING_POLICY,
   REMOTE_POLICY,
   CONFIG_LOADED,
   ORG_SELECTED,
   SAVE,
+  PUBLISH,
   NONE_SELECTED,
   NO_BUCKET,
   NOT_EDITOR,
@@ -67,7 +70,7 @@ export class Option {
 }
 
 export const Exchange = {
-  status: {name: 'Status', url: 'admin/status'},
-  version: {name: 'Version', url: 'admin/version'},
-  orgStatus: {name: 'Org Status', url: 'admin/orgstatus'}
+  status: {name: 'Admin Status', url: 'admin/status'},
+  version: {name: 'Admin Version', url: 'admin/version'},
+  orgStatus: {name: 'Admin Org Status', url: 'admin/orgstatus'}
 } as const;

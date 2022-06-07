@@ -29,7 +29,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   bucketApi: any;
   state: any;
   currentPolicy = '';
-  orginalJson: any;
+  originalJson: any;
   template = {
     "org": "$HZN_ORG_ID",
     "label": "$SERVICE_NAME for $ARCH",
@@ -82,7 +82,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.showData = this.data = this.ieamService.editorStorage.json;
       this.shouldLoadConfig()
     } else {
-      this.showData = this.data = this.template;
+      this.originalJson = this.showData = this.data = this.template;
     }
 
     this.route.data.subscribe((data) => {
@@ -101,10 +101,20 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
       if(msg.type == Enum.SAVE) {
         this.save()
+      } else if(msg.type == Enum.LOAD_EXISTING_CONFIG) {
+        this.ieamService.editingConfig = true;
+        this.originalJson = this.showData = this.data = this.ieamService.configJson;
+        this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
       } else if(msg.type == Enum.LOAD_CONFIG) {
         this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
         console.log(msg.payload)
         this.loadFile(msg.payload, Enum.LOAD_CONFIG)
+      } else if(msg.type == Enum.LOAD_EXISTING_POLICY) {
+        this.ieamService.editingConfig = false;
+        this.originalJson = this.showData = this.data = this.ieamService.editorStorage.json;
+        if(this.ieamService.selectedOrg.length > 0) {
+          this.updateEditorData(this.ieamService.selectedOrg)
+        }
       } else if(msg.type == Enum.LOAD_POLICY) {
         this.ieamService.editingConfig = false;
         console.log(msg.payload)
@@ -118,7 +128,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadFile(msg.payload, Enum.LOAD_POLICY)
       } else if(msg.type == Enum.ORG_SELECTED) {
         if(this.isModified()) {
-          const resp:any = await this.promptDialog('Would you to discard your changes?', 'confirm')
+          const resp:any = await this.ieamService.promptDialog('Would you to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
           if(resp) {
             this.ieamService.selectedOrg = msg.payload;
             this.updateEditorData(this.ieamService.selectedOrg)
@@ -164,7 +174,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   async shouldLoadConfig() {
     if(Object.keys(this.ieamService.configJson).length == 0) {
-      const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+      const answer:any = await this.ieamService.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
       if(answer) {
         // payload indicates we are in editor route
         this.ieamService.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: {toEditor: true}});
@@ -180,83 +190,49 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
       })
       if(policy.indexOf('$ARCH') >= 0) {
-        const arch:any = await this.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
-        policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
+        const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
+        if(arch) {
+          policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
+
+          if(policy.indexOf('$MMS_CONTAINER') > 0) {
+            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Architecture type'})
+            if(answer) {
+              let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
+              policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
+            }
+          }
+          if(policy.indexOf('$SERVICE_CONTAINER') > 0) {
+            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Architecture type'})
+            if(answer) {
+              let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
+              policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
+            }
+          }
+        }
       }
       this.showData = JSON.parse(policy)
-      this.orginalJson = this.showData;
+      this.isModified()
+      // this.originalJson = this.showData;
       console.log(this.showData)
       this.editor.getEditor().set(this.showData)
     }
   }
   loadFile(payload: any, type: Enum) {
-    let $upload: any = {};
-    let $files: any = {};
-    let fhandle: FileSystemFileHandle[] = payload.fhandle;
-
-    for (let i = fhandle.length - 1; i >= 0; i--) {
-      $files[fhandle[i].name] = this.ieamService.readOpenFile(fhandle[i]);
-    }
-    forkJoin($files)
-    .subscribe((res: any) => {
-      Object.keys(res).forEach((key: any, idx: number) => {
+    this.ieamService.loadFile(payload, type)
+    .subscribe({
+      complete: async () => {
         if(type == Enum.LOAD_CONFIG) {
-          this.ieamService.configFilename = key
-          this.ieamService.configJson = JSON.parse(res[key]);
           if(payload.toEditor) {
             // go to editor with existing policy
             this.showData = this.data = this.ieamService.editorStorage.json;
           } else {
             this.showData = this.data = this.ieamService.configJson;
           }
-          this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
         } else if(type == Enum.LOAD_POLICY) {
-          this.ieamService.currentFilename = key
-          this.ieamService.editorStorage = {json: JSON.parse(res[key]), filename: key};
           this.showData = this.data = this.ieamService.editorStorage.json;
         }
-        this.orginalJson = this.showData;
-      });
-    })
-  }
-  promptDialog(title: string, type: string, options: any = {}) {
-    // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
-    return new Promise((resolve, reject) => {
-      this.openDialog({title: title, type: type, options: options}, (resp: any) => {
-        if (resp) {
-          console.log(resp);
-          resolve(resp);
-        }
-      });
-    })
-  }
-  openDialog(payload: { title: string; type: string; options: any; }, cb: { (resp: any): void; (resp: any): void; (resp: any): void; (arg0: any): void; }): void {
-    this.dialogRef = this.dialog.open(DialogComponent, {
-      hasBackdrop: false,
-      width: '350px',
-      height: '250px',
-      data: payload
-    });
-
-    this.dialogRef.afterClosed().subscribe((result: any) => {
-      cb(result);
-      this.dialog.closeAll();
-    });
-  }
-  loadFile2(fhandle: FileSystemFileHandle[]) {
-    let $upload: any = {};
-    let $files: any = {};
-
-    for (let i = fhandle.length - 1; i >= 0; i--) {
-      $files[fhandle[i].name] = this.readFile(fhandle[i]);
-    }
-    forkJoin($files)
-    .subscribe((res: any) => {
-      Object.keys(res).forEach((key: any, idx: number) => {
-        let b64 = res[key].replace(/^data:.+;base64,/, '');
-        this.ieamService.configJson = JSON.parse(atob(b64));
-        this.showData = this.data = this.ieamService.configJson;
-      });
+        this.originalJson = this.showData;
+      }
     })
   }
   readFile(file: any) {
@@ -299,9 +275,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   isModified() {
-    const modified = JSON.stringify(this.showData) != JSON.stringify(this.orginalJson) //&& this.ieamService.selectedOrg.length > 0;
-    this.ieamService.broadcast({type: Enum.JSON_MODIFIED, payload: modified});
-    return modified;
+    this.ieamService.isJsonModified = JSON.stringify(this.showData) != JSON.stringify(this.originalJson) //&& this.ieamService.selectedOrg.length > 0;
+    return this.ieamService.isJsonModified;
   }
   changeEvent(event) {
     console.log(event);

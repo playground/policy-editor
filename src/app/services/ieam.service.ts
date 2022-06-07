@@ -1,7 +1,7 @@
 import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angular/core';
 import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
 import { Enum, Navigate, EnumClass, HeaderOptions } from '../models/ieam-model';
@@ -10,7 +10,8 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
 declare const window: any;
-let backendUrl = '';
+let backendUrl = isDevMode() ? 'http://localhost:3000' : '';
+console.log(isDevMode(), backendUrl);
 
 export const method = {
   list: `${backendUrl}/list`,
@@ -62,6 +63,7 @@ export class IeamService implements HttpInterceptor {
   selectedCall: string = '';
   currentFilename = '';
   configFilename = '';
+  isJsonModified = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -69,8 +71,6 @@ export class IeamService implements HttpInterceptor {
     private http: HttpClient,
     private dialog: MatDialog
   ) {
-    backendUrl = isDevMode() ? '' : '';
-
     this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
 
     if(this.isMetaMaskInstalled()) {
@@ -205,7 +205,7 @@ export class IeamService implements HttpInterceptor {
     // TODO, should logout of Metamask too?
   }
   isMetaMaskInstalled() {
-    console.log('etherum')
+    // console.log('etherum')
     const { ethereum } = window;
     return Boolean(ethereum && ethereum.isMetaMask);
   }
@@ -318,6 +318,31 @@ export class IeamService implements HttpInterceptor {
       this.router.navigateByUrl(url, state)
     }
   }
+  loadFile(payload: any, type: Enum) {
+    return new Observable((observer) => {
+      let $upload: any = {};
+      let $files: any = {};
+      let fhandle: FileSystemFileHandle[] = payload.fhandle;
+
+      for (let i = fhandle.length - 1; i >= 0; i--) {
+        $files[fhandle[i].name] = this.readOpenFile(fhandle[i]);
+      }
+      forkJoin($files)
+      .subscribe((res: any) => {
+        Object.keys(res).forEach((key: any, idx: number) => {
+          if(type == Enum.LOAD_CONFIG) {
+            this.configFilename = key
+            this.configJson = JSON.parse(res[key]);
+            this.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
+          } else if(type == Enum.LOAD_POLICY) {
+            this.currentFilename = key
+            this.editorStorage = {json: JSON.parse(res[key]), filename: key};
+          }
+        });
+        observer.complete()
+      })
+    })
+  }
   readOpenFile(fhandle: FileSystemFileHandle) {
     const reader = new FileReader();
     return new Observable((observer: { next: (arg0: any) => void; complete: () => void; }) => {
@@ -408,10 +433,8 @@ export class IeamService implements HttpInterceptor {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
     return new Promise((resolve, reject) => {
       this.openDialog({title: title, type: type, options: options}, (resp: any) => {
-        if (resp) {
-          console.log(resp);
-          resolve(resp);
-        }
+        console.log(resp);
+        resolve(resp);
       });
     })
   }
@@ -433,7 +456,7 @@ export class IeamService implements HttpInterceptor {
   }
   getCall(endpoint: string) {
     const credential = this.configJson[this.selectedOrg]['credential']
-    const b64 = btoa(`${this.selectedOrg}:${credential['HZN_EXCHANGE_USER_AUTH']}`)
+    const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = credential['HZN_EXCHANGE_URL']
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {
@@ -442,8 +465,9 @@ export class IeamService implements HttpInterceptor {
     headerOptions['Authorization'] = `Basic ${b64}`;
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
-    header = header.append('Access-Control-Allow-Credentials', 'true')
-    header = header.append('Access-Control-Allow-Origin', '*')
+    // header = header.append('Access-Control-Allow-Credentials', 'true')
+    // header = header.append('Access-Control-Allow-Origin', '*')
+    // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
 }

@@ -44,6 +44,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       this.noBucket = true;
       this.noneSelected = true;
       this.notExchange = true;
+      this.ieamService.signIn()
       if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
         this.populateOrgs()
         this.notEditor = false;
@@ -112,15 +113,38 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   loadPolicy(payload: any = {}) {
-    this.ieamService.showOpenFilePicker()
-    .subscribe({
-      next: (fhandle: any) => {
-        payload.fhandle = fhandle;
-        this.broadcast(Enum.LOAD_POLICY, payload);
+    if(this.ieamService.isJsonModified) {
+      this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+      .then((answer) => {
+        if(answer) {
+          this.openFilePicker(payload, Enum.LOAD_POLICY)
+        }
+      })
+    } else if(this.ieamService.editorStorage && Object.keys(this.ieamService.editorStorage.json).length > 0) {
+      this.loadNewFile('Would you like to load a new file?', Enum.LOAD_POLICY, payload, Enum.LOAD_EXISTING_POLICY)
+      // this.ieamService.promptDialog('Would you like to load a new file?', '', {okButton: 'Yes', cancelButton: 'No'})
+      // .then((answer) => {
+      //   if(answer) {
+      //     this.openFilePicker(payload, Enum.LOAD_POLICY)
+      //   } else {
+      //     this.broadcast(Enum.LOAD_EXISTING_POLICY, payload);
+      //   }
+      // })
+    } else {
+      this.openFilePicker(payload, Enum.LOAD_POLICY)
+    }
+  }
+
+  loadNewFile(prompt: string, type: Enum, payload: any, broadcastType: Enum) {
+    this.ieamService.promptDialog(prompt, '', {okButton: 'Yes', cancelButton: 'No'})
+    .then((answer) => {
+      if(answer) {
+        this.openFilePicker(payload, type)
+      } else {
+        this.broadcast(broadcastType, payload);
       }
     })
   }
-
   loadRemotePolicy() {
     this.broadcast(Enum.REMOTE_POLICY);
   }
@@ -130,11 +154,34 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   loadConfig(payload:any = {}) {
+    if(this.ieamService.isJsonModified) {
+      this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+      .then((answer) => {
+        if(answer) {
+          this.openFilePicker(payload, Enum.LOAD_CONFIG)
+        }
+      })
+    } else if(Object.keys(this.ieamService.configJson).length > 0) {
+      this.loadNewFile('Would you like to load a new config file?', Enum.LOAD_CONFIG, payload, Enum.LOAD_EXISTING_CONFIG)
+      // this.ieamService.promptDialog('Would you like to load a new config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+      // .then((answer) => {
+      //   if(answer) {
+      //     this.openFilePicker(payload, Enum.LOAD_CONFIG)
+      //   } else {
+      //     this.broadcast(Enum.LOAD_EXISTING_CONFIG, payload);
+      //   }
+      // })
+    } else {
+      this.openFilePicker(payload, Enum.LOAD_CONFIG)
+    }
+  }
+
+  openFilePicker(payload:any = {}, type: Enum) {
     this.ieamService.showOpenFilePicker()
     .subscribe({
       next: (fhandle: any) => {
         payload.fhandle = fhandle;
-        this.broadcast(Enum.LOAD_CONFIG, payload);
+        this.broadcast(type, payload);
       }
     })
   }
@@ -151,8 +198,12 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.broadcast(Enum.SAVE)
   }
 
+  publish() {
+    this.broadcast(Enum.PUBLISH)
+  }
+
   shouldDisenable() {
-    return !this.isJsonModified  //|| this.ieamService.editingConfig
+    return !this.ieamService.isJsonModified  //|| this.ieamService.editingConfig
   }
 
   shouldNotRun() {
