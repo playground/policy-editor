@@ -134,13 +134,20 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   loadLocalPolicy() {
     this.loadPolicy(Enum.LOAD_POLICY)
   }
+  loadTemplatePoicy() {
+    this.loadPolicy(Enum.LOAD_TEMPLATE_POLICY)
+  }
   loadPolicy(type: Enum, payload: any = {}) {
     let json = this.ieamService.getEditorStorage();
-    if(this.ieamService.isJsonModified) {
-      this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+    if(this.ieamService.isModified()) {
+      this.ieamService.promptDialog('Would you like to save your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {
+        this.ieamService.setModify(false);
         if(answer) {
-          this.openFilePicker(payload, type)
+          // save file
+          this.save()
+        } else {
+          this.doThis(type, payload)
         }
       })
     } else if(json && Object.keys(json.content).length > 0) {
@@ -148,27 +155,49 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       // this.ieamService.promptDialog('Would you like to load a new file?', '', {okButton: 'Yes', cancelButton: 'No'})
       // .then((answer) => {
       //   if(answer) {
-      //     this.openFilePicker(payload, Enum.LOAD_POLICY)
+      //     this.ieamService.openFilePicker(payload, Enum.LOAD_POLICY)
       //   } else {
       //     this.broadcast(Enum.LOAD_EXISTING_POLICY, payload);
       //   }
       // })
     } else {
+      this.doThis(type, payload)
+      // if(type === Enum.LOAD_TEMPLATE_POLICY) {
+      //   this.broadcast(type, payload);
+      // } else {
+      //   this.ieamService.promptDialog('What type of file?', 'loader')
+      //   .then((answer: any) => {
+      //     if(answer) {
+      //       this.ieamService.openFilePicker(payload, type)
+      //     }
+      //   })
+      // }
+    }
+  }
+
+  private doThis(type: Enum, payload: any) {
+    if(type === Enum.LOAD_TEMPLATE_POLICY) {
+      this.broadcast(type, payload);
+    } else {
       this.ieamService.promptDialog('What type of file?', 'loader')
       .then((answer: any) => {
         if(answer) {
-          this.ieamService.currentWorkingFile = answer.options.name;
-          this.openFilePicker(payload, type)
+          this.ieamService.openFilePicker(payload, type)
         }
       })
     }
   }
-
   loadNewFile(prompt: string, type: Enum, payload: any, broadcastType: Enum) {
     this.ieamService.promptDialog(prompt, '', {okButton: 'Yes', cancelButton: 'No'})
     .then((answer) => {
       if(answer) {
-        this.openFilePicker(payload, type)
+        this.doThis(type, payload)
+        // this.ieamService.promptDialog('What type of file?', 'loader')
+        // .then((answer: any) => {
+        //   if(answer) {
+        //     this.ieamService.openFilePicker(payload, type)
+        //   }
+        // })
       } else {
         this.broadcast(broadcastType, payload);
       }
@@ -185,32 +214,14 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {
         if(answer) {
-          this.openFilePicker(payload, Enum.LOAD_CONFIG)
+          this.ieamService.openFilePicker(payload, Enum.LOAD_CONFIG)
         }
       })
     } else if(json && Object.keys(json).length > 0) {
       this.loadNewFile('Would you like to load a new config file?', Enum.LOAD_CONFIG, payload, Enum.LOAD_EXISTING_CONFIG)
-      // this.ieamService.promptDialog('Would you like to load a new config file?', '', {okButton: 'Yes', cancelButton: 'No'})
-      // .then((answer) => {
-      //   if(answer) {
-      //     this.openFilePicker(payload, Enum.LOAD_CONFIG)
-      //   } else {
-      //     this.broadcast(Enum.LOAD_EXISTING_CONFIG, payload);
-      //   }
-      // })
     } else {
-      this.openFilePicker(payload, Enum.LOAD_CONFIG)
+      this.ieamService.openFilePicker(payload, Enum.LOAD_CONFIG)
     }
-  }
-
-  openFilePicker(payload:any = {}, type: Enum) {
-    this.ieamService.showOpenFilePicker()
-    .subscribe({
-      next: (fhandle: any) => {
-        payload.fhandle = fhandle;
-        this.broadcast(type, payload);
-      }
-    })
   }
 
   folder() {
@@ -230,7 +241,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldDisenable() {
-    return !this.ieamService.isJsonModified  //|| this.ieamService.editingConfig
+    return !this.ieamService.isModified()  //|| this.ieamService.editingConfig
   }
 
   shouldNotRun() {
@@ -249,6 +260,13 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value
+    }
+  }
+
+  onOptionChange(evt: any) {
+    if(evt.isUserInput) {
+      this.ieamService.onOptionChange(evt);
+      this.loadTemplatePoicy()
     }
   }
 

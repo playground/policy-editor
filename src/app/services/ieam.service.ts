@@ -53,6 +53,7 @@ export class IeamService implements HttpInterceptor {
   isJsonModified = false;
   method: any = {};
   currentWorkingFile = '';
+  titleText = 'IEAM';
 
   constructor(
     private route: ActivatedRoute,
@@ -337,6 +338,15 @@ export class IeamService implements HttpInterceptor {
       })()
     });
   }
+  openFilePicker(payload:any = {}, type: Enum) {
+    this.showOpenFilePicker()
+    .subscribe({
+      next: (fhandle: any) => {
+        payload.fhandle = fhandle;
+        this.broadcast({type: type, payload: payload});
+      }
+    })
+  }
   showOpenFilePicker(pickerOpts = pickerOptions) {
     return new Observable((observer) => {
       (async () => {
@@ -359,8 +369,9 @@ export class IeamService implements HttpInterceptor {
     window.document.body.appendChild(element);
 
     element.click();
-
     window.document.body.removeChild(element);
+
+    this.setModify(false);
   }
   isObject(value: any) {
     return !!(value && typeof value === "object" && !Array.isArray(value));
@@ -471,6 +482,9 @@ export class IeamService implements HttpInterceptor {
   getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key]
   }
+  updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
+    this.editorStorage[key] = json;
+  }
   getLoader(): IOption[] {
     let loaders: IOption[] = [];
     Object.keys(Loader).forEach((key) => {
@@ -487,8 +501,17 @@ export class IeamService implements HttpInterceptor {
   }
   onOptionChange(evt: any) {
     if(evt.isUserInput) {
-      console.log(evt.source.value)
       this.currentWorkingFile = evt.source.value.id
     }
+  }
+  setModify(status: boolean, key = this.currentWorkingFile) {
+    this.isJsonModified = status;
+    this.editorStorage[key].modified = status;
+  }
+  isModified(key = this.currentWorkingFile): boolean {
+    return this.editorStorage[key] && this.editorStorage[key].modified
+  }
+  setTitleText(key = this.currentWorkingFile) {
+    this.titleText = this.editorStorage[key] ? this.editorStorage[key].filename ? this.editorStorage[key].filename : key : 'IEAM'
   }
 }

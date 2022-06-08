@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
-import { Enum, Navigate } from '../../models/ieam-model';
+import { Enum, IEditorStorage, Navigate, Loader } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from '../dialog/dialog.component';
@@ -30,6 +30,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   state: any;
   currentPolicy = '';
   originalJson: any;
+  editJson: IEditorStorage;
   template = {
     "org": "$HZN_ORG_ID",
     "label": "$SERVICE_NAME for $ARCH",
@@ -78,9 +79,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!this.ieamService.signIn('/editor')) {
       return
     }
-    let json = this.ieamService.getEditorStorage()
-    if(json) {
-      this.showData = this.data = json.content;
+    this.editJson = this.ieamService.getEditorStorage()
+    if(this.editJson) {
+      this.showData = this.data = this.editJson.content;
       this.shouldLoadConfig()
     } else {
       this.originalJson = this.showData = this.data = this.template;
@@ -100,54 +101,120 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     })
 
     this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
-      if(msg.type == Enum.SAVE) {
-        this.save()
-      } else if(msg.type == Enum.LOAD_EXISTING_CONFIG) {
-        this.ieamService.editingConfig = true;
-        this.originalJson = this.showData = this.data = this.ieamService.configJson;
-        this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
-      } else if(msg.type == Enum.LOAD_CONFIG) {
-        this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
-        console.log(msg.payload)
-        this.loadFile(msg.payload, Enum.LOAD_CONFIG)
-      } else if(msg.type == Enum.LOAD_EXISTING_POLICY) {
-        this.ieamService.editingConfig = false;
-        this.originalJson = this.showData = this.data = this.ieamService.getEditorStorage(this.ieamService.currentWorkingFile);
-        if(this.ieamService.selectedOrg.length > 0) {
-          this.updateEditorData(this.ieamService.selectedOrg)
-        }
-      } else if(msg.type == Enum.LOAD_POLICY) {
-        this.ieamService.editingConfig = false;
-        console.log(msg.payload)
-        let json = this.ieamService.getEditorStorage('hznConfig')
-        if(!json || Object.keys(json.content).length == 0) {
-          this.shouldLoadConfig()
-        } else {
+      this.ieamService.editingConfig = false;
+      this.ieamService.setTitleText();
+      switch(msg.type) {
+        case Enum.SAVE:
+          this.save()
+          break;
+        case Enum.LOAD_TEMPLATE_POLICY:
+          this.ieamService.get(Loader[this.ieamService.currentWorkingFile].file)
+          .subscribe((res) => {
+            console.log(res)
+            this.ieamService.addEditorStorage(res, Loader[this.ieamService.currentWorkingFile].name)
+            this.editJson = this.ieamService.getEditorStorage()
+            this.showData = this.data = this.editJson.content;
+          })
+          break;
+        case Enum.LOAD_EXISTING_CONFIG:
+          this.ieamService.editingConfig = true;
+          this.originalJson = this.showData = this.data = this.ieamService.configJson;
+          this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
+          break;
+        case Enum.LOAD_CONFIG:
+          this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
+          this.loadFile(msg.payload, Enum.LOAD_CONFIG)
+          break;
+        case Enum.LOAD_EXISTING_POLICY:
+          this.ieamService.editingConfig = false;
+          this.originalJson = this.showData = this.data = this.ieamService.getEditorStorage(this.ieamService.currentWorkingFile);
           if(this.ieamService.selectedOrg.length > 0) {
             this.updateEditorData(this.ieamService.selectedOrg)
           }
-        }
-        this.loadFile(msg.payload, Enum.LOAD_POLICY)
-      } else if(msg.type == Enum.ORG_SELECTED) {
-        if(this.isModified()) {
-          const resp:any = await this.ieamService.promptDialog('Would you to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
-          if(resp) {
+          break;
+        case Enum.LOAD_POLICY:
+          this.ieamService.editingConfig = false;
+          console.log(msg.payload)
+          this.editJson = this.ieamService.getEditorStorage('hznConfig')
+          if(!this.editJson || Object.keys(this.editJson.content).length == 0) {
+            this.shouldLoadConfig()
+          } else {
+            if(this.ieamService.selectedOrg.length > 0) {
+              this.updateEditorData(this.ieamService.selectedOrg)
+            }
+          }
+          this.loadFile(msg.payload, Enum.LOAD_POLICY)
+          break;
+        case Enum.ORG_SELECTED:
+          if(this.isModified()) {
+            const resp:any = await this.ieamService.promptDialog('Would you to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+            if(resp) {
+              this.ieamService.selectedOrg = msg.payload;
+              this.updateEditorData(this.ieamService.selectedOrg)
+            }
+          } else {
             this.ieamService.selectedOrg = msg.payload;
             this.updateEditorData(this.ieamService.selectedOrg)
           }
-        } else {
-          this.ieamService.selectedOrg = msg.payload;
-          this.updateEditorData(this.ieamService.selectedOrg)
-        }
-      } else if(msg.type == Enum.REMOTE_POLICY) {
-        this.ieamService.editingConfig = false;
-        let json = this.ieamService.getEditorStorage()
-        if(json) {
-          this.showData = this.data = json.content;
-        } else {
-          this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.bucket})
-        }
+          break;
+        case Enum.REMOTE_POLICY:
+          this.ieamService.editingConfig = false;
+          this.editJson = this.ieamService.getEditorStorage()
+          if(this.editJson) {
+            this.showData = this.data = this.editJson.content;
+          } else {
+            this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.bucket})
+          }
+          break;
       }
+      // if(msg.type == Enum.SAVE) {
+      //   this.save()
+      // } else if(msg.type == Enum.LOAD_EXISTING_CONFIG) {
+      //   this.ieamService.editingConfig = true;
+      //   this.originalJson = this.showData = this.data = this.ieamService.configJson;
+      //   this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
+      // } else if(msg.type == Enum.LOAD_CONFIG) {
+      //   this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
+      //   console.log(msg.payload)
+      //   this.loadFile(msg.payload, Enum.LOAD_CONFIG)
+      // } else if(msg.type == Enum.LOAD_EXISTING_POLICY) {
+      //   this.ieamService.editingConfig = false;
+      //   this.originalJson = this.showData = this.data = this.ieamService.getEditorStorage(this.ieamService.currentWorkingFile);
+      //   if(this.ieamService.selectedOrg.length > 0) {
+      //     this.updateEditorData(this.ieamService.selectedOrg)
+      //   }
+      // } else if(msg.type == Enum.LOAD_POLICY) {
+      //   this.ieamService.editingConfig = false;
+      //   console.log(msg.payload)
+      //   this.editJson = this.ieamService.getEditorStorage('hznConfig')
+      //   if(!this.editJson || Object.keys(this.editJson.content).length == 0) {
+      //     this.shouldLoadConfig()
+      //   } else {
+      //     if(this.ieamService.selectedOrg.length > 0) {
+      //       this.updateEditorData(this.ieamService.selectedOrg)
+      //     }
+      //   }
+      //   this.loadFile(msg.payload, Enum.LOAD_POLICY)
+      // } else if(msg.type == Enum.ORG_SELECTED) {
+      //   if(this.isModified()) {
+      //     const resp:any = await this.ieamService.promptDialog('Would you to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+      //     if(resp) {
+      //       this.ieamService.selectedOrg = msg.payload;
+      //       this.updateEditorData(this.ieamService.selectedOrg)
+      //     }
+      //   } else {
+      //     this.ieamService.selectedOrg = msg.payload;
+      //     this.updateEditorData(this.ieamService.selectedOrg)
+      //   }
+      // } else if(msg.type == Enum.REMOTE_POLICY) {
+      //   this.ieamService.editingConfig = false;
+      //   this.editJson = this.ieamService.getEditorStorage()
+      //   if(this.editJson) {
+      //     this.showData = this.data = this.editJson.content;
+      //   } else {
+      //     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.bucket})
+      //   }
+      // }
     });
 
     // this.showData = this.data = {
@@ -176,8 +243,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   async shouldLoadConfig() {
-    let json = this.ieamService.getEditorStorage('hznConfig')
-    if(!json || Object.keys(json.content).length == 0) {
+    this.editJson= this.ieamService.getEditorStorage('hznConfig')
+    if(!this.editJson || Object.keys(this.editJson.content).length == 0) {
       const answer:any = await this.ieamService.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
       if(answer) {
         // payload indicates we are in editor route
@@ -228,12 +295,15 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         if(type == Enum.LOAD_CONFIG) {
           if(payload.toEditor) {
             // go to editor with existing policy
-            this.showData = this.data = this.ieamService.getEditorStorage().content;
+            this.editJson = this.ieamService.getEditorStorage()
+            this.showData = this.data = this.editJson.content;
           } else {
-            this.showData = this.data = this.ieamService.getEditorStorage('hznConfig').content;
+            this.editJson = this.ieamService.getEditorStorage('hznConfig')
+            this.showData = this.data = this.editJson.content;
           }
         } else if(type == Enum.LOAD_POLICY) {
-          this.showData = this.data = this.ieamService.getEditorStorage().content;
+          this.editJson = this.ieamService.getEditorStorage()
+          this.showData = this.data = this.editJson.content;
         }
         this.originalJson = this.showData;
       }
@@ -280,6 +350,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   isModified() {
     this.ieamService.isJsonModified = JSON.stringify(this.showData) != JSON.stringify(this.originalJson) //&& this.ieamService.selectedOrg.length > 0;
+    this.editJson.content = this.showData;
+    this.editJson.modified = this.ieamService.isJsonModified;
+    this.ieamService.updateEditorStorage(this.editJson);
     return this.ieamService.isJsonModified;
   }
   changeEvent(event) {
