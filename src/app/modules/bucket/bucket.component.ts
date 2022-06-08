@@ -41,6 +41,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private http: HttpClient
   ) {
+    this.method = this.ieamService.method;
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
       if(this.currentRoute === this.router.routerState.snapshot.url) {
@@ -249,7 +250,8 @@ export class BucketComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (res: any) => {
             console.log(res)
-            this.ieamService.editorStorage = {json: res, filename: file};
+            this.ieamService.addEditorStorage(res, file)
+            // this.ieamService.editorStorage = {json: res, filename: file};
             this.ieamService.navigateByUrl('/editor',
             {state: {bucketName: this.bucketName, bucketApi: this.bucketApi, url: res.url}});
           }, error: (err: any) => {

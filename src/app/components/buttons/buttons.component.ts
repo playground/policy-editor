@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
-import { Enum, Organization, Exchange, Option, Loader } from 'src/app/models/ieam-model';
+import { Enum, Organization, Exchange, IOption, Loader } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -21,11 +21,11 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   orgs: Organization[] = [];
   routerObserver: any;
   routeObserver: any;
-  loaders: Option[] = [];
-  exchangeCalls: Option[] = [];
+  loaders: IOption[] = [];
+  exchangeCalls: IOption[] = [];
   psAgent!: { unsubscribe: () => void; };
   loaderControl = new FormControl('');
-  filteredOptions: Observable<Option[]>;
+  filteredOptions: Observable<IOption[]>;
 
   constructor(
     private router: Router,
@@ -33,23 +33,16 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     public ieamService: IeamService
   ) { }
 
-  private _filter(name: string): Option[] {
-    const filterValue = name.toLowerCase();
-    return this.loaders.filter(option => option.name.toLowerCase().includes(filterValue));
-  }
-
   ngOnInit() {
     Object.keys(Exchange).forEach((key) => {
       this.exchangeCalls.push({name: Exchange[key].name, id: key})
     })
-    Object.keys(Loader).forEach((key) => {
-      this.loaders.push({name: Loader[key].name, id: key})
-    })
+    this.loaders = this.ieamService.getLoader();
 
     this.filteredOptions = this.loaderControl.valueChanges.pipe(
       startWith(''),
       map(value => (typeof value === 'string' ? value : value?.id)),
-      map(name => (name ? this._filter(name) : this.loaders.slice()))
+      map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
     )
     this.routeObserver = this.route.data.subscribe((data) => {
       if('/editor' == this.router.routerState.snapshot.url) {
@@ -112,10 +105,6 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.routeObserver.unsubscribe();
   }
 
-  displayFn(option: Option): string {
-    return option && option.name ? option.name : '';
-  }
-
   populateOrgs() {
     this.orgs = [];
     Object.keys(this.ieamService.configJson).forEach((key) => {
@@ -139,16 +128,23 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.broadcast(Enum.CHANGE_ACCESS, access);
   }
 
-  loadPolicy(payload: any = {}) {
+  loadRemotePolicy() {
+    this.loadPolicy(Enum.REMOTE_POLICY);
+  }
+  loadLocalPolicy() {
+    this.loadPolicy(Enum.LOAD_POLICY)
+  }
+  loadPolicy(type: Enum, payload: any = {}) {
+    let json = this.ieamService.getEditorStorage();
     if(this.ieamService.isJsonModified) {
       this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {
         if(answer) {
-          this.openFilePicker(payload, Enum.LOAD_POLICY)
+          this.openFilePicker(payload, type)
         }
       })
-    } else if(this.ieamService.editorStorage && Object.keys(this.ieamService.editorStorage.json).length > 0) {
-      this.loadNewFile('Would you like to load a new file?', Enum.LOAD_POLICY, payload, Enum.LOAD_EXISTING_POLICY)
+    } else if(json && Object.keys(json.content).length > 0) {
+      this.loadNewFile('Would you like to load a new file?', type, payload, Enum.LOAD_EXISTING_POLICY)
       // this.ieamService.promptDialog('Would you like to load a new file?', '', {okButton: 'Yes', cancelButton: 'No'})
       // .then((answer) => {
       //   if(answer) {
@@ -158,7 +154,13 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       //   }
       // })
     } else {
-      this.openFilePicker(payload, Enum.LOAD_POLICY)
+      this.ieamService.promptDialog('What type of file?', 'loader')
+      .then((answer: any) => {
+        if(answer) {
+          this.ieamService.currentWorkingFile = answer.options.name;
+          this.openFilePicker(payload, type)
+        }
+      })
     }
   }
 
@@ -172,15 +174,13 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       }
     })
   }
-  loadRemotePolicy() {
-    this.broadcast(Enum.REMOTE_POLICY);
-  }
 
   upload(event) {
     this.broadcast(Enum.UPLOAD, event);
   }
 
   loadConfig(payload:any = {}) {
+    let json = this.ieamService.getEditorStorage('hznConfig');
     if(this.ieamService.isJsonModified) {
       this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {
@@ -188,7 +188,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
           this.openFilePicker(payload, Enum.LOAD_CONFIG)
         }
       })
-    } else if(Object.keys(this.ieamService.configJson).length > 0) {
+    } else if(json && Object.keys(json).length > 0) {
       this.loadNewFile('Would you like to load a new config file?', Enum.LOAD_CONFIG, payload, Enum.LOAD_EXISTING_CONFIG)
       // this.ieamService.promptDialog('Would you like to load a new config file?', '', {okButton: 'Yes', cancelButton: 'No'})
       // .then((answer) => {

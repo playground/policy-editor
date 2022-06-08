@@ -64,9 +64,9 @@ export const HeaderOptions = {
   'Access-Control-Allow-Methods': '*'
 } as const;
 
-export class Option {
-  id: string = '';
-  name: string = '';
+export interface IOption {
+  id: string;
+  name: string;
 }
 
 export interface IFile {
@@ -76,10 +76,11 @@ export interface IFile {
   content: Object;
 }
 export interface IEditorStorage {
-  type?: string;
-  files?: IFile[];
-  json: Object;
+  content: Object;
+  original: Object;
   filename: string;
+  modified: boolean;
+  remote: boolean;
 }
 export interface IExchange {
   name: string;
@@ -101,6 +102,7 @@ export const Loader = {
   servicePolicy: {name: 'Service Policy', file: 'assets/templates/service.policy.json', template: true},
   deploymentPolicy: {name: 'Deployment Policy', file: 'assets/templates/deployment.policy.json', template: true},
   nodePolicy: {name: 'Node Policy', file: 'assets/templates/node.policy.json', template: true},
+  hznConfig: {name: 'hzn Config File'},
   localPolicy: {name: 'Local File'},
   remotePolicy: {name: 'Remote File'}
 } as const;

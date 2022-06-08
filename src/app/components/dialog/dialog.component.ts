@@ -1,5 +1,9 @@
 import { Component, OnInit, Inject, NgZone } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormControl } from '@angular/forms';
+import { Observable, map, startWith } from 'rxjs';
+import { IeamService, Broadcast } from '../../services/ieam.service';
+import { IOption } from '../../models/ieam-model';
 
 export class Option {
   name: string;
@@ -20,8 +24,13 @@ export interface DialogData {
 })
 export class DialogComponent implements OnInit {
   notOK = true;
+  loaders: IOption[] = [];
+  loaderControl = new FormControl('');
+  filteredOptions: Observable<IOption[]>;
+
   constructor(
     private ngZone: NgZone,
+    public ieamService: IeamService,
     public dialogRef: MatDialogRef<DialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData) {}
 
@@ -35,6 +44,13 @@ export class DialogComponent implements OnInit {
     this.dialogRef.close(this.data);
   }
   ngOnInit() {
+    this.loaders = this.ieamService.getLoader();
+    this.filteredOptions = this.loaderControl.valueChanges.pipe(
+      startWith(''),
+      map(value => (typeof value === 'string' ? value : value?.id)),
+      map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
+    )
+
     if (this.data.type !== 'folder') {
       this.notOK = false;
     }
@@ -45,5 +61,4 @@ export class DialogComponent implements OnInit {
       this.data.options.cancelButton = 'Cancel'
     }
   }
-
 }

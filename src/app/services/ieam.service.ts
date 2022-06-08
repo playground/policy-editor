@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params } from '../interface/params';
 import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
@@ -42,7 +42,7 @@ export class IeamService implements HttpInterceptor {
   loginSession: any;
   sessionExpiry = 3600000;
   urlExpiry = 600;
-  editorStorage: IEditorStorage;
+  editorStorage: any = {};
   configJson: any = {};
   editingConfig = false;
   dialogRef?: MatDialogRef<DialogComponent, any>;
@@ -52,6 +52,7 @@ export class IeamService implements HttpInterceptor {
   configFilename = '';
   isJsonModified = false;
   method: any = {};
+  currentWorkingFile = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -313,10 +314,12 @@ export class IeamService implements HttpInterceptor {
           if(type == Enum.LOAD_CONFIG) {
             this.configFilename = key
             this.configJson = JSON.parse(res[key]);
+            this.addEditorStorage(JSON.parse(res[key]), key, 'hznConfig')
             this.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
           } else if(type == Enum.LOAD_POLICY) {
             this.currentFilename = key
-            this.editorStorage = {json: JSON.parse(res[key]), filename: key};
+            // this.editorStorage = {json: JSON.parse(res[key]), filename: key};
+            this.addEditorStorage(JSON.parse(res[key]), key, this.currentWorkingFile)
           }
         });
         observer.complete()
@@ -461,5 +464,31 @@ export class IeamService implements HttpInterceptor {
     // header = header.append('Access-Control-Allow-Origin', '*')
     // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     return this.get(`${url}/${endpoint}`, {headers: header})
+  }
+  addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {
+    this.editorStorage[key] = {content: content, name: name, original: content}
+  }
+  getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
+    return this.editorStorage[key]
+  }
+  getLoader(): IOption[] {
+    let loaders: IOption[] = [];
+    Object.keys(Loader).forEach((key) => {
+      loaders.push({name: Loader[key].name, id: key})
+    })
+    return loaders;
+  }
+  optionFilter(name: string, loaders: IOption[]): IOption[] {
+    const filterValue = name.toLowerCase();
+    return loaders.filter(option => option.name.toLowerCase().includes(filterValue));
+  }
+  optionDisplayFn(option: IOption): string {
+    return option && option.name ? option.name : '';
+  }
+  onOptionChange(evt: any) {
+    if(evt.isUserInput) {
+      console.log(evt.source.value)
+      this.currentWorkingFile = evt.source.value.id
+    }
   }
 }
