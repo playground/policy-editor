@@ -152,26 +152,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       })
     } else if(json && Object.keys(json.content).length > 0) {
       this.loadNewFile('Would you like to load a new file?', type, payload, Enum.LOAD_EXISTING_POLICY)
-      // this.ieamService.promptDialog('Would you like to load a new file?', '', {okButton: 'Yes', cancelButton: 'No'})
-      // .then((answer) => {
-      //   if(answer) {
-      //     this.ieamService.openFilePicker(payload, Enum.LOAD_POLICY)
-      //   } else {
-      //     this.broadcast(Enum.LOAD_EXISTING_POLICY, payload);
-      //   }
-      // })
     } else {
       this.doThis(type, payload)
-      // if(type === Enum.LOAD_TEMPLATE_POLICY) {
-      //   this.broadcast(type, payload);
-      // } else {
-      //   this.ieamService.promptDialog('What type of file?', 'loader')
-      //   .then((answer: any) => {
-      //     if(answer) {
-      //       this.ieamService.openFilePicker(payload, type)
-      //     }
-      //   })
-      // }
     }
   }
 
@@ -266,7 +248,16 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   onOptionChange(evt: any) {
     if(evt.isUserInput) {
       this.ieamService.onOptionChange(evt);
-      this.loadTemplatePoicy()
+      const id = evt.source.value.id;
+      if(Loader[id].template) {
+        this.loadTemplatePoicy()
+      } else if(id === 'hznConfig') {
+        this.loadConfig()
+      } else if(id === 'localPolicy') {
+        this.loadLocalPolicy()
+      } else if(id === 'remotePolicy') {
+        this.loadRemotePolicy()
+      }
     }
   }
 

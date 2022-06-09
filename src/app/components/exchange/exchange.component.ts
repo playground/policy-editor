@@ -19,6 +19,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    let json = this.ieamService.getEditorStorage()
+    if(json) {
+      this.content = prettyHtml(json.content)
+    }
     if(!this.ieamService.signIn('/exchange')) {
       return
     }

@@ -92,11 +92,13 @@ export interface IExchange {
   placeholder: string;
 }
 export const Exchange = {
-  Admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
+  admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
   adminVersion: {name: 'Admin Version', path: 'admin/version'},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
-  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'}
+  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'},
+  addServicePolicy: {name: 'Add Service Policy', path: 'org/${orgid}/services/${service}/policy', method: 'PUT'},
 } as const;
+
 export const Loader = {
   service: {name: 'Service Definition', file: 'assets/templates/service.json', template: true},
   topLevelService: {name: 'Top Level Service', file: 'assets/templates/top-level-service.json', template: true},
