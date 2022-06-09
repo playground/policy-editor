@@ -2,9 +2,9 @@ import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angu
 import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
-import { Params } from '../interface/params';
+import { Params, IMethod } from '../interface';
 import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption, UrlToken } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
@@ -51,7 +51,8 @@ export class IeamService implements HttpInterceptor {
   currentFilename = '';
   configFilename = '';
   isJsonModified = false;
-  method: any = {};
+  method: IMethod;
+
   currentWorkingFile = '';
   titleText = 'IEAM';
 
@@ -448,7 +449,7 @@ export class IeamService implements HttpInterceptor {
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
-  callExchange(endpoint: string, exchange: IExchange) {
+  callExchange(endpoint: string, exchange: IExchange, body?: any) {
     const credential = this.configJson[this.selectedOrg]['credential']
     const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = credential['HZN_EXCHANGE_URL']
@@ -462,18 +463,19 @@ export class IeamService implements HttpInterceptor {
     }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
+
     switch(exchange.method) {
       case 'GET':
       default:
         return this.get(`${url}/${endpoint}`, {headers: header})
         break;
       case 'POST':
-        return this.http.post(`${url}/${endpoint}`, {headers: header})
+        // header = header.append('Access-Control-Allow-Credentials', 'true')
+        // header = header.append('Access-Control-Allow-Origin', '*')
+        // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+        return this.http.post(`${url}/${endpoint}`, body, {headers: header})
         break;
     }
-    // header = header.append('Access-Control-Allow-Credentials', 'true')
-    // header = header.append('Access-Control-Allow-Origin', '*')
-    // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
   addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {

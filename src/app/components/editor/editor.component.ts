@@ -241,7 +241,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
         if(arch) {
           policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
-
           if(policy.indexOf('$MMS_CONTAINER') > 0) {
             const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})
             if(answer) {
@@ -253,7 +252,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
             const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})
             if(answer) {
               let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
-              policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
+              policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
             }
           }
         }

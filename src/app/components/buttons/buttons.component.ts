@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
-import { Enum, Organization, Exchange, IOption, Loader } from 'src/app/models/ieam-model';
+import { Enum, Organization, Exchange, IOption, Loader, Navigate } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -219,7 +219,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   publish() {
-    this.broadcast(Enum.PUBLISH)
+    this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
 
   shouldDisenable() {
@@ -242,6 +242,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value
+      this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
     }
   }
 

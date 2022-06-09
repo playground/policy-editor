@@ -21,6 +21,7 @@ export enum Enum {
   LOAD_TEMPLATE_POLICY,
   CONFIG_LOADED,
   ORG_SELECTED,
+  EXCHANGE_SELECTED,
   SAVE,
   PUBLISH,
   NONE_SELECTED,
@@ -70,12 +71,6 @@ export interface IOption {
   name: string;
 }
 
-export interface IFile {
-  name: string;
-  modified: boolean;
-  remote: boolean;
-  content: Object;
-}
 export interface IEditorStorage {
   content: Object;
   original: Object;
@@ -96,7 +91,8 @@ export const Exchange = {
   adminVersion: {name: 'Admin Version', path: 'admin/version'},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
   addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'},
-  addServicePolicy: {name: 'Add Service Policy', path: 'org/${orgid}/services/${service}/policy', method: 'PUT'},
+  addService: {name: 'Add Service', path: 'orgs/${orgid}/services', method: 'POST', type: 'service'},
+  addServicePolicy: {name: 'Add Service Policy', path: 'orgs/${orgid}/services/${service}/policy', method: 'PUT', type: 'servicePolicy'}
 } as const;
 
 export const Loader = {
@@ -108,4 +104,9 @@ export const Loader = {
   hznConfig: {name: 'hzn Config File'},
   localPolicy: {name: 'Local File'},
   remotePolicy: {name: 'Remote File'}
+} as const;
+
+export const UrlToken = {
+  orgid: '${orgid}',
+  service: '${service}'
 } as const;
