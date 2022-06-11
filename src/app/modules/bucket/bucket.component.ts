@@ -354,16 +354,13 @@ export class BucketComponent implements OnInit, OnDestroy {
             }
           });
           if (filename.length > 0) {
-            let options = {
-              headers: {
-                'Access-Control-Allow-Credentials': true,
-                'Access-Control-Allow-Origin': '*'
-              },
+            let body = {
               bucket: this.bucketName,
-              filename: filename,
+              files: filename,
               action: 'delete'
-            };
-            this.ieamService.post(this.method.delete, options)
+            }
+
+            this.ieamService.post(this.method.delete, body)
             .subscribe({
               next: (data: any) => {
                 this.showSnackBar(data.result, 'Rock');
@@ -375,16 +372,12 @@ export class BucketComponent implements OnInit, OnDestroy {
             });
           }
           if (dirname.length > 0) {
-            let options = {
-              headers: {
-                'Access-Control-Allow-Credentials': true,
-                'Access-Control-Allow-Origin': '*'
-              },
+            let body = {
               bucket: this.bucketName,
               directory: dirname,
               action: 'delete_folder'
-            };
-            this.ieamService.post(this.method.delete, options)
+            }
+            this.ieamService.post(this.method.deleteFolder, body)
             // this.ieamService.post(`${this.gateway}${this.bucketApi}${this.method.post}`, options)
             .subscribe({
               next: (data: any) => {
@@ -438,7 +431,7 @@ export class BucketComponent implements OnInit, OnDestroy {
     let resp: any = await this.ieamService.promptDialog(`What is the name of the new folder?`, 'folder', {placeholder: 'Folder name'})
     if (resp) {
       console.log(resp);
-      let directory = resp.options.name.replace(/\//g, '');
+      let directory = resp.options.name;
       this.mkdir(directory)
       .subscribe((res) => {
         console.log(res)
@@ -456,13 +449,7 @@ export class BucketComponent implements OnInit, OnDestroy {
         directory: path.length > 0 ? `${path}/${directory}/placeholder.txt` : `${directory}/placeholder.txt`,
         action: 'mkdir'
       };
-      let options = {
-        headers: {
-          'Access-Control-Allow-Credentials': true,
-          'Access-Control-Allow-Origin': '*'
-        }
-      }
-      this.ieamService.post(this.method.mkdir, JSON.stringify(body), options)
+      this.ieamService.post(this.method.mkdir, body)
       .subscribe({
         next: (data: any) => {
           console.log('rock', data)

@@ -139,10 +139,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           break;
         case Enum.LOAD_POLICY:
           this.ieamService.editingConfig = false;
+          this.loadFile(msg.payload, Enum.LOAD_POLICY)
           console.log(msg.payload)
           this.isConfigLoaded()
           .subscribe(() => {
-            this.loadFile(msg.payload, Enum.LOAD_POLICY)
+            console.log('loaded config')
+            // this.loadFile(msg.payload, Enum.LOAD_POLICY)
           })
           // this.editJson = this.ieamService.getEditorStorage('hznConfig')
           // if(!this.editJson || Object.keys(this.editJson.content).length == 0) {

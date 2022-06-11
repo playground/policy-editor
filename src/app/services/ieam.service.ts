@@ -65,12 +65,13 @@ export class IeamService implements HttpInterceptor {
     const backendUrl = isDevMode() ? 'http://localhost:3000' : '';
     this.method = {
       list: `${backendUrl}/list`,
-      mkdir: `${backendUrl}`,
+      mkdir: `${backendUrl}/mkdir`,
       upload: `${backendUrl}/upload`,
       session: `${backendUrl}/session`,
       sigUrl: `${backendUrl}/get_signed_url`,
       signature: `${backendUrl}/signature`,
       delete: `${backendUrl}/delete`,
+      deleteFolder: `${backendUrl}/delete_folder`,
       post: 'post'
     };
 
@@ -449,6 +450,9 @@ export class IeamService implements HttpInterceptor {
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
+  getOrg(org = this.selectedOrg) {
+    return this.configJson[org]
+  }
   callExchange(endpoint: string, exchange: IExchange, body?: any) {
     const credential = this.configJson[this.selectedOrg]['credential']
     const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
@@ -473,7 +477,12 @@ export class IeamService implements HttpInterceptor {
         // header = header.append('Access-Control-Allow-Credentials', 'true')
         // header = header.append('Access-Control-Allow-Origin', '*')
         // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+        header = header.append('Content-Type', 'application/json');
+        header = header.append('Accept', 'application/json');
         return this.http.post(`${url}/${endpoint}`, body, {headers: header})
+        break;
+      case 'PUT':
+        return this.http.put(`${url}/${endpoint}`, body, {headers: header})
         break;
     }
     return this.get(`${url}/${endpoint}`, {headers: header})

@@ -20,6 +20,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    if(!this.ieamService.signIn('/editor')) {
+      return
+    }
+
     this.showContent()
     if(!this.ieamService.signIn('/exchange')) {
       return
@@ -68,12 +72,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.callExchange(exchange.path, exchange)
     }
   }
-  tokenReplace(path: string, content: any) {
+  tokenReplace(path: string, content: any, org: any) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
       switch(key) {
         case 'service':
-          value = content.url
+          value = org.envVars.SERVICE_NAME
           break;
         case 'orgid':
           value = this.ieamService.selectedOrg
@@ -88,8 +92,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     const method = exchange.method ? exchange.method : 'GET'
     const json:any = this.ieamService.getEditorStorage();
     let content: IService = json.content;
-    path = this.tokenReplace(path, content)
-    this.ieamService.callExchange(path, exchange, JSON.stringify(content))
+    let org: any = this
+    path = this.tokenReplace(path, content, this.ieamService.getOrg())
+    this.ieamService.callExchange(path, exchange, content)
     .subscribe({
       next: (res: any) => {
         let html = ''

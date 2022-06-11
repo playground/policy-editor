@@ -51,30 +51,33 @@ export class CosClient {
   listAll(params: Params, token, keys) {
     return new Observable((observer) => {
       let list = (params, token, keys) => {
-        let config = {
-          Bucket: params.bucket,
-          Prefix: params.key
-        };
-        if(token) {
-          config['ContinuationToken'] = token;
-        }
-        console.log('$$$config',  config);
-        this.client.listObjectsV2(config, function(err, data){
-          // console.log('$$$data',  data, err);
-          if(data) {
-            keys = keys.concat(data.Contents);
+        try {
+          let config = {
+            Bucket: params.bucket,
+            Prefix: params.key
+          };
+          if(token) {
+            config['ContinuationToken'] = token;
+          }
+          this.client.listObjectsV2(config, function(err, data){
+            if(data) {
+              keys = keys.concat(data.Contents);
 
-            if (data.IsTruncated) {
-              list(params, data.NextContinuationToken, keys);
+              if (data.IsTruncated) {
+                list(params, data.NextContinuationToken, keys);
+              } else {
+                observer.next(keys);
+                observer.complete();
+              }
             } else {
               observer.next(keys);
               observer.complete();
             }
-          } else {
-            observer.next(keys);
-            observer.complete();
-          }
-        });
+          });
+        } catch(e) {
+          console.log(e)
+          observer.error(e)
+        }
       };
       list(params, token, keys);
     });
@@ -135,7 +138,7 @@ export class CosClient {
       let items = 0;
       let $dir: any = {};
       let files:any = [];
-      console.log('$$$$$$file', params.directory)
+      // console.log('$$$$$$directory', params.directory)
       params.directory.forEach((dir, idx: number) => {
         let config = <Params>{
           key: dir,
@@ -145,14 +148,14 @@ export class CosClient {
       });
       forkJoin($dir)
       .subscribe((res: any) => {
-        res.forEach((keys: any[]) => {
-          items += keys.length;
-          keys.forEach((key) => {
+        let keys =  Object.keys(res)
+        items += keys.length;
+        keys.forEach((key, idx: number) => {
+          res[key].forEach((key) => {
             files.push(key.Key);
           })
         });
-        // console.log('$$$files: ', files)
-        params.filename = files;
+        params.files = files;
         this.delete(params)
         .subscribe((res) => {
           observer.next({result: `${items} item(s) deleted successfully`});
@@ -163,8 +166,8 @@ export class CosClient {
   }
   delete(params: Params) {
     return new Observable((observer) => {
-      // console.log('$$$$$$file', params.filename)
-      const files = params.filename instanceof Array ? params.filename : [params.filename];
+      console.log('$$$$$$file', params.files)
+      const files = params.files instanceof Array ? params.files : [params.files];
       let $files: any = {};
       let config = {
         Bucket: params.bucket,
