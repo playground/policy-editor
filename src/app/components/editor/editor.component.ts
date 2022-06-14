@@ -7,6 +7,7 @@ import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from '../dialog/dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { IEnvVars } from 'src/app/interface';
 
 @Component({
   selector: 'app-editor',
@@ -233,7 +234,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   async updateEditorData(org: string) {
     if(this.ieamService.configJson[org]) {
-      let envVars = this.ieamService.configJson[org].envVars;
+      let envVars: IEnvVars = this.ieamService.configJson[org].envVars;
       let policy = JSON.stringify(this.data)
       policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
       Object.keys(envVars).forEach((key) => {
@@ -242,6 +243,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       if(policy.indexOf('$ARCH') >= 0) {
         const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
         if(arch) {
+          this.ieamService.setArch(arch.options.name)
           policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
           if(policy.indexOf('$MMS_CONTAINER') > 0) {
             const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})

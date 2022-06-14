@@ -84,14 +84,19 @@ export interface IExchange {
   method: string;
   prompt: boolean;
   title: string;
-  placeholder: string;
+  placeholder: string
+  signature: boolean,
+  callB4: string;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
   adminVersion: {name: 'Admin Version', path: 'admin/version'},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
   addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'},
-  addService: {name: 'Add Service', path: 'orgs/${orgid}/services', method: 'POST', type: 'service'},
+  addService: {name: 'Add/Update Service', path: 'orgs/${orgid}/services', method: 'POST', type: 'service', signature: true, callB4: 'getService'},
+  getService: {name: 'Get Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'GET', type: 'service'},
+  getServices: {name: 'Get All Services', path: 'orgs/${orgid}/services', method: 'GET', type: 'service'},
+  deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'DELETE', type: 'service'},
   addServicePolicy: {name: 'Add Service Policy', path: 'orgs/${orgid}/services/${service}/policy', method: 'PUT', type: 'servicePolicy'}
 } as const;
 

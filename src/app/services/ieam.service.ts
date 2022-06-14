@@ -2,7 +2,7 @@ import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angu
 import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
-import { Params, IMethod } from '../interface';
+import { Params, IMethod, IEnvVars, IHznConfig } from '../interface';
 import { ISession } from '../interface/session';
 import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption, UrlToken } from '../models/ieam-model';
 import { ObserversModule } from '@angular/cdk/observers';
@@ -72,6 +72,7 @@ export class IeamService implements HttpInterceptor {
       signature: `${backendUrl}/signature`,
       delete: `${backendUrl}/delete`,
       deleteFolder: `${backendUrl}/delete_folder`,
+      signDeployment: `${backendUrl}/sign_deployment`,
       post: 'post'
     };
 
@@ -450,7 +451,7 @@ export class IeamService implements HttpInterceptor {
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
-  getOrg(org = this.selectedOrg) {
+  getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
   callExchange(endpoint: string, exchange: IExchange, body?: any) {
@@ -524,5 +525,18 @@ export class IeamService implements HttpInterceptor {
   }
   setTitleText(key = this.currentWorkingFile) {
     this.titleText = this.editorStorage[key] ? this.editorStorage[key].filename ? this.editorStorage[key].filename : key : 'IEAM'
+  }
+  setArch(arch: string, org = this.getOrg()) {
+    if(org) {
+      org.metaVars.ARCH = arch;
+    }
+  }
+  getServiceName(org = this.getOrg()) {
+    let serviceName = ''
+    if(org) {
+      const envVars: IEnvVars = org.envVars;
+      serviceName = `${envVars.SERVICE_NAME}_${envVars.SERVICE_VERSION}_${org.metaVars.ARCH}`;
+    }
+    return serviceName;
   }
 }

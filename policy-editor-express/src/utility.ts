@@ -33,6 +33,9 @@ export const util: any = {
     }
     return originalText;
   },
+  encryptSha256: (jsonString: string) => {
+    return cryptoJS.SHA256(jsonString);
+  },
   validateSession: (sessionId: string) => {
     const seed = util.decryptAES(sessionId, util.passPhrase)
     return Date.now() - parseInt(seed.substring(util.sessionToken.length)) < 300000;
@@ -175,5 +178,16 @@ export const util: any = {
         console.log(data)
       })
     });
+  },
+  isSha256: (hash: string) => {
+    const regexExp = /^[a-f0-9]{64}$/gi;
+    return regexExp.test(hash)
   }
 }
+
+export const shell = util.shell;
+export const isSha256 = util.isSha256;
+export const encryptSha256 = util.encryptSha256;
+
+export const homePath = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+export const privateKey = `${homePath}/.ssh/key.pem`;

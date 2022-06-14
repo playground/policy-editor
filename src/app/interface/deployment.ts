@@ -30,3 +30,4 @@ export interface IService {
     storeType: string;
   }
 }
+

@@ -1,7 +1,6 @@
 {
-  "org": "$HZN_ORG_ID",
   "label": "$MMS_SERVICE_NAME for $ARCH",
-  "description": "blah blah",
+  "description": "$MMS_SERVICE_NAME for $ARCH",
   "public": true,
   "documentation": "https://console.cloud.ibm.com/docs/services/edge-fabric/poc/sdr.html",
   "url": "$MMS_SERVICE_NAME",

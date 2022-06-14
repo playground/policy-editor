@@ -7,5 +7,6 @@ export interface IMethod {
   signature: string;
   delete: string;
   deleteFolder: string;
+  signDeployment: string;
   post: string;
 }

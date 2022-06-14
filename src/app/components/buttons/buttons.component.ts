@@ -37,6 +37,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     Object.keys(Exchange).forEach((key) => {
       this.exchangeCalls.push({name: Exchange[key].name, id: key})
     })
+    this.exchangeCalls.sort((a,b) => a.name.localeCompare(b.name))
     this.loaders = this.ieamService.getLoader();
 
     this.filteredOptions = this.loaderControl.valueChanges.pipe(

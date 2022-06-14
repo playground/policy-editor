@@ -5,7 +5,8 @@ import { existsSync, readFileSync } from 'fs';
 import cors = require('cors');
 import { CosClient } from './cos-client';
 import { Params } from './params';
-import { util } from './utility';
+import { util, homePath, privateKey } from './utility';
+import { anax } from './utils';
 import express = require('express');
 import { Stream } from 'stream';
 import * as readline from 'readline';
@@ -282,6 +283,20 @@ export class Server {
     app.get('/validate_session', (req: express.Request, res: express.Response) => {
       let params = this.getParams(req.query as unknown as Params);
       res.send({valid: util.validateSession(params.sessionId)})
+    })
+    app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res)
+      .subscribe({
+        next: (params: Params) => {
+          let hash = util.encryptSha256(JSON.stringify(params.body))
+          console.log('hash', hash)
+          anax.signDeployment(privateKey, hash)
+          .subscribe({
+            next: (data: any) => res.send({signature: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
     })
     app.get("*",  (req, res) => {
       res.redirect(301, '/')
