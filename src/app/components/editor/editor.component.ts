@@ -243,6 +243,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           policy = policy.replace(new RegExp(`\\$MMS_SHARED_VOLUME:\\$${key}`, 'g'), `${envVars['MMS_SHARED_VOLUME']}:${envVars[key]}`)
         }
       })
+      Object.keys(envVars).forEach((key) => {
+        policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
+      })
       if(policy.indexOf('$ARCH') >= 0) {
         const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
         if(arch) {

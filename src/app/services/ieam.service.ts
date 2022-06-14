@@ -483,7 +483,10 @@ export class IeamService implements HttpInterceptor {
       case 'PUT':
         return this.http.put(`${url}/${endpoint}`, body, {headers: header})
         break;
-    }
+      case 'DELETE':
+          return this.http.delete(`${url}/${endpoint}`, {headers: header})
+          break;
+      }
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
   addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {

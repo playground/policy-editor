@@ -37,9 +37,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(msg.type == Enum.EXCHANGE_CALL) {
           this.run(msg.payload)
         } else if(msg.type == Enum.EXCHANGE_SELECTED) {
-          if(msg.payload && msg.payload.type == this.ieamService.currentWorkingFile) {
-            this.showContent()
-          }
+          this.showContent()
         } else if(msg.type == Enum.LOAD_CONFIG) {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({
