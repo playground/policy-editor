@@ -89,7 +89,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             let callB4: IExchange = Object.assign({}, Exchange[exchange.callB4]);
             if(callB4) {
               // Check if service exists, if so PUT instead of POST
-              let callB4Path = this.tokenReplace(callB4.path)
+              let callB4Path = this.tokenReplace(callB4.path, content)
               this.ieamService.callExchange(callB4Path, callB4)
               .subscribe(({
                 next: (data) => {
@@ -98,7 +98,11 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                     this.callExchange(callB4Path, callB4, content)
                   }
                 },
-                error: (err) => console.log(err)
+                error: (err) => {
+                  console.log(err)
+                  // TODO: exchange-api /v1/orgs/root/services/<service> should not return 404 when service not found
+                  this.callExchange(path, exchange, content);
+                }
               }))
             } else {
               this.callExchange(path, exchange, content);
@@ -112,12 +116,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.callExchange(path, exchange, content)
     }
   }
-  tokenReplace(path: string) {
+  tokenReplace(path: string, content: IService) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
       switch(key) {
         case 'service':
-          value = this.ieamService.getServiceName()
+          value = this.ieamService.getServiceName(content)
           break;
         case 'orgid':
           value = this.ieamService.selectedOrg
@@ -128,12 +132,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log(path)
     return path;
   }
-  callExchange(path: string, exchange: IExchange, content: any) {
+  callExchange(path: string, exchange: IExchange, content: IService) {
     // const method = exchange.method ? exchange.method : 'GET'
     // const json:any = this.ieamService.getEditorStorage();
     // let content: IService = json.content;
     // let org: any = this
-    path = this.tokenReplace(path)
+    path = this.tokenReplace(path, content)
     this.ieamService.callExchange(path, exchange, content)
     .subscribe({
       next: (res: any) => {

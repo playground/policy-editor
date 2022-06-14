@@ -238,7 +238,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       let policy = JSON.stringify(this.data)
       policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
       Object.keys(envVars).forEach((key) => {
-        policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
+        policy = policy.replace(new RegExp(`"\\$${key}"`, 'g'), `"${envVars[key]}"`)
+        if(key === 'VOLUME_MOUNT') {
+          policy = policy.replace(new RegExp(`\\$MMS_SHARED_VOLUME:\\$${key}`, 'g'), `${envVars['MMS_SHARED_VOLUME']}:${envVars[key]}`)
+        }
       })
       if(policy.indexOf('$ARCH') >= 0) {
         const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})

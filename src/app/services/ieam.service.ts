@@ -2,10 +2,8 @@ import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angu
 import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
-import { Params, IMethod, IEnvVars, IHznConfig } from '../interface';
-import { ISession } from '../interface/session';
+import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
 import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption, UrlToken } from '../models/ieam-model';
-import { ObserversModule } from '@angular/cdk/observers';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
@@ -531,11 +529,10 @@ export class IeamService implements HttpInterceptor {
       org.metaVars.ARCH = arch;
     }
   }
-  getServiceName(org = this.getOrg()) {
+  getServiceName(content: IService, org = this.getOrg()) {
     let serviceName = ''
     if(org) {
-      const envVars: IEnvVars = org.envVars;
-      serviceName = `${envVars.SERVICE_NAME}_${envVars.SERVICE_VERSION}_${org.metaVars.ARCH}`;
+      serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;
   }
