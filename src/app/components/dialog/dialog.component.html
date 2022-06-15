@@ -1,4 +1,4 @@
-<h1 mat-dialog-title>{{data.title}}</h1>
+<h1 mat-dialog-title [innerHtml]="data.title"></h1>
 <form #form="ngForm">
 <div mat-dialog-content>
   <div [ngSwitch]="data.type">

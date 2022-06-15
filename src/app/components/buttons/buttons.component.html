@@ -50,6 +50,7 @@
 
 <div mat-card-actions class="center" [hidden]="isExchange()">
   <div class="align-elements">
+    <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
       <mat-label>Org</mat-label>
       <mat-select [(value)]="ieamService.selectedOrg" name="organization" required>
@@ -62,12 +63,21 @@
 
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Call</mat-label>
-      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
-        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
-          {{call.name}}
+      <input
+        type="text"
+        matInput
+        aria-label="Call"
+        placeholder="Pick one"
+        [formControl]="exchangeControl"
+        [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+        <mat-option *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
+          {{option.name}}
         </mat-option>
-      </mat-select>
+      </mat-autocomplete>
     </mat-form-field>
+
     <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
+    </form>
   </div>
 </div>

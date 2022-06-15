@@ -26,6 +26,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   psAgent!: { unsubscribe: () => void; };
   loaderControl = new FormControl('');
   filteredOptions: Observable<IOption[]>;
+  exchangeControl = new FormControl('');
+  filterExchangeOptions: Observable<IOption[]>;
 
   constructor(
     private router: Router,
@@ -39,11 +41,17 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     })
     this.exchangeCalls.sort((a,b) => a.name.localeCompare(b.name))
     this.loaders = this.ieamService.getLoader();
+    this.loaders.sort((a,b) => a.name.localeCompare(b.name))
 
     this.filteredOptions = this.loaderControl.valueChanges.pipe(
       startWith(''),
       map(value => (typeof value === 'string' ? value : value?.id)),
       map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
+    )
+    this.filterExchangeOptions = this.exchangeControl.valueChanges.pipe(
+      startWith(''),
+      map(value => (typeof value === 'string' ? value : value?.id)),
+      map(name => (name ? this.ieamService.optionFilter(name, this.exchangeCalls) : this.exchangeCalls.slice()))
     )
     this.routeObserver = this.route.data.subscribe((data) => {
       if('/editor' == this.router.routerState.snapshot.url) {
@@ -228,7 +236,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    return this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+    return this.ieamService.selectedLoader !== Exchange[this.ieamService.selectedCall]?.type || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
   }
 
   onChange(evt: any) {
@@ -250,7 +258,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   onOptionChange(evt: any) {
     if(evt.isUserInput) {
       this.ieamService.onOptionChange(evt);
-      const id = evt.source.value.id;
+      const id = this.ieamService.selectedLoader = evt.source.value.id;
       if(Loader[id].template) {
         this.loadTemplatePoicy()
       } else if(id === 'hznConfig') {

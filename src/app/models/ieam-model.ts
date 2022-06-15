@@ -84,9 +84,11 @@ export interface IExchange {
   method: string;
   prompt: boolean;
   title: string;
-  placeholder: string
-  signature: boolean,
+  placeholder: string;
+  signature: boolean;
   callB4: string;
+  description: string;
+  type: string;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
@@ -97,15 +99,25 @@ export const Exchange = {
   getService: {name: 'Get Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'GET', type: 'service'},
   getServices: {name: 'Get All Services', path: 'orgs/${orgid}/services', method: 'GET', type: 'service'},
   deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'DELETE', type: 'service'},
-  addServicePolicy: {name: 'Add Service Policy', path: 'orgs/${orgid}/services/${service}/policy', method: 'PUT', type: 'servicePolicy'}
+  addNodePolicy: {name: 'Add/Update Mgmt Policy', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'POST', type: 'managementPolicy', callB4: 'getNodePolicy', description: 'Creates a node management policy resource. A node management policy controls the updating of the edge node agents. This can only be called by a user.'},
+  getNodePolicy: {name: 'Get Mgmt Policy By Name', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'GET', type: 'managementPolicy'},
+  getNodePolicies: {name: 'Get All Mgmt Policies', path: 'orgs/${orgid}/managementpolicies', method: 'GET', type: 'managementPolicy'},
+  deleteNodePolicy: {name: 'Delete Mgmt Policy By Name', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'DELETE', type: 'managementPolicy'},
+  addBusinessPolicy: {name: 'Add/Update Business Policy', path: 'orgs/${orgid}/business/policies/${businesPolicy}', method: 'POST', type: 'businessPolicy', callB4: 'getBusinessPolicy', description: 'Creates a business policy resource. A business policy resource specifies the service that should be deployed based on the specified properties and constraints. This can only be called by a user.'},
+  getBusinessPolicy: {name: 'Get Business Policy By Name', path: 'orgs/${orgid}/business/policies/${businesPolicy}', method: 'GET', type: 'businessPolicy', description: 'Returns the business policy with the specified id. Can be run by a user, node, or agbot.'},
+  getBusinessPolicies: {name: 'Get All Business Policies', path: 'orgs/${orgid}/business/policies', method: 'GET', type: 'businessPolicy', description: 'Returns all business policy definitions in this organization. Can be run by any user, node, or agbot.'},
+  deleteBusinessPolicy: {name: 'Delete Business Policy By Name', path: 'orgs/${orgid}/business/${businesPolicy}', method: 'DELETE', type: 'businessPolicy', description: ''},
+  addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgid}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
+  getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgid}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},
+  deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgid}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', description: 'Deletes the policy of a service. Can be run by the owning user.'},
 } as const;
 
 export const Loader = {
   service: {name: 'Service Definition', file: 'assets/templates/service.json', template: true},
   topLevelService: {name: 'Top Level Service', file: 'assets/templates/top-level-service.json', template: true},
   servicePolicy: {name: 'Service Policy', file: 'assets/templates/service.policy.json', template: true},
-  deploymentPolicy: {name: 'Deployment Policy', file: 'assets/templates/deployment.policy.json', template: true},
-  nodePolicy: {name: 'Node Policy', file: 'assets/templates/node.policy.json', template: true},
+  businessPolicy: {name: 'Business Policy', file: 'assets/templates/deployment.policy.json', template: true},
+  managementPolicy: {name: 'Node Policy', file: 'assets/templates/node.policy.json', template: true},
   hznConfig: {name: 'hzn Config File'},
   localPolicy: {name: 'Local File'},
   remotePolicy: {name: 'Remote File'}
@@ -113,5 +125,8 @@ export const Loader = {
 
 export const UrlToken = {
   orgid: '${orgid}',
-  service: '${service}'
+  service: '${service}',
+  servicePolicy: '${servicePolicy}',
+  managementPolicy: '${managementPolicy}',
+  businessPolicy: '${businessPolicy}'
 } as const;

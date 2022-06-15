@@ -46,6 +46,7 @@ export class IeamService implements HttpInterceptor {
   dialogRef?: MatDialogRef<DialogComponent, any>;
   selectedOrg: string = '';
   selectedCall: string = '';
+  selectedLoader: string = '';
   currentFilename = '';
   configFilename = '';
   isJsonModified = false;
@@ -538,5 +539,40 @@ export class IeamService implements HttpInterceptor {
       serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;
+  }
+  hasServiceName(content: IService) {
+    return content.url && content.version && content.arch;
+  }
+  getServiceName2(content: IService, org = this.getOrg()) {
+    return new Observable((observer) => {
+      let serviceName = ''
+      if(org) {
+        if(content.url && content.version && content.arch) {
+          serviceName = `${content.url}_${content.version}_${content.arch}`;
+          observer.next(serviceName)
+          observer.complete()
+        } else {
+          this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
+          .then((resp: any) => {
+            if (resp) {
+              const arch = resp.options.name;
+              if(this.selectedLoader == 'servicePolicy') {
+                serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
+              } else if(this.selectedLoader == 'deploymentPolicy') {
+                serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
+              }
+              observer.next(serviceName)
+              observer.complete()
+            } else {
+              observer.next(serviceName)
+              observer.complete()
+            }
+          })
+        }
+      } else {
+        observer.next(serviceName)
+        observer.complete()
+      }
+    })
   }
 }
