@@ -35,9 +35,16 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     public ieamService: IeamService
   ) { }
 
+  setExchangeOptions() {
+    this.exchangeCalls.sort((a,b) => a.name.localeCompare(b.name))
+    this.filterExchangeOptions = this.exchangeControl.valueChanges.pipe(
+      startWith(''),
+      map(value => (typeof value === 'string' ? value : value?.id)),
+      map(name => (name ? this.ieamService.optionFilter(name, this.exchangeCalls) : this.exchangeCalls.slice()))
+    )
+  }
   ngOnInit() {
     this.exchangeCalls = this.ieamService.getExchange()
-    this.exchangeCalls.sort((a,b) => a.name.localeCompare(b.name))
     this.loaders = this.ieamService.getLoader();
     this.loaders.sort((a,b) => a.name.localeCompare(b.name))
 
@@ -46,11 +53,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       map(value => (typeof value === 'string' ? value : value?.id)),
       map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
     )
-    this.filterExchangeOptions = this.exchangeControl.valueChanges.pipe(
-      startWith(''),
-      map(value => (typeof value === 'string' ? value : value?.id)),
-      map(name => (name ? this.ieamService.optionFilter(name, this.exchangeCalls) : this.exchangeCalls.slice()))
-    )
+    this.setExchangeOptions()
+
     this.routeObserver = this.route.data.subscribe((data) => {
       if('/editor' == this.router.routerState.snapshot.url) {
         this.populateOrgs()
@@ -226,6 +230,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   publish() {
+    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader)
+    this.setExchangeOptions()
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
 
@@ -234,7 +240,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    return this.ieamService.selectedLoader !== Exchange[this.ieamService.selectedCall]?.type && !Exchange[this.ieamService.selectedCall]?.run || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+    const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
+    return !match && !Exchange[this.ieamService.selectedCall]?.run || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
   }
 
   onChange(evt: any) {

@@ -52,3 +52,8 @@
   font-size: 12px;
   margin-top: 4px;
 }
+::ng-deep mat-option.mat-autocomplete-option {
+  line-height: 3em;
+  height: 3em;
+  font-size: 12px;
+}

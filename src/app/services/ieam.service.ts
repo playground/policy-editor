@@ -61,7 +61,7 @@ export class IeamService implements HttpInterceptor {
     private http: HttpClient,
     private dialog: MatDialog
   ) {
-    const backendUrl = isDevMode() ? 'http://localhost:3000' : '';
+    const backendUrl = isDevMode() ? 'http://192.168.86.250:3000' : '';
     this.method = {
       list: `${backendUrl}/list`,
       mkdir: `${backendUrl}/mkdir`,
@@ -499,10 +499,17 @@ export class IeamService implements HttpInterceptor {
   updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
     this.editorStorage[key] = json;
   }
-  getExchange(): IOption[] {
+  getExchange(filter = ''): IOption[] {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
-      exchange.push({name: Exchange[key].name, id: key})
+      if(filter.length > 0) {
+        if(filter == Exchange[key].type) {
+          exchange.push({name: Exchange[key].name, id: key})
+        }
+      }
+      else { 
+        exchange.push({name: Exchange[key].name, id: key})
+      }  
     })
     return exchange;
   }

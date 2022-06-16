@@ -34,7 +34,7 @@
         [formControl]="loaderControl"
         [matAutocomplete]="auto">
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
-        <mat-option *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="onOptionChange($event)">
+        <mat-option class="mat-autocomplete-option" *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="onOptionChange($event)">
           {{option.name}}
         </mat-option>
       </mat-autocomplete>
@@ -59,8 +59,9 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
+  </form>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
-
+  <form>
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Call</mat-label>
       <input
@@ -71,20 +72,12 @@
         [formControl]="exchangeControl"
         [matAutocomplete]="auto">
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
-        <mat-option *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
+        <mat-option class="mat-autocomplete-option" *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
           {{option.name}}
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
-    <mat-form-field appearance="fill" class="device-form-field">
-      <mat-label>Call</mat-label>
-      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
-        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
-          {{call.name}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
-    </form>
+  </form>
+  <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
   </div>
 </div>

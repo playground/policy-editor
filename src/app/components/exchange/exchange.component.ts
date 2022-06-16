@@ -94,7 +94,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                 next: (data) => {
                   if(Object.keys(data).length > 0) {
                     callB4.method = 'PUT'
-                    this.hasServiceName(callB4Path, callB4, content)
+                    this.callExchange(callB4Path, callB4, content)
                   }
                 },
                 error: (err) => {
