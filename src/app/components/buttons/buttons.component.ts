@@ -36,9 +36,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    Object.keys(Exchange).forEach((key) => {
-      this.exchangeCalls.push({name: Exchange[key].name, id: key})
-    })
+    this.exchangeCalls = this.ieamService.getExchange()
     this.exchangeCalls.sort((a,b) => a.name.localeCompare(b.name))
     this.loaders = this.ieamService.getLoader();
     this.loaders.sort((a,b) => a.name.localeCompare(b.name))
@@ -236,7 +234,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    return this.ieamService.selectedLoader !== Exchange[this.ieamService.selectedCall]?.type || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+    return this.ieamService.selectedLoader !== Exchange[this.ieamService.selectedCall]?.type && !Exchange[this.ieamService.selectedCall]?.run || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
   }
 
   onChange(evt: any) {
@@ -250,7 +248,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   onExchangeChange(evt: any) {
     if(evt.isUserInput) {
       console.log(evt.source.value)
-      this.ieamService.selectedCall = evt.source.value
+      this.ieamService.selectedCall = evt.source.value.id ? evt.source.value.id : evt.source.value
       this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
     }
   }

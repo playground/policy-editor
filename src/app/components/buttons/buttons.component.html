@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<div mat-card-actions class="center" [hidden]="isExchange()">
+<div mat-card-actions class="center" *ngIf="!isExchange()">
   <div class="align-elements">
     <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
@@ -76,7 +76,14 @@
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
-
+    <mat-form-field appearance="fill" class="device-form-field">
+      <mat-label>Call</mat-label>
+      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
+        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
+          {{call.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
     <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
     </form>
   </div>

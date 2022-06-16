@@ -89,23 +89,24 @@ export interface IExchange {
   callB4: string;
   description: string;
   type: string;
+  run: boolean;
 }
 export const Exchange = {
-  admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET'},
-  adminVersion: {name: 'Admin Version', path: 'admin/version'},
-  adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus'},
-  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name'},
+  admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
+  adminVersion: {name: 'Admin Version', path: 'admin/version', run: true},
+  adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus', run: true},
+  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name', run: true},
   addService: {name: 'Add/Update Service', path: 'orgs/${orgid}/services', method: 'POST', type: 'service', signature: true, callB4: 'getService'},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'GET', type: 'service'},
-  getServices: {name: 'Get All Services', path: 'orgs/${orgid}/services', method: 'GET', type: 'service'},
+  getServices: {name: 'Get All Services', path: 'orgs/${orgid}/services', method: 'GET', type: 'service', run: true},
   deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgid}/services/${service}', method: 'DELETE', type: 'service'},
   addNodePolicy: {name: 'Add/Update Mgmt Policy', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'POST', type: 'managementPolicy', callB4: 'getNodePolicy', description: 'Creates a node management policy resource. A node management policy controls the updating of the edge node agents. This can only be called by a user.'},
   getNodePolicy: {name: 'Get Mgmt Policy By Name', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'GET', type: 'managementPolicy'},
-  getNodePolicies: {name: 'Get All Mgmt Policies', path: 'orgs/${orgid}/managementpolicies', method: 'GET', type: 'managementPolicy'},
+  getNodePolicies: {name: 'Get All Mgmt Policies', path: 'orgs/${orgid}/managementpolicies', method: 'GET', type: 'managementPolicy', run: true},
   deleteNodePolicy: {name: 'Delete Mgmt Policy By Name', path: 'orgs/${orgid}/managementpolicies/${managementPolicy}', method: 'DELETE', type: 'managementPolicy'},
   addBusinessPolicy: {name: 'Add/Update Business Policy', path: 'orgs/${orgid}/business/policies/${businesPolicy}', method: 'POST', type: 'businessPolicy', callB4: 'getBusinessPolicy', description: 'Creates a business policy resource. A business policy resource specifies the service that should be deployed based on the specified properties and constraints. This can only be called by a user.'},
   getBusinessPolicy: {name: 'Get Business Policy By Name', path: 'orgs/${orgid}/business/policies/${businesPolicy}', method: 'GET', type: 'businessPolicy', description: 'Returns the business policy with the specified id. Can be run by a user, node, or agbot.'},
-  getBusinessPolicies: {name: 'Get All Business Policies', path: 'orgs/${orgid}/business/policies', method: 'GET', type: 'businessPolicy', description: 'Returns all business policy definitions in this organization. Can be run by any user, node, or agbot.'},
+  getBusinessPolicies: {name: 'Get All Business Policies', path: 'orgs/${orgid}/business/policies', method: 'GET', type: 'businessPolicy', run: true, description: 'Returns all business policy definitions in this organization. Can be run by any user, node, or agbot.'},
   deleteBusinessPolicy: {name: 'Delete Business Policy By Name', path: 'orgs/${orgid}/business/${businesPolicy}', method: 'DELETE', type: 'businessPolicy', description: ''},
   addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgid}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
   getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgid}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},

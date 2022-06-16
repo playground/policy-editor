@@ -3,7 +3,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, IOption, UrlToken } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
@@ -498,6 +498,13 @@ export class IeamService implements HttpInterceptor {
   }
   updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
     this.editorStorage[key] = json;
+  }
+  getExchange(): IOption[] {
+    let exchange: IOption[] = [];
+    Object.keys(Exchange).forEach((key) => {
+      exchange.push({name: Exchange[key].name, id: key})
+    })
+    return exchange;
   }
   getLoader(): IOption[] {
     let loaders: IOption[] = [];

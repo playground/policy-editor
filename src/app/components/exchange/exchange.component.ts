@@ -117,7 +117,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   async confirmB4Calling(path: string, exchange: IExchange, content: IService) {
     path = this.tokenReplace(path, content)
-    if(exchange.method != 'GET') {
+    if(!exchange.run && exchange.method != 'GET') {
       const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
         this.callExchange(path, exchange, content)
@@ -128,7 +128,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   hasServiceName(path: string, exchange: IExchange, content: IService) {
     let serviceName = ''
-    if(this.ieamService.hasServiceName(content)) {
+    if(exchange.run || this.ieamService.hasServiceName(content)) {
       this.confirmB4Calling(path, exchange, content)
     } else {
       this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
