@@ -281,6 +281,9 @@ export class IeamService implements HttpInterceptor {
   }
 
   isLoggedIn() {
+    if(!this.loggedIn) {
+      this.router.navigate([`/${Navigate.signin}`])
+    }
     return this.loggedIn
   }
 

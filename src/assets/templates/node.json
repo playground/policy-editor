@@ -1,0 +1,46 @@
+{
+  "token": "abc",
+  "name": "rpi3",
+  "nodeType": "device",
+  "pattern": "myorg/mypattern",
+  "arch": "arm",
+  "registeredServices": [
+    {
+      "url": "IBM/github.com.open-horizon.examples.cpu",
+      "numAgreements": 1,
+      "policy": "{}",
+      "properties": [
+        {
+          "name": "arch",
+          "value": "arm",
+          "propType": "string",
+          "op": "="
+        }
+      ]
+    }
+  ],
+  "userInput": [
+    {
+      "serviceOrgid": "IBM",
+      "serviceUrl": "ibm.cpu2msghub",
+      "serviceArch": "",
+      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "inputs": [
+        {
+          "name": "foo",
+          "value": "bar"
+        }
+      ]
+    }
+  ],
+  "msgEndPoint": "",
+  "softwareVersions": {
+    "horizon": "1.2.3"
+  },
+  "publicKey": "ABCDEF",
+  "heartbeatIntervals": {
+    "minInterval": 10,
+    "maxInterval": 120,
+    "intervalAdjustment": 10
+  }
+}

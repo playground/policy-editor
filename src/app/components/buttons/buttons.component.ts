@@ -239,6 +239,10 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     return !this.ieamService.isModified()  //|| this.ieamService.editingConfig
   }
 
+  shouldNotPublish() {
+    return this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+  }
+
   shouldNotRun() {
     // const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
     // const run = this.ieamService.selectedCall && Exchange[this.ieamService.selectedCall].run

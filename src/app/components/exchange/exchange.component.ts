@@ -3,7 +3,7 @@ import { ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Enum, Navigate, Exchange, IExchange, UrlToken } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
-import { IMethod, IService } from 'src/app/interface';
+import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
 
 @Component({
   selector: 'app-exchange',
@@ -120,7 +120,25 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!exchange.run && exchange.method != 'GET') {
       const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
-        this.callExchange(path, exchange, content)
+        if(exchange.callB4) {
+          // Check if service exists, if so PUT instead of POST
+          let callB4: IExchange = Object.assign({}, Exchange[exchange.callB4]);
+          let callB4Path = this.tokenReplace(callB4.path, content)
+          this.ieamService.callExchange(callB4Path, callB4)
+          .subscribe(({
+            next: (data) => {
+              if(Object.keys(data).length > 0) {
+                callB4.method = 'PUT'
+                this.callExchange(callB4Path, callB4, content)
+              }
+            },
+            error: (err) => {
+              console.log(err)
+            }
+          }))
+        } else {
+          this.callExchange(path, exchange, content)
+        }
       }
     } else {
       this.callExchange(path, exchange, content)
@@ -129,7 +147,16 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   hasServiceName(path: string, exchange: IExchange, content: IService) {
     let serviceName = ''
     if(exchange.run || this.ieamService.hasServiceName(content)) {
-      this.confirmB4Calling(path, exchange, content)
+      if(path.indexOf('${nodeid}') >= 0) {
+        this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
+        .then((resp: any) => {
+          const nodeid = resp.options.name;
+          path = path.replace(UrlToken['nodeid'], nodeid)
+          this.confirmB4Calling(path, exchange, content)
+        })
+      } else {
+        this.confirmB4Calling(path, exchange, content)
+      }
     } else {
       this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
       .then((resp: any) => {
@@ -153,15 +180,22 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   tokenReplace(path: string, content: IService) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
-      switch(key) {
-        case 'service':
-          value = this.ieamService.getServiceName(content)
-          break;
+      if(path.indexOf(UrlToken[key]) >= 0) {
+        switch(key) {
+          case 'service':
+            value = this.ieamService.getServiceName(content)
+            break;
           case 'orgid':
-          value = this.ieamService.selectedOrg
-          break;
+            value = this.ieamService.selectedOrg
+            break;
+          case 'deploymentPolicy':
+            const policy = content as IDeploymentPolicy;
+            const version = policy.service.serviceVersions[0] ? `_${policy.service.serviceVersions[0].version}_` : '_'
+            value = `${policy.service.name}${version}${this.ieamService.selectedArch}`
+            break;
+          }
+        path = path.replace(UrlToken[key], value)
       }
-      path = path.replace(UrlToken[key], value)
     })
     console.log(path)
     return path;
