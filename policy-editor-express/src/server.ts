@@ -297,6 +297,29 @@ export class Server {
           })
         }, error: (err) => next(err)
       })
+    })    
+    app.get('/bcrypt', (req: express.Request, res: express.Response, next) => {
+      let params = this.getParams(req.query as unknown as Params);
+      util.bcryptHash(params)
+      .then(hash => {
+        res.send({hash: hash})
+      })
+      .catch(err => {
+          console.log(err)
+          next(err)
+      })
+    })
+    app.get('/bcrypt_validate', (req: express.Request, res: express.Response, next) => {
+      let params = this.getParams(req.query as unknown as Params);
+      util.bcryptValidate(params)
+      .then(result => {
+        console.log(result)
+        res.send({res: result})
+      })
+      .catch(err => {
+          console.log(err)
+          next(err)
+      })
     })
     app.get("*",  (req, res) => {
       res.redirect(301, '/')

@@ -499,19 +499,22 @@ export class IeamService implements HttpInterceptor {
   updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
     this.editorStorage[key] = json;
   }
-  getExchange(filter = ''): IOption[] {
+  getExchange(type = ''): IOption[] {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
-      if(filter.length > 0) {
-        if(filter == Exchange[key].type) {
+      if(type.length > 0) {
+        if(!Exchange[key].type || this.checkType(type, Exchange[key].type)) {
           exchange.push({name: Exchange[key].name, id: key})
         }
       }
       else { 
         exchange.push({name: Exchange[key].name, id: key})
-      }  
+      }
     })
     return exchange;
+  }
+  checkType(type: string, filter: string) {
+    return (new RegExp(`^${filter}$`)).exec(type)
   }
   getLoader(): IOption[] {
     let loaders: IOption[] = [];

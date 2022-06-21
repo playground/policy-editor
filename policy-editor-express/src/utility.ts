@@ -8,6 +8,7 @@ import * as cryptoJS from 'crypto-js';
 import * as ethers from 'ethers';
 const ifs: any = os.networkInterfaces();
 import * as jsonfile from 'jsonfile';
+import * as bcrypt from 'bcrypt';
 import * as cp from 'child_process';
 import { hasUncaughtExceptionCaptureCallback } from 'process';
 const exec = cp.exec;
@@ -39,6 +40,12 @@ export const util: any = {
   validateSession: (sessionId: string) => {
     const seed = util.decryptAES(sessionId, util.passPhrase)
     return Date.now() - parseInt(seed.substring(util.sessionToken.length)) < 300000;
+  },
+  bcryptHash: (params: Params) => {
+    return bcrypt.hash(params.message, 10)
+  },
+  bcryptValidate: (params: Params) => {
+    return bcrypt.compare(params.message, params.hash)
   },
   signature: (params: Params) => {
     return new Observable((observer) => {
