@@ -131,10 +131,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     if(exchange.run || this.ieamService.hasServiceName(content)) {
       this.confirmB4Calling(path, exchange, content)
     } else {
-      this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
+      this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
       .then((resp: any) => {
         if (resp) {
-          const arch = resp.options.name;
+          const arch = this.ieamService.selectedArch = resp.options.name;
           const org = this.ieamService.getOrg()
           if(exchange.type == 'servicePolicy') {
             this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`

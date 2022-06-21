@@ -240,8 +240,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotRun() {
-    const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
-    return !match && !Exchange[this.ieamService.selectedCall]?.run || this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0
+    // const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
+    // const run = this.ieamService.selectedCall && Exchange[this.ieamService.selectedCall].run
+    return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0)
   }
 
   onChange(evt: any) {

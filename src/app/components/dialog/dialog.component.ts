@@ -53,6 +53,8 @@ export class DialogComponent implements OnInit {
 
     if (this.data.type !== 'folder') {
       this.notOK = false;
+    } else {
+      this.notOK = !this.data.options.name
     }
     if(!this.data.options.okButton) {
       this.data.options.okButton = 'OK'

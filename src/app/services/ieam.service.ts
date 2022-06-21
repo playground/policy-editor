@@ -47,6 +47,8 @@ export class IeamService implements HttpInterceptor {
   selectedOrg: string = '';
   selectedCall: string = '';
   selectedLoader: string = '';
+  selectedArch: string = '';
+  selectedDockerHubId: string = '';
   currentFilename = '';
   configFilename = '';
   isJsonModified = false;
@@ -503,11 +505,11 @@ export class IeamService implements HttpInterceptor {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
       if(type.length > 0) {
-        if(!Exchange[key].type || this.checkType(type, Exchange[key].type)) {
+        if(!Exchange[key].type || Exchange[key].run || this.checkType(type, Exchange[key].type)) {
           exchange.push({name: Exchange[key].name, id: key})
         }
       }
-      else { 
+      else {
         exchange.push({name: Exchange[key].name, id: key})
       }
     })
@@ -560,36 +562,36 @@ export class IeamService implements HttpInterceptor {
   hasServiceName(content: IService) {
     return content.url && content.version && content.arch;
   }
-  getServiceName2(content: IService, org = this.getOrg()) {
-    return new Observable((observer) => {
-      let serviceName = ''
-      if(org) {
-        if(content.url && content.version && content.arch) {
-          serviceName = `${content.url}_${content.version}_${content.arch}`;
-          observer.next(serviceName)
-          observer.complete()
-        } else {
-          this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
-          .then((resp: any) => {
-            if (resp) {
-              const arch = resp.options.name;
-              if(this.selectedLoader == 'servicePolicy') {
-                serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
-              } else if(this.selectedLoader == 'deploymentPolicy') {
-                serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
-              }
-              observer.next(serviceName)
-              observer.complete()
-            } else {
-              observer.next(serviceName)
-              observer.complete()
-            }
-          })
-        }
-      } else {
-        observer.next(serviceName)
-        observer.complete()
-      }
-    })
-  }
+  // getServiceName2(content: IService, org = this.getOrg()) {
+  //   return new Observable((observer) => {
+  //     let serviceName = ''
+  //     if(org) {
+  //       if(content.url && content.version && content.arch) {
+  //         serviceName = `${content.url}_${content.version}_${content.arch}`;
+  //         observer.next(serviceName)
+  //         observer.complete()
+  //       } else {
+  //         this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
+  //         .then((resp: any) => {
+  //           if (resp) {
+  //             const arch = resp.options.name;
+  //             if(this.selectedLoader == 'servicePolicy') {
+  //               serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
+  //             } else if(this.selectedLoader == 'deploymentPolicy') {
+  //               serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
+  //             }
+  //             observer.next(serviceName)
+  //             observer.complete()
+  //           } else {
+  //             observer.next(serviceName)
+  //             observer.complete()
+  //           }
+  //         })
+  //       }
+  //     } else {
+  //       observer.next(serviceName)
+  //       observer.complete()
+  //     }
+  //   })
+  // }
 }

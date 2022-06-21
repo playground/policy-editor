@@ -247,20 +247,23 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
       })
       if(policy.indexOf('$ARCH') >= 0) {
-        const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type'})
+        const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type', name: this.ieamService.selectedArch})
         if(arch) {
           this.ieamService.setArch(arch.options.name)
+          this.ieamService.selectedArch = arch.options.name;
           policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
           if(policy.indexOf('$MMS_CONTAINER') > 0) {
-            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})
+            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
             if(answer) {
+              this.ieamService.selectedDockerHubId = answer.options.name;
               let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
               policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
             }
           }
           if(policy.indexOf('$SERVICE_CONTAINER') > 0) {
-            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id'})
+            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
             if(answer) {
+              this.ieamService.selectedDockerHubId = answer.options.name;
               let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
               policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
             }
