@@ -33,23 +33,24 @@
         placeholder="Pick one"
         [formControl]="loaderControl"
         [matAutocomplete]="auto">
-      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
-        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+        <mat-option class="mat-autocomplete-option" *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="onOptionChange($event)">
           {{option.name}}
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
   </form>
-    <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
-    <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadPolicy()">Local Policy</button>
-    <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
+    <!-- <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadLocalPolicy()">Local Policy</button>
+    <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button> -->
     <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
-    <button mat-raised-button color="publish" type="button" (click)="publish()" [disabled]="shouldDisenable()">Publish</button>
+    <button mat-raised-button color="publish" type="button" (click)="publish()" [disabled]="shouldNotPublish()">Publish</button>
   </div>
 </div>
 
-<div mat-card-actions class="center" [hidden]="isExchange()">
+<div mat-card-actions class="center" *ngIf="!isExchange()">
   <div class="align-elements">
+    <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
       <mat-label>Org</mat-label>
       <mat-select [(value)]="ieamService.selectedOrg" name="organization" required>
@@ -58,16 +59,25 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
+  </form>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
-
+  <form>
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Call</mat-label>
-      <mat-select [(value)]="ieamService.selectedCall" name="exchange" required>
-        <mat-option *ngFor="let call of exchangeCalls" [value]="call.id" (onSelectionChange)="onExchangeChange($event)">
-          {{call.name}}
+      <input
+        type="text"
+        matInput
+        aria-label="Call"
+        placeholder="Pick one"
+        [formControl]="exchangeControl"
+        [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+        <mat-option class="mat-autocomplete-option" *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
+          {{option.name}}
         </mat-option>
-      </mat-select>
+      </mat-autocomplete>
     </mat-form-field>
-    <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
+  </form>
+  <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
   </div>
 </div>

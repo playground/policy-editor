@@ -2,10 +2,8 @@ import { Injectable, EventEmitter, Output, HostListener, isDevMode } from '@angu
 import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
-import { Params } from '../interface/params';
-import { ISession } from '../interface/session';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage } from '../models/ieam-model';
-import { ObserversModule } from '@angular/cdk/observers';
+import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 
@@ -42,16 +40,22 @@ export class IeamService implements HttpInterceptor {
   loginSession: any;
   sessionExpiry = 3600000;
   urlExpiry = 600;
-  editorStorage: IEditorStorage;
+  editorStorage: any = {};
   configJson: any = {};
   editingConfig = false;
   dialogRef?: MatDialogRef<DialogComponent, any>;
   selectedOrg: string = '';
   selectedCall: string = '';
+  selectedLoader: string = '';
+  selectedArch: string = '';
+  selectedDockerHubId: string = '';
   currentFilename = '';
   configFilename = '';
   isJsonModified = false;
-  method: any = {};
+  method: IMethod;
+
+  currentWorkingFile = '';
+  titleText = 'IEAM';
 
   constructor(
     private route: ActivatedRoute,
@@ -59,15 +63,17 @@ export class IeamService implements HttpInterceptor {
     private http: HttpClient,
     private dialog: MatDialog
   ) {
-    const backendUrl = isDevMode() ? 'http://localhost:3000' : '';
+    const backendUrl = isDevMode() ? 'http://192.168.86.250:3000' : '';
     this.method = {
       list: `${backendUrl}/list`,
-      mkdir: `${backendUrl}`,
+      mkdir: `${backendUrl}/mkdir`,
       upload: `${backendUrl}/upload`,
       session: `${backendUrl}/session`,
       sigUrl: `${backendUrl}/get_signed_url`,
       signature: `${backendUrl}/signature`,
       delete: `${backendUrl}/delete`,
+      deleteFolder: `${backendUrl}/delete_folder`,
+      signDeployment: `${backendUrl}/sign_deployment`,
       post: 'post'
     };
 
@@ -275,6 +281,9 @@ export class IeamService implements HttpInterceptor {
   }
 
   isLoggedIn() {
+    if(!this.loggedIn) {
+      this.router.navigate([`/${Navigate.signin}`])
+    }
     return this.loggedIn
   }
 
@@ -313,10 +322,12 @@ export class IeamService implements HttpInterceptor {
           if(type == Enum.LOAD_CONFIG) {
             this.configFilename = key
             this.configJson = JSON.parse(res[key]);
+            this.addEditorStorage(JSON.parse(res[key]), key, 'hznConfig')
             this.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
           } else if(type == Enum.LOAD_POLICY) {
             this.currentFilename = key
-            this.editorStorage = {json: JSON.parse(res[key]), filename: key};
+            // this.editorStorage = {json: JSON.parse(res[key]), filename: key};
+            this.addEditorStorage(JSON.parse(res[key]), key, this.currentWorkingFile)
           }
         });
         observer.complete()
@@ -333,6 +344,15 @@ export class IeamService implements HttpInterceptor {
         observer.complete()
       })()
     });
+  }
+  openFilePicker(payload:any = {}, type: Enum) {
+    this.showOpenFilePicker()
+    .subscribe({
+      next: (fhandle: any) => {
+        payload.fhandle = fhandle;
+        this.broadcast({type: type, payload: payload});
+      }
+    })
   }
   showOpenFilePicker(pickerOpts = pickerOptions) {
     return new Observable((observer) => {
@@ -356,8 +376,9 @@ export class IeamService implements HttpInterceptor {
     window.document.body.appendChild(element);
 
     element.click();
-
     window.document.body.removeChild(element);
+
+    this.setModify(false);
   }
   isObject(value: any) {
     return !!(value && typeof value === "object" && !Array.isArray(value));
@@ -434,7 +455,10 @@ export class IeamService implements HttpInterceptor {
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
-  callExchange(endpoint: string, exchange: IExchange) {
+  getOrg(org = this.selectedOrg): IHznConfig {
+    return this.configJson[org]
+  }
+  callExchange(endpoint: string, exchange: IExchange, body?: any) {
     const credential = this.configJson[this.selectedOrg]['credential']
     const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = credential['HZN_EXCHANGE_URL']
@@ -448,18 +472,129 @@ export class IeamService implements HttpInterceptor {
     }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
+
     switch(exchange.method) {
       case 'GET':
       default:
         return this.get(`${url}/${endpoint}`, {headers: header})
         break;
       case 'POST':
-        return this.http.post(`${url}/${endpoint}`, {headers: header})
+        // header = header.append('Access-Control-Allow-Credentials', 'true')
+        // header = header.append('Access-Control-Allow-Origin', '*')
+        // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+        header = header.append('Content-Type', 'application/json');
+        header = header.append('Accept', 'application/json');
+        return this.http.post(`${url}/${endpoint}`, body, {headers: header})
         break;
-    }
-    // header = header.append('Access-Control-Allow-Credentials', 'true')
-    // header = header.append('Access-Control-Allow-Origin', '*')
-    // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+      case 'PUT':
+        return this.http.put(`${url}/${endpoint}`, body, {headers: header})
+        break;
+      case 'DELETE':
+          return this.http.delete(`${url}/${endpoint}`, {headers: header})
+          break;
+      }
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
+  addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {
+    this.editorStorage[key] = {content: content, name: name, original: content}
+  }
+  getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
+    return this.editorStorage[key]
+  }
+  updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
+    this.editorStorage[key] = json;
+  }
+  getExchange(type = ''): IOption[] {
+    let exchange: IOption[] = [];
+    Object.keys(Exchange).forEach((key) => {
+      if(type.length > 0) {
+        if(!Exchange[key].type || Exchange[key].run || this.checkType(type, Exchange[key].type)) {
+          exchange.push({name: Exchange[key].name, id: key})
+        }
+      }
+      else {
+        exchange.push({name: Exchange[key].name, id: key})
+      }
+    })
+    return exchange;
+  }
+  checkType(type: string, filter: string) {
+    return (new RegExp(`^${filter}$`)).exec(type)
+  }
+  getLoader(): IOption[] {
+    let loaders: IOption[] = [];
+    Object.keys(Loader).forEach((key) => {
+      loaders.push({name: Loader[key].name, id: key})
+    })
+    return loaders;
+  }
+  optionFilter(name: string, loaders: IOption[]): IOption[] {
+    const filterValue = name.toLowerCase();
+    return loaders.filter(option => option.name.toLowerCase().includes(filterValue));
+  }
+  optionDisplayFn(option: IOption): string {
+    return option && option.name ? option.name : '';
+  }
+  onOptionChange(evt: any) {
+    if(evt.isUserInput) {
+      this.currentWorkingFile = evt.source.value.id
+    }
+  }
+  setModify(status: boolean, key = this.currentWorkingFile) {
+    this.isJsonModified = status;
+    this.editorStorage[key].modified = status;
+  }
+  isModified(key = this.currentWorkingFile): boolean {
+    return this.editorStorage[key] && this.editorStorage[key].modified
+  }
+  setTitleText(key = this.currentWorkingFile) {
+    this.titleText = this.editorStorage[key] ? this.editorStorage[key].filename ? this.editorStorage[key].filename : key : 'IEAM'
+  }
+  setArch(arch: string, org = this.getOrg()) {
+    if(org) {
+      org.metaVars.ARCH = arch;
+    }
+  }
+  getServiceName(content: IService, org = this.getOrg()) {
+    let serviceName = ''
+    if(org) {
+      serviceName = `${content.url}_${content.version}_${content.arch}`;
+    }
+    return serviceName;
+  }
+  hasServiceName(content: IService) {
+    return content.url && content.version && content.arch;
+  }
+  // getServiceName2(content: IService, org = this.getOrg()) {
+  //   return new Observable((observer) => {
+  //     let serviceName = ''
+  //     if(org) {
+  //       if(content.url && content.version && content.arch) {
+  //         serviceName = `${content.url}_${content.version}_${content.arch}`;
+  //         observer.next(serviceName)
+  //         observer.complete()
+  //       } else {
+  //         this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
+  //         .then((resp: any) => {
+  //           if (resp) {
+  //             const arch = resp.options.name;
+  //             if(this.selectedLoader == 'servicePolicy') {
+  //               serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
+  //             } else if(this.selectedLoader == 'deploymentPolicy') {
+  //               serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
+  //             }
+  //             observer.next(serviceName)
+  //             observer.complete()
+  //           } else {
+  //             observer.next(serviceName)
+  //             observer.complete()
+  //           }
+  //         })
+  //       }
+  //     } else {
+  //       observer.next(serviceName)
+  //       observer.complete()
+  //     }
+  //   })
+  // }
 }

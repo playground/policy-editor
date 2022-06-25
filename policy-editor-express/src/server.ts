@@ -5,7 +5,8 @@ import { existsSync, readFileSync } from 'fs';
 import cors = require('cors');
 import { CosClient } from './cos-client';
 import { Params } from './params';
-import { util } from './utility';
+import { util, homePath, privateKey } from './utility';
+import { anax } from './utils';
 import express = require('express');
 import { Stream } from 'stream';
 import * as readline from 'readline';
@@ -31,6 +32,35 @@ export class Server {
   getParams(params: Params) {
     return Object.assign(this.params, params)
   }
+  setCorsHeaders(req: express.Request, res: express.Response) {
+    res.header("Access-Control-Allow-Origin", "YOUR_URL"); // restrict it to the required domain
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+    // Set custom headers for CORS
+    res.header("Access-Control-Allow-Headers", "Content-type,Accept,X-Custom-Header");
+
+  }
+  streamData(req: express.Request, res: express.Response) {
+    let params = this.getParams(req.query as unknown as Params);
+    let body = ''
+    return new Observable((observer) => {
+      req.on('data', (data) => {
+        body += data
+      })
+      .on('close', () => {
+        try {
+          console.log(body)
+          let data = JSON.parse(body);
+          Object.keys(data).forEach((key) => {
+            params[key] = data[key];
+          })
+          observer.next(params)
+          observer.complete()
+        } catch(e) {
+          observer.error(e)
+        }
+      })
+    })
+  }
   initialise() {
     this.params.accessKeyId = this.localJson[env]['access_key_id'];
     this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
@@ -42,8 +72,12 @@ export class Server {
     this.cosClient = new CosClient(this.params)
 
     let app = this.app;
+    app.options('*', cors());
     app.use(cors({
-      origin: '*'
+      credentials: true,
+      preflightContinue: true,
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      origin: true
     }));
     app.use(fileUpload());
 
@@ -86,39 +120,94 @@ export class Server {
         error: (err: any) => res.send({})
       })
     });
-    app.get('/mkdir', (req: express.Request, res: express.Response, next) => {
-      let params = this.getParams(req.query as unknown as Params);
-      this.cosClient.mkdir(params)
+    app.post('/mkdir', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res)
       .subscribe({
-        next: (data: any) => res.send(data),
-        error: (err: any) => next(err)
+        next: (params: Params) => {
+          console.log(params)
+          this.cosClient.mkdir(params)
+          .subscribe({
+            next: (data: any) => res.send(data),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
       })
     })
-    app.get('/delete', (req: express.Request, res: express.Response, next) => {
-      let params = this.getParams(req.query as unknown as Params);
-      this.cosClient.delete(params)
+    app.post('/delete', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res)
       .subscribe({
-        next: (data: any) => res.send(data),
-        error: (err: any) => next(err)
+        next: (params: Params) => {
+          this.cosClient.delete(params)
+          .subscribe({
+            next: (data: any) => res.send(data),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
       })
     })
-    app.get('/delete_folder', (req: express.Request, res: express.Response, next) => {
-      let params = this.getParams(req.query as unknown as Params);
-      console.log('$$$delete_folder')
-      this.cosClient.deleteDir(params)
+    app.post('/delete_folder', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res)
       .subscribe({
-        next: (data: any) => res.send(data),
-        error: (err: any) => next(err)
+        next: (params: Params) => {
+          this.cosClient.deleteDir(params)
+          .subscribe({
+            next: (data: any) => res.send(data),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
       })
     })
-    app.get('/upload', (req: express.Request, res: express.Response, next) => {
+    app.post('/upload', (req: express.Request, res: express.Response, next) => {
       let params = this.getParams(req.query as unknown as Params);
-      // console.log('$$$stream')
+      let matches = req.body.file.match(/^data:([A-Za-z-+\/.]+);base64,(.+)$/)
+      if (!matches && matches.length !== 3) {
+        next({result: 'Invalid file format'});
+      }
+      let config = req.body.config;
+      // console.log('$$$stream', req.body.file, req.body.config)
       const stream = new Stream.PassThrough();
       // console.log('$$$stream through')
-      const buffer = Buffer.from(params['body'], 'utf-8');
-      // const buffer = params.body;
-      // console.log('$$$stream buffer')
+      const buffer = Buffer.from(matches[2], 'base64');
+      // const buffer = req['body'].file;
+      // console.log('$$$stream buffer', buffer.length)
+      stream.end(buffer);
+
+      let rl = readline.createInterface({
+        input: stream,
+      });
+      let length = buffer.byteLength;
+      let body = ''
+      rl.on('line', function (line, lineCount, byteCount) {
+        // console.log('reading', line)
+        body += line;
+      })
+      .on('close', () => {
+        try {
+          // console.log(config)
+          let data = JSON.parse(config);
+          Object.keys(data).forEach((key) => {
+            params[key] = data[key]
+          })
+          params.body = Buffer.from(body, 'base64');
+          params.contentType = matches[1];
+          this.cosClient.upload(params)
+          .subscribe({
+            next: (data: any) => res.send(data),
+            error: (err: any) => next(err)
+          })
+        } catch(e) {
+          next({result: `catch: ${e}`});
+        }
+      })
+    })
+    app.post('/upload2', (req: express.Request, res: express.Response, next) => {
+      let params = this.getParams(req.query as unknown as Params);
+      console.log('$$$stream', req.body.file)
+      const stream = new Stream.PassThrough();
+      console.log('$$$stream through')
+      const buffer = Buffer.from(req.body.file, 'base64');
+      // const buffer = req['body'].file;
+      console.log('$$$stream buffer', buffer.length)
       stream.end(buffer);
 
       let rl = readline.createInterface({
@@ -128,7 +217,7 @@ export class Server {
       let file = {data: '', reading: false}
       let config = {data: '', reading: false}
       rl.on('line', function (line, lineCount, byteCount) {
-        // console.log('reading', line)
+        console.log('reading', line)
         if(line.indexOf('------WebKitFormBoundary') === 0) {
           file.reading = false;
           config.reading = false;
@@ -194,6 +283,43 @@ export class Server {
     app.get('/validate_session', (req: express.Request, res: express.Response) => {
       let params = this.getParams(req.query as unknown as Params);
       res.send({valid: util.validateSession(params.sessionId)})
+    })
+    app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res)
+      .subscribe({
+        next: (params: Params) => {
+          let hash = util.encryptSha256(JSON.stringify(params.body))
+          console.log('hash', hash)
+          anax.signDeployment(privateKey, hash)
+          .subscribe({
+            next: (data: any) => res.send({signature: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })    
+    app.get('/bcrypt', (req: express.Request, res: express.Response, next) => {
+      let params = this.getParams(req.query as unknown as Params);
+      util.bcryptHash(params)
+      .then(hash => {
+        res.send({hash: hash})
+      })
+      .catch(err => {
+          console.log(err)
+          next(err)
+      })
+    })
+    app.get('/bcrypt_validate', (req: express.Request, res: express.Response, next) => {
+      let params = this.getParams(req.query as unknown as Params);
+      util.bcryptValidate(params)
+      .then(result => {
+        console.log(result)
+        res.send({res: result})
+      })
+      .catch(err => {
+          console.log(err)
+          next(err)
+      })
     })
     app.get("*",  (req, res) => {
       res.redirect(301, '/')

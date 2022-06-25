@@ -8,8 +8,7 @@
           close
       </mat-icon>
     </button>
-    <div class="title-text">
-      {{titleText}}
+    <div class="title-text" [innerText]="ieamService.titleText">
     </div>
   </div>
   <app-breadcrumb *ngIf="isBucket()"></app-breadcrumb>

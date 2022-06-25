@@ -1,5 +1,6 @@
 export interface Params {
   message: string;
+  hash: string;
   method: string;
   func: string;
   bucket: string;

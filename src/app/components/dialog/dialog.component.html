@@ -1,4 +1,4 @@
-<h1 mat-dialog-title>{{data.title}}</h1>
+<h1 mat-dialog-title [innerHtml]="data.title"></h1>
 <form #form="ngForm">
 <div mat-dialog-content>
   <div [ngSwitch]="data.type">
@@ -13,6 +13,23 @@
         >
       </mat-form-field>
     </div>
+    <div *ngSwitchCase="'loader'">
+      <mat-form-field appearance="fill" class="device-form-field">
+        <mat-label>Type</mat-label>
+        <input
+          type="text"
+          matInput
+          aria-label="Type"
+          placeholder="Pick one"
+          [formControl]="loaderControl"
+          [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+          <mat-option *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="ieamService.onOptionChange($event)">
+            {{option.name}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+      </div>
   </div>
 </div>
 <div mat-dialog-actions>
