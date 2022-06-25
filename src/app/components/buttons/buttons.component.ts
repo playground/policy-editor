@@ -298,6 +298,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   run() {
-    this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
+    if(this.ieamService.isLoggedIn()) {
+      this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
+    }
   }
 }

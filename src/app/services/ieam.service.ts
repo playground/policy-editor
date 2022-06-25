@@ -461,7 +461,7 @@ export class IeamService implements HttpInterceptor {
   callExchange(endpoint: string, exchange: IExchange, body?: any) {
     const credential = this.configJson[this.selectedOrg]['credential']
     const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
-    const url = credential['HZN_EXCHANGE_URL']
+    const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {
       headerOptions[key] = HeaderOptions[key]
@@ -565,36 +565,4 @@ export class IeamService implements HttpInterceptor {
   hasServiceName(content: IService) {
     return content.url && content.version && content.arch;
   }
-  // getServiceName2(content: IService, org = this.getOrg()) {
-  //   return new Observable((observer) => {
-  //     let serviceName = ''
-  //     if(org) {
-  //       if(content.url && content.version && content.arch) {
-  //         serviceName = `${content.url}_${content.version}_${content.arch}`;
-  //         observer.next(serviceName)
-  //         observer.complete()
-  //       } else {
-  //         this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
-  //         .then((resp: any) => {
-  //           if (resp) {
-  //             const arch = resp.options.name;
-  //             if(this.selectedLoader == 'servicePolicy') {
-  //               serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
-  //             } else if(this.selectedLoader == 'deploymentPolicy') {
-  //               serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
-  //             }
-  //             observer.next(serviceName)
-  //             observer.complete()
-  //           } else {
-  //             observer.next(serviceName)
-  //             observer.complete()
-  //           }
-  //         })
-  //       }
-  //     } else {
-  //       observer.next(serviceName)
-  //       observer.complete()
-  //     }
-  //   })
-  // }
 }

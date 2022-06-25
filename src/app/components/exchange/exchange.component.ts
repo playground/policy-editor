@@ -4,6 +4,7 @@ import { Enum, Navigate, Exchange, IExchange, UrlToken } from '../../models/ieam
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
+import { Observable } from 'rxjs/internal/Observable';
 
 @Component({
   selector: 'app-exchange',
@@ -74,6 +75,25 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.checkB4Calling(exchange.path, exchange)
     }
   }
+  checkIfExist(path: string, exchange: IExchange) {
+    return new Observable((observer) => {
+      this.ieamService.callExchange(path, exchange)
+      .subscribe(({
+        next: (data) => {
+          if(Object.keys(data).length > 0) {
+            observer.next({found: true})
+            observer.complete()
+          }
+        },
+        error: (err) => {
+          console.log(err)
+          // TODO: exchange-api /v1/orgs/root/services/<service> should not return 404 when service not found
+          observer.next({found: false})
+          observer.complete()
+        }
+      }))
+    })
+  }
   checkB4Calling(path: string, exchange: IExchange) {
     const json:any = this.ieamService.getEditorStorage();
     let content: IService = Object.assign({}, json.content);
@@ -85,27 +105,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           next: (res) => {
             content.deployment = JSON.stringify(body)
             content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
-            let callB4: IExchange = Object.assign({}, Exchange[exchange.callB4]);
-            if(callB4) {
-              // Check if service exists, if so PUT instead of POST
-              let callB4Path = this.tokenReplace(callB4.path, content)
-              this.ieamService.callExchange(callB4Path, callB4)
-              .subscribe(({
-                next: (data) => {
-                  if(Object.keys(data).length > 0) {
-                    callB4.method = 'PUT'
-                    this.callExchange(callB4Path, callB4, content)
-                  }
-                },
-                error: (err) => {
-                  console.log(err)
-                  // TODO: exchange-api /v1/orgs/root/services/<service> should not return 404 when service not found
-                  this.hasServiceName(path, exchange, content);
-                }
-              }))
-            } else {
-              this.hasServiceName(path, exchange, content);
-            }
+            this.hasServiceName(path, exchange, content)
           }
         })
       } catch(e) {
@@ -118,22 +118,23 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   async confirmB4Calling(path: string, exchange: IExchange, content: IService) {
     path = this.tokenReplace(path, content)
     if(!exchange.run && exchange.method != 'GET') {
-      const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
+      const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.ieamService.getServiceName(content)}`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
         if(exchange.callB4) {
           // Check if service exists, if so PUT instead of POST
           let callB4: IExchange = Object.assign({}, Exchange[exchange.callB4]);
           let callB4Path = this.tokenReplace(callB4.path, content)
-          this.ieamService.callExchange(callB4Path, callB4)
+          this.checkIfExist(callB4Path, callB4)
           .subscribe(({
-            next: (data) => {
-              if(Object.keys(data).length > 0) {
+            next: (data: any) => {
+              if(!data.found) {
+                exchange.method = 'POST'
+                path = this.tokenReplace(path, content)
+                this.callExchange(path, exchange, content)
+              } else {
                 callB4.method = 'PUT'
                 this.callExchange(callB4Path, callB4, content)
               }
-            },
-            error: (err) => {
-              console.log(err)
             }
           }))
         } else {
@@ -147,11 +148,27 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   hasServiceName(path: string, exchange: IExchange, content: IService) {
     let serviceName = ''
     if(exchange.run || this.ieamService.hasServiceName(content)) {
-      if(path.indexOf('${nodeid}') >= 0) {
+      if(path.indexOf('${nodeId}') >= 0) {
         this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
         .then((resp: any) => {
-          const nodeid = resp.options.name;
-          path = path.replace(UrlToken['nodeid'], nodeid)
+          const nodeId = resp.options.name;
+          path = path.replace(UrlToken['nodeId'], nodeId)
+          this.confirmB4Calling(path, exchange, content)
+        })
+      }
+      if(path.indexOf('${agId}') >= 0) {
+        this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
+        .then((resp: any) => {
+          const nodeId = resp.options.name;
+          path = path.replace(UrlToken['agId'], nodeId)
+          this.confirmB4Calling(path, exchange, content)
+        })
+      }
+      if(path.indexOf('${pattern}') >= 0) {
+        this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
+        .then((resp: any) => {
+          const nodeId = resp.options.name;
+          path = path.replace(UrlToken['pattern'], nodeId)
           this.confirmB4Calling(path, exchange, content)
         })
       } else {
@@ -163,7 +180,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if (resp) {
           const arch = this.ieamService.selectedArch = resp.options.name;
           const org = this.ieamService.getOrg()
-          if(exchange.type == 'servicePolicy') {
+          if(/^service$|^servicePolicy$/.exec(exchange.type)) {
             this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`
             path = path.replace(UrlToken[exchange.type], this.tempName)
           } else if(exchange.type == 'deploymentPolicy') {
@@ -174,7 +191,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
         }
       })
-
     }
   }
   tokenReplace(path: string, content: IService) {
@@ -185,7 +201,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           case 'service':
             value = this.ieamService.getServiceName(content)
             break;
-          case 'orgid':
+          case 'orgId':
             value = this.ieamService.selectedOrg
             break;
           case 'deploymentPolicy':

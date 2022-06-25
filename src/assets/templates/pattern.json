@@ -1,0 +1,82 @@
+{
+  "label": "name of the edge pattern",
+  "description": "descriptive text",
+  "public": false,
+  "services": [
+    {
+      "serviceUrl": "mydomain.com.weather",
+      "serviceOrgid": "myorg",
+      "serviceArch": "amd64",
+      "agreementLess": false,
+      "serviceVersions": [
+        {
+          "version": "1.0.1",
+          "deployment_overrides": "{\"services\":{\"location\":{\"environment\":[\"USE_NEW_STAGING_URL=false\"]}}}",
+          "deployment_overrides_signature": "",
+          "priority": {
+            "priority_value": 50,
+            "retries": 1,
+            "retry_durations": 3600,
+            "verified_durations": 52
+          },
+          "upgradePolicy": {
+            "lifecycle": "immediate",
+            "time": "01:00AM"
+          }
+        }
+      ],
+      "dataVerification": {
+        "enabled": true,
+        "URL": "",
+        "user": "",
+        "password": "",
+        "interval": 480,
+        "check_rate": 15,
+        "metering": {
+          "tokens": 1,
+          "per_time_unit": "min",
+          "notification_interval": 30
+        }
+      },
+      "nodeHealth": {
+        "missing_heartbeat_interval": 600,
+        "check_agreement_status": 120
+      }
+    }
+  ],
+  "userInput": [
+    {
+      "serviceOrgid": "IBM",
+      "serviceUrl": "ibm.cpu2msghub",
+      "serviceArch": "",
+      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "inputs": [
+        {
+          "name": "foo",
+          "value": "bar"
+        }
+      ]
+    }
+  ],
+  "secretBinding": [
+    {
+      "serviceOrgid": "myorg",
+      "serviceUrl": "myservice",
+      "serviceArch": "amd64",
+      "serviceVersionRange": "x.y.z",
+      "secrets": [
+        {
+          "<service-secret-name1>": "<vault-secret-name1>"
+        },
+        {
+          "<service-secret-name2>": "<vault-secret-name2>"
+        }
+      ]
+    }
+  ],
+  "agreementProtocols": [
+    {
+      "name": "Basic"
+    }
+  ]
+}
