@@ -198,3 +198,6 @@ export const encryptSha256 = util.encryptSha256;
 
 export const homePath = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 export const privateKey = `${homePath}/.ssh/key.pem`;
+export const publicKey = `${homePath}/.ssh/key.pem.pub`;
+
+// ssh-keygen -t rsa -f key.pem -m pem

@@ -74,6 +74,7 @@ export class IeamService implements HttpInterceptor {
       delete: `${backendUrl}/delete`,
       deleteFolder: `${backendUrl}/delete_folder`,
       signDeployment: `${backendUrl}/sign_deployment`,
+      getPublicKey: `${backendUrl}/get_public_key`,
       post: 'post'
     };
 

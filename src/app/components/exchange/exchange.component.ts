@@ -66,7 +66,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     const exchange: IExchange = Exchange[task]
     console.log(task, exchange.path)
     if(exchange.prompt) {
-      const answer:any = await this.ieamService.promptDialog(exchange.title, 'folder', {placeholder: exchange.placeholder})
+      const answer:any = await this.ieamService.promptDialog(exchange.title || '', 'folder', {placeholder: exchange.placeholder})
       if(answer) {
         const path = `${exchange.path}/${answer.options.name}`
         this.checkB4Calling(path, exchange)
@@ -94,20 +94,53 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       }))
     })
   }
+  getPublicKey() {
+    return new Observable((observer) => {
+      this.ieamService.get(this.method.getPublicKey)
+      .subscribe({
+        next: (res: any) => observer.next(res.publicKey.replace(/^\s+|\s+$/g, '')),
+        error: (err) => {
+          console.log(err)
+          observer.error(err)
+        }
+      })
+    })
+  }
+  addServiceKey(content: IService) {
+    const exchange: IExchange = Exchange.addServiceCert
+    let path = this.tokenReplace(exchange.path, content)
+    this.getPublicKey()
+    .subscribe({
+      next: (key: any) => {
+        this.callExchange(path, exchange, {key: key})
+      }
+    })
+  }
   checkB4Calling(path: string, exchange: IExchange) {
     const json:any = this.ieamService.getEditorStorage();
     let content: IService = Object.assign({}, json.content);
     if(exchange.signature) {
       try {
-        let body: any = content.deployment
-        this.ieamService.post(this.method.signDeployment, body)
-        .subscribe({
-          next: (res) => {
-            content.deployment = JSON.stringify(body)
-            content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
-            this.hasServiceName(path, exchange, content)
-          }
-        })
+        if(exchange.signature === 'getPublicKey') {
+          this.getPublicKey()
+          .subscribe({
+            next: (key: any) => {
+              let useThis = {key: key}
+              this.hasServiceName(path, exchange, content, useThis)
+            }
+          })
+        } else {
+          let body: any = content.deployment
+          this.ieamService.post(this.method.signDeployment, body)
+          .subscribe({
+            next: (res) => {
+              content.deployment = JSON.stringify(body)
+              content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
+              this.hasServiceName(path, exchange, content)
+              this.addServiceKey(content)
+            }
+          })
+        }
       } catch(e) {
         console.log(e)
       }
@@ -115,10 +148,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.hasServiceName(path, exchange, content)
     }
   }
-  async confirmB4Calling(path: string, exchange: IExchange, content: IService) {
+  async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}) {
     path = this.tokenReplace(path, content)
+    let body = Object.keys(useThis).length > 0 ? useThis : content;
     if(!exchange.run && exchange.method != 'GET') {
-      const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.ieamService.getServiceName(content)}`, '', {okButton: 'Yes', cancelButton: 'No'})
+      this.tempName = this.tempName ? this.tempName : this.ieamService.getServiceName(content)
+      const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
         if(exchange.callB4) {
           // Check if service exists, if so PUT instead of POST
@@ -130,49 +165,52 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               if(!data.found) {
                 exchange.method = 'POST'
                 path = this.tokenReplace(path, content)
-                this.callExchange(path, exchange, content)
+                this.callExchange(path, exchange, body)
               } else {
                 callB4.method = 'PUT'
-                this.callExchange(callB4Path, callB4, content)
+                this.callExchange(callB4Path, callB4, body)
               }
             }
           }))
         } else {
-          this.callExchange(path, exchange, content)
+          this.callExchange(path, exchange, body)
         }
       }
     } else {
-      this.callExchange(path, exchange, content)
+      this.callExchange(path, exchange, body)
     }
   }
-  hasServiceName(path: string, exchange: IExchange, content: IService) {
+  hasServiceName(path: string, exchange: IExchange, content: IService, useThis = {}) {
     let serviceName = ''
     if(exchange.run || this.ieamService.hasServiceName(content)) {
-      if(path.indexOf('${nodeId}') >= 0) {
-        this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-        .then((resp: any) => {
-          const nodeId = resp.options.name;
-          path = path.replace(UrlToken['nodeId'], nodeId)
-          this.confirmB4Calling(path, exchange, content)
-        })
+      if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
+        if(path.indexOf('${nodeId}') >= 0) {
+          this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
+          .then((resp: any) => {
+            const nodeId = resp.options.name;
+            path = path.replace(UrlToken['nodeId'], nodeId)
+            this.confirmB4Calling(path, exchange, content, useThis)
+          })
+        }
+        if(path.indexOf('${agId}') >= 0) {
+          this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
+          .then((resp: any) => {
+            const nodeId = resp.options.name;
+            path = path.replace(UrlToken['agId'], nodeId)
+            this.confirmB4Calling(path, exchange, content, useThis)
+          })
+        }
+        if(path.indexOf('${pattern}') >= 0) {
+          this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
+          .then((resp: any) => {
+            const nodeId = resp.options.name;
+            path = path.replace(UrlToken['pattern'], nodeId)
+            this.confirmB4Calling(path, exchange, content, useThis)
+          })
+        }
       }
-      if(path.indexOf('${agId}') >= 0) {
-        this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
-        .then((resp: any) => {
-          const nodeId = resp.options.name;
-          path = path.replace(UrlToken['agId'], nodeId)
-          this.confirmB4Calling(path, exchange, content)
-        })
-      }
-      if(path.indexOf('${pattern}') >= 0) {
-        this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
-        .then((resp: any) => {
-          const nodeId = resp.options.name;
-          path = path.replace(UrlToken['pattern'], nodeId)
-          this.confirmB4Calling(path, exchange, content)
-        })
-      } else {
-        this.confirmB4Calling(path, exchange, content)
+      else {
+        this.confirmB4Calling(path, exchange, content, useThis)
       }
     } else {
       this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
@@ -187,7 +225,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             this.tempName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`
             path = path.replace(UrlToken[exchange.type], this.tempName)
           }
-          this.confirmB4Calling(path, exchange, content)
+          this.confirmB4Calling(path, exchange, content, useThis)
         } else {
         }
       })
@@ -200,6 +238,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         switch(key) {
           case 'service':
             value = this.ieamService.getServiceName(content)
+            break;
+          case 'keyId':
+            value = 'policy-editor'
             break;
           case 'orgId':
             value = this.ieamService.selectedOrg
@@ -216,12 +257,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log(path)
     return path;
   }
-  callExchange(path: string, exchange: IExchange, content: IService) {
+  callExchange(path: string, exchange: IExchange, body: any) {
     // const method = exchange.method ? exchange.method : 'GET'
     // const json:any = this.ieamService.getEditorStorage();
     // let content: IService = json.content;
     // let org: any = this
-    this.ieamService.callExchange(path, exchange, content)
+    this.ieamService.callExchange(path, exchange, body)
     .subscribe({
       next: (res: any) => {
         let html = ''

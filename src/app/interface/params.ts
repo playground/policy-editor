@@ -3,4 +3,5 @@ export interface Params {
   name: string;
   result: string;
   signature: string;
+  publicKey: string;
 }

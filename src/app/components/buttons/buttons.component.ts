@@ -162,7 +162,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
         }
       })
     } else if(json && Object.keys(json.content).length > 0) {
-      this.loadNewFile('Would you like to load a new file?', type, payload, Enum.LOAD_EXISTING_POLICY)
+      this.loadNewFile('Would you like to load a new file?', type, payload, this.ieamService.selectedLoader === 'localPolicy' ? Enum.LOAD_EXISTING_POLICY : Enum.LOAD_TEMPLATE_POLICY)
     } else {
       this.doThis(type, payload)
     }

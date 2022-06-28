@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'fs';
 import cors = require('cors');
 import { CosClient } from './cos-client';
 import { Params } from './params';
-import { util, homePath, privateKey } from './utility';
+import { util, homePath, privateKey, publicKey } from './utility';
 import { anax } from './utils';
 import express = require('express');
 import { Stream } from 'stream';
@@ -297,7 +297,11 @@ export class Server {
           })
         }, error: (err) => next(err)
       })
-    })    
+    })
+    app.get('/get_public_key', (req: express.Request, res: express.Response, next) => {
+      const content = readFileSync(publicKey, {encoding:'utf8', flag:'r'});
+      res.send({publicKey: content})
+    })
     app.get('/bcrypt', (req: express.Request, res: express.Response, next) => {
       let params = this.getParams(req.query as unknown as Params);
       util.bcryptHash(params)
