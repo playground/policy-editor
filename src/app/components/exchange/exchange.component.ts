@@ -16,6 +16,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   psAgent!: { unsubscribe: () => void; };
   method: IMethod;
   tempName: string = '';
+  activeFile: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -118,7 +119,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   checkB4Calling(path: string, exchange: IExchange) {
     const json:any = this.ieamService.getEditorStorage();
-    let content: IService = Object.assign({}, json.content);
+    let content: IService = Object.assign({}, json?.content);
     if(exchange.signature) {
       try {
         if(exchange.signature === 'getPublicKey') {
@@ -276,6 +277,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           html = prettyHtml(res)
         }
         this.content = html;
+        this.ieamService.editable = exchange.editable == true
+        if(this.ieamService.editable) {
+          this.activeFile = res
+        }
         console.log(res)
       }, error: (err) => console.log(err)
     })

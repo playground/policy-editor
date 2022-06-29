@@ -1,0 +1,24 @@
+{
+  "header": {
+    "name": "Policy for myorg_homehub-express-mms",
+    "version": "2.0"
+  },
+  "apiSpec": [
+    {
+      "specRef": "homehub-express-mms",
+      "organization": "myorg",
+      "version": "1.0.12",
+      "exclusiveAccess": true,
+      "arch": "arm"
+    }
+  ],
+  "valueExchange": {},
+  "dataVerification": { "metering": {} },
+  "proposalRejection": {},
+  "properties": [
+    { "name": "cpus", "value": "4" },
+    { "name": "ram", "value": "7898" }
+  ],
+  "ha_group": {},
+  "nodeHealth": {}
+}

@@ -53,6 +53,7 @@ export class IeamService implements HttpInterceptor {
   configFilename = '';
   isJsonModified = false;
   method: IMethod;
+  editable = false;
 
   currentWorkingFile = '';
   titleText = 'IEAM';
@@ -564,6 +565,14 @@ export class IeamService implements HttpInterceptor {
     return serviceName;
   }
   hasServiceName(content: IService) {
-    return content.url && content.version && content.arch;
+    return content && content.url && content.version && content.arch;
+  }
+  getPropFromJson(json: any, prop: string) {
+    prop in json
+    ? json[prop]
+    : Object.values(json).reduce((val, obj) => {
+        if (val !== undefined) return val;
+        if (typeof obj === 'object') return this.getPropFromJson(obj, prop);
+      }, undefined);
   }
 }

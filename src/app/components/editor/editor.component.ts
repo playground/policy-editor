@@ -77,6 +77,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.ieamService.isLoggedIn()
     if(!this.ieamService.signIn('/editor')) {
       return
     }

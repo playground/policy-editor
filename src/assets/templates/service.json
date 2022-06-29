@@ -1,5 +1,5 @@
 {
-  "label": "$SERVICE_NAME for $ARCH",
+  "label": "$SERVICE_NAME_$SERVICE_VERSION_$ARCH",
   "description": "$SERVICE_NAME for $ARCH",
   "url": "$SERVICE_NAME",
   "version": "$SERVICE_VERSION",

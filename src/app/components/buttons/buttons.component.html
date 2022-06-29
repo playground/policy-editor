@@ -63,11 +63,11 @@
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
   <form>
     <mat-form-field appearance="fill" class="device-form-field">
-      <mat-label>Call</mat-label>
+      <mat-label>Exchange api</mat-label>
       <input
         type="text"
         matInput
-        aria-label="Call"
+        aria-label="Exchange api"
         placeholder="Pick one"
         [formControl]="exchangeControl"
         [matAutocomplete]="auto">
@@ -78,6 +78,9 @@
       </mat-autocomplete>
     </mat-form-field>
   </form>
+  <button mat-raised-button color="publish" type="button" (click)="edit()" *ngIf="ieamService.editable">
+    <mat-icon>edit</mat-icon>
+  </button>
   <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
   </div>
 </div>

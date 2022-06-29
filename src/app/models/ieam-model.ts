@@ -90,6 +90,7 @@ export interface IExchange {
   description: string;
   type: string;
   run?: boolean;          // available to run regardless
+  editable?: boolean;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
@@ -98,7 +99,7 @@ export const Exchange = {
   addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name', run: true},
 
   addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true},
-  getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true},
+  getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
   getNodes: {name: 'Get All Nodes', path: 'orgs/${orgId}/nodes', method: 'GET', type: 'node', run: true},
   deleteNode: {name: 'Delete Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'DELETE', type: 'node', run: true},
   getNodeDetail: {name: 'Get All Nodes Details', path: 'orgs/${orgId}/node-details', method: 'GET', type: 'node', run: true},
@@ -184,4 +185,10 @@ export const UrlToken = {
   pattern: '${pattern}',
   objectId: '${objectId}',
   objectType: '${objectType}'
+} as const;
+
+export const JsonToken = {
+  orgId: '${orgId}',
+  service: '${service}',
+
 } as const;
