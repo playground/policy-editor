@@ -1,6 +1,5 @@
 {
-  "name": "pattern-$SERVICE_NAME-$ARCH",
-  "label": "Edge $SERVICE_NAME Service Pattern for $ARCH",
+  "label": "$SERVICE_NAME_$SERVICE_VERSION_$ARCH",
   "description": "Pattern for $SERVICE_NAME for $ARCH",
   "services": [
     {
@@ -8,6 +7,13 @@
       "serviceOrgid": "$HZN_ORG_ID",
       "serviceArch": "$ARCH",
       "serviceVersions": [ { "version": "$MMS_SERVICE_VERSION" } ]
+    }
+  ],
+  "userInput": [],
+  "secretBinding": [],
+  "agreementProtocols": [
+    {
+      "name": "Basic"
     }
   ]
 }

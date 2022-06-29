@@ -218,12 +218,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if (resp) {
           const arch = this.ieamService.selectedArch = resp.options.name;
           const org = this.ieamService.getOrg()
-          if(/^service$|^servicePolicy$/.exec(exchange.type)) {
+          if(/service$|servicePolicy$|servicePattern$/.exec(exchange.type) && this.ieamService.selectedLoader !== 'topLevelService') {
             this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`
-            path = path.replace(UrlToken[exchange.type], this.tempName)
-          } else if(exchange.type == 'deploymentPolicy') {
+            // path = path.replace(UrlToken[exchange.type], this.tempName)
+          } else if(/deploymentPolicy$|topLevelService$|topLevelServicePattern$/.exec(exchange.type)) {
             this.tempName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`
-            path = path.replace(UrlToken[exchange.type], this.tempName)
+            // path = path.replace(UrlToken[exchange.type], this.tempName)
           }
           this.confirmB4Calling(path, exchange, content, useThis)
         } else {
@@ -235,6 +235,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
       if(path.indexOf(UrlToken[key]) >= 0) {
+        value = ''
         switch(key) {
           case 'service':
             value = this.ieamService.getServiceName(content)
@@ -244,6 +245,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             break;
           case 'orgId':
             value = this.ieamService.selectedOrg
+            break;
+          case 'pattern':
+            value = content.label
             break;
           case 'deploymentPolicy':
             const policy = content as IDeploymentPolicy;
