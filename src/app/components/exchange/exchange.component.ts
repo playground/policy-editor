@@ -16,7 +16,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   psAgent!: { unsubscribe: () => void; };
   method: IMethod;
   tempName: string = '';
-  activeFile: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -128,6 +127,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             next: (key: any) => {
               let useThis = {key: key}
               this.hasServiceName(path, exchange, content, useThis)
+              .subscribe((res: any) =>  this.confirmB4Calling(res.path, exchange, content, useThis))
             }
           })
         } else {
@@ -138,7 +138,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               content.deployment = JSON.stringify(body)
               content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
               this.hasServiceName(path, exchange, content)
-              this.addServiceKey(content)
+              .subscribe((res: any) => {
+                this.confirmB4Calling(res.path, exchange, content, {}, 'addServiceKey')
+              })
+              // this.addServiceKey(content)
             }
           })
         }
@@ -147,9 +150,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } else {
       this.hasServiceName(path, exchange, content)
+      .subscribe((res: any) =>  this.confirmB4Calling(res.path, exchange, content))
     }
   }
-  async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}) {
+  async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}, cb?: any) {
     path = this.tokenReplace(path, content)
     let body = Object.keys(useThis).length > 0 ? useThis : content;
     if(!exchange.run && exchange.method != 'GET') {
@@ -171,6 +175,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                 callB4.method = 'PUT'
                 this.callExchange(callB4Path, callB4, body)
               }
+              if(cb) {
+                this[cb](content)
+              }
             }
           }))
         } else {
@@ -182,13 +189,87 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   hasServiceName(path: string, exchange: IExchange, content: IService, useThis = {}) {
+    return new Observable((observer) => {
+      let serviceName = ''
+      if(exchange.run || this.ieamService.hasServiceName(content)) {
+        if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
+          if(path.indexOf('${nodeId}') >= 0) {
+            this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
+            .then((resp: any) => {
+              if(resp) {
+                const nodeId = this.ieamService.nodeId = resp.options.name;
+                path = path.replace(UrlToken['nodeId'], nodeId)
+                observer.next({path: path})
+                observer.complete()
+                // this.confirmB4Calling(path, exchange, content, useThis)
+              } else {
+                observer.error()
+              }
+            })
+          } else if(path.indexOf('${agId}') >= 0) {
+            this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
+            .then((resp: any) => {
+              if(resp) {
+                const agId = resp.options.name;
+                path = path.replace(UrlToken['agId'], agId)
+                observer.next({path: path})
+                observer.complete()
+                // this.confirmB4Calling(path, exchange, content, useThis)
+              } else {
+                observer.error()
+              }
+            })
+          } else if(path.indexOf('${pattern}') >= 0) {
+            this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
+            .then((resp: any) => {
+              if(resp) {
+                const pattern = resp.options.name;
+                path = path.replace(UrlToken['pattern'], pattern)
+                observer.next({path: path})
+                observer.complete()
+                // this.confirmB4Calling(path, exchange, content, useThis)
+              } else {
+                observer.error()
+              }
+            })
+          }
+        }
+        else {
+          observer.next({path: path})
+          observer.complete()
+          // this.confirmB4Calling(path, exchange, content, useThis)
+        }
+      } else {
+        this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
+        .then((resp: any) => {
+          if (resp) {
+            const arch = this.ieamService.selectedArch = resp.options.name;
+            const org = this.ieamService.getOrg()
+            if(/service$|servicePolicy$|servicePattern$/.exec(exchange.type) && this.ieamService.selectedLoader !== 'topLevelService') {
+              this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`
+              // path = path.replace(UrlToken[exchange.type], this.tempName)
+            } else if(/deploymentPolicy$|topLevelService$|topLevelServicePattern$/.exec(exchange.type)) {
+              this.tempName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`
+              // path = path.replace(UrlToken[exchange.type], this.tempName)
+            }
+            observer.next({path: path})
+            observer.complete()
+            // this.confirmB4Calling(path, exchange, content, useThis)
+          } else {
+            observer.error()
+          }
+        })
+      }
+    })
+  }
+  hasServiceName2(path: string, exchange: IExchange, content: IService, useThis = {}) {
     let serviceName = ''
     if(exchange.run || this.ieamService.hasServiceName(content)) {
       if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
         if(path.indexOf('${nodeId}') >= 0) {
           this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
           .then((resp: any) => {
-            const nodeId = resp.options.name;
+            const nodeId = this.ieamService.nodeId = resp.options.name;
             path = path.replace(UrlToken['nodeId'], nodeId)
             this.confirmB4Calling(path, exchange, content, useThis)
           })
@@ -196,16 +277,16 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(path.indexOf('${agId}') >= 0) {
           this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
           .then((resp: any) => {
-            const nodeId = resp.options.name;
-            path = path.replace(UrlToken['agId'], nodeId)
+            const agId = resp.options.name;
+            path = path.replace(UrlToken['agId'], agId)
             this.confirmB4Calling(path, exchange, content, useThis)
           })
         }
         if(path.indexOf('${pattern}') >= 0) {
           this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
           .then((resp: any) => {
-            const nodeId = resp.options.name;
-            path = path.replace(UrlToken['pattern'], nodeId)
+            const pattern = resp.options.name;
+            path = path.replace(UrlToken['pattern'], pattern)
             this.confirmB4Calling(path, exchange, content, useThis)
           })
         }
@@ -279,7 +360,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.content = html;
         this.ieamService.editable = exchange.editable == true
         if(this.ieamService.editable) {
-          this.activeFile = res
+          this.ieamService.activeExchangeFile = res
         }
         console.log(res)
       }, error: (err) => console.log(err)

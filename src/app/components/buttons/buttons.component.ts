@@ -246,7 +246,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   shouldNotRun() {
     // const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
     // const run = this.ieamService.selectedCall && Exchange[this.ieamService.selectedCall].run
-    return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0)
+    return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0 || (!this.ieamService.editorStorage[this.ieamService.selectedCall] && Exchange[this.ieamService.selectedCall].run != true))
   }
 
   onChange(evt: any) {
@@ -305,7 +305,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
 
   edit() {
     if(this.ieamService.isLoggedIn()) {
-      this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
+      this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
     }
   }
 }

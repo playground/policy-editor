@@ -29,6 +29,7 @@ export enum Enum {
   NOT_EDITOR,
   NOT_EXCHANGE,
   EXCHANGE_CALL,
+  EDIT_EXCHANGE_FILE,
   NETWORK,
   JSON_MODIFIED,
   INSTALL_METAMASK
@@ -187,8 +188,18 @@ export const UrlToken = {
   objectType: '${objectType}'
 } as const;
 
+export const JsonSchema = {
+  getNode: {name: 'Node Json', file: 'assets/templates/node.json', policy: 'assets/templates/policy.string.json'},
+  getService: 'assets/templates/service.json',
+
+} as const;
+
 export const JsonToken = {
   orgId: '${orgId}',
   service: '${service}',
-
+  hzVersion: '${hzVersion}',
+  version: '${version}',
+  arch: '${arch}',
+  cpu: '${cpu}',
+  ram: '${ram}'
 } as const;

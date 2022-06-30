@@ -54,6 +54,8 @@ export class IeamService implements HttpInterceptor {
   isJsonModified = false;
   method: IMethod;
   editable = false;
+  activeExchangeFile: any;
+  nodeId = '';
 
   currentWorkingFile = '';
   titleText = 'IEAM';
@@ -568,7 +570,7 @@ export class IeamService implements HttpInterceptor {
     return content && content.url && content.version && content.arch;
   }
   getPropFromJson(json: any, prop: string) {
-    prop in json
+    return prop in json
     ? json[prop]
     : Object.values(json).reduce((val, obj) => {
         if (val !== undefined) return val;

@@ -4,4 +4,5 @@ export interface Params {
   result: string;
   signature: string;
   publicKey: string;
+  path: string;
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
-import { Enum, IEditorStorage, Navigate, Loader } from '../../models/ieam-model';
+import { Enum, IEditorStorage, Navigate, Loader, JsonSchema, Exchange, JsonToken } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from '../dialog/dialog.component';
@@ -25,7 +25,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   public EditedData: any;
   psAgent!: { unsubscribe: () => void; };
   modified = false;
-  routerObserver: any;
+  routeObserver: any;
   bucketName: any;
   bucketApi: any;
   state: any;
@@ -69,6 +69,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     private ieamService: IeamService,
     private dialog: MatDialog
   ) {
+    this.ieamService.isLoggedIn()
+    this.routeObserver = this.route.queryParams.subscribe((params: any) => {
+      console.log(params)
+      this.editExchangeFile(+params.type)
+    })
+
     this.editorOptions = new JsonEditorOptions()
     this.editorOptions.modes = ['code', 'text', 'tree', 'view'];
 
@@ -77,30 +83,16 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngOnInit() {
-    this.ieamService.isLoggedIn()
     if(!this.ieamService.signIn('/editor')) {
       return
     }
-    this.editJson = this.ieamService.getEditorStorage()
-    if(this.editJson) {
-      this.showData = this.data = this.editJson.content;
-      this.shouldLoadConfig().then(() => '')
-    } else {
-      this.originalJson = this.showData = this.data = this.template;
-    }
-
-    this.route.data.subscribe((data) => {
-      if(!this.route.snapshot.queryParamMap.get('fromMenu')) {
-        // this.ieamService.broadcast({type: Enum.NOT_EDITOR, payload: false});
-      } else {
-      }
-    })
-    this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
-    .subscribe((event: any) => {
-      // if('/editor' !== this.router.routerState.snapshot.url) {
-      //   return;
-      // }
-    })
+    // this.editJson = this.ieamService.getEditorStorage()
+    // if(this.editJson) {
+    //   this.showData = this.data = this.editJson.content;
+    //   this.shouldLoadConfig().then(() => '')
+    // } else {
+    //   this.originalJson = this.showData = this.data = this.template;
+    // }
 
     this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
       this.ieamService.editingConfig = false;
@@ -108,6 +100,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       switch(msg.type) {
         case Enum.SAVE:
           this.save()
+          break;
+        case Enum.EDIT_EXCHANGE_FILE:
+          this.editExchangeFile(msg.payload)
           break;
         case Enum.LOAD_TEMPLATE_POLICY:
           this.ieamService.get(Loader[this.ieamService.currentWorkingFile].file)
@@ -148,15 +143,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
             console.log('loaded config')
             // this.loadFile(msg.payload, Enum.LOAD_POLICY)
           })
-          // this.editJson = this.ieamService.getEditorStorage('hznConfig')
-          // if(!this.editJson || Object.keys(this.editJson.content).length == 0) {
-          //   this.shouldLoadConfig()
-          // } else {
-          //   if(this.ieamService.selectedOrg.length > 0) {
-          //     this.updateEditorData(this.ieamService.selectedOrg)
-          //   }
-          // }
-          // this.loadFile(msg.payload, Enum.LOAD_POLICY)
           break;
         case Enum.ORG_SELECTED:
           if(this.ieamService.isModified()) {
@@ -205,6 +191,42 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     if(this.ieamService.selectedOrg.length > 0) {
       this.updateEditorData(this.ieamService.selectedOrg)
+    }
+  }
+  populateJson(input, output) {
+    Object.keys(output).forEach((key) => {
+      output[key] = input[key]
+    })
+    return output
+  }
+  editExchangeFile(type: number) {
+    switch(type) {
+      case Enum.EDIT_EXCHANGE_FILE:
+        let json = this.ieamService.activeExchangeFile.nodes[`${this.ieamService.selectedOrg}/${this.ieamService.nodeId}`]
+        let schema = JsonSchema[this.ieamService.selectedCall]
+        this.ieamService.get(schema.file)
+        .subscribe((res) => {
+          this.ieamService.currentWorkingFile = this.ieamService.selectedCall
+          json = this.populateJson(json, res)
+          this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
+          this.editJson = this.ieamService.getEditorStorage()
+          if(this.editJson) {
+            this.showData = this.data = this.editJson.content;
+            this.shouldLoadConfig().then(() => '')
+          } else {
+            console.log('file not found');
+          }
+        })
+        break;
+      default:
+        this.editJson = this.ieamService.getEditorStorage()
+        if(this.editJson) {
+          this.showData = this.data = this.editJson.content;
+          this.shouldLoadConfig().then(() => '')
+        } else {
+          this.originalJson = this.showData = this.data = this.template;
+        }
+        break;
     }
   }
   isConfigLoaded() {
@@ -277,6 +299,33 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log(this.showData)
       this.editor.getEditor().set(this.showData)
     }
+  }
+  massageContent(json: any) {
+    return new Observable((observer) => {
+      let exchange = Exchange[this.ieamService.selectedCall]
+      let schema = JsonSchema[this.ieamService.selectedCall]
+      switch(exchange.type) {
+        case 'getNode':
+          this.ieamService.get(schema.policy)
+          .subscribe((res) => {
+            try {
+              let policy = JSON.stringify(res)
+              Object.keys(JsonToken).forEach((key) => {
+                let val = this.ieamService.getPropFromJson(json, key)
+                if(val) {
+                  
+                }
+              })
+            } catch(e) {
+              console.log(e)
+            }
+          })
+          break;
+        default:
+          observer.complete()
+      }
+
+    })
   }
   loadFile(payload: any, type: Enum) {
     this.ieamService.loadFile(payload, type)
@@ -416,6 +465,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.psAgent) {
       this.psAgent.unsubscribe();
     }
-    this.routerObserver.unsubscribe();
+    this.routeObserver.unsubscribe();
   }
 }
