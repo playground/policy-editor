@@ -309,11 +309,21 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.get(schema.policy)
           .subscribe((res) => {
             try {
-              let policy = JSON.stringify(res)
-              Object.keys(JsonToken).forEach((key) => {
-                let val = this.ieamService.getPropFromJson(json, key)
-                if(val) {
-                  
+              json['registeredServices'].forEach((service) => {
+                if(service.indexOf(this.ieamService.selectedOrg) == 0) {
+                  let orgService = service.url.split('/')
+                  let policy = JSON.stringify(res)
+                  policy = policy.replace(/\${orgId}/g, orgService[0])
+                  policy = policy.replace(/\${service}/g, orgService[1])
+                  policy = policy.replace(/\${version}/g, service.version)
+                  policy = policy.replace(/\${arch}/g, json.arch)
+                  Object.keys(JsonToken).forEach((key) => {
+                    let val = this.ieamService.getPropFromJson(json, key)
+                    if(val) {
+
+                    }
+                  })
+
                 }
               })
             } catch(e) {
