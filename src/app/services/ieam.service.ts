@@ -578,11 +578,30 @@ export class IeamService implements HttpInterceptor {
       }, undefined);
   }
   getPropValueFromJson(json: any, prop: string, value: string) {
-    return json[prop] && json[prop] === value
+    return json[prop] && json[prop] == value
     ? json[prop]
     : Object.values(json).reduce((val, obj) => {
-        if (val !== undefined && val === value) return val;
+        if (val !== undefined && val == value) return val;
         if (typeof obj === 'object') return this.getPropValueFromJson(obj, prop, value);
+      }, undefined);
+  }
+  getParentFromJson(json: any, prop: string, value: string) {
+    return json[prop] && json[prop] == value
+    ? json
+    : Object.values(json).reduce((val, obj) => {
+        if (val !== undefined && this.getPropValueFromJson(val, prop, value) == value) return val;
+        if (typeof obj === 'object') return this.getParentFromJson(obj, prop, value);
+      }, undefined);
+  }
+  setPropValueFromJson(json: any, prop: string, value: string, newValue: string) {
+    return json[prop] && json[prop] == value
+    ? json
+    : Object.values(json).reduce((val: any, obj) => {
+        if (val !== undefined && this.getPropValueFromJson(val, prop, value) == value) {
+          val.value = newValue
+          return val;
+        }
+        if (typeof obj === 'object') return this.setPropValueFromJson(obj, prop, value, newValue);
       }, undefined);
   }
 }

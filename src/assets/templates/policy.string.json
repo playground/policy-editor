@@ -16,7 +16,7 @@
   "dataVerification": { "metering": {} },
   "proposalRejection": {},
   "properties": [
-    { "name": "cpus", "value": "${cpu}" },
+    { "name": "cpus", "value": "${cpus}" },
     { "name": "ram", "value": "${ram}" }
   ],
   "ha_group": {},

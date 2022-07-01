@@ -21,13 +21,14 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     private route: ActivatedRoute,
     private ieamService: IeamService
   ) {
+    this.ieamService.isLoggedIn()
     this.method = this.ieamService.method;
   }
 
   ngOnInit(): void {
-    if(!this.ieamService.signIn('/editor')) {
-      return
-    }
+    // if(!this.ieamService.signIn('/editor')) {
+    //   return
+    // }
 
     this.showContent()
     if(!this.ieamService.signIn('/exchange')) {

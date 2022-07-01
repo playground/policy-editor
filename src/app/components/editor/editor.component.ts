@@ -189,9 +189,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     // };
   }
   ngAfterViewInit() {
-    if(this.ieamService.selectedOrg.length > 0) {
-      this.updateEditorData(this.ieamService.selectedOrg)
-    }
+    // if(this.ieamService.selectedOrg.length > 0) {
+    //   this.updateEditorData(this.ieamService.selectedOrg)
+    // }
   }
   populateJson(input, output) {
     Object.keys(output).forEach((key) => {
@@ -293,39 +293,52 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         }
       }
-      this.showData = JSON.parse(policy)
-      this.isModified()
-      // this.originalJson = this.showData;
-      console.log(this.showData)
-      this.editor.getEditor().set(this.showData)
+      this.massageContent(JSON.parse(policy))
+      .subscribe((json) => {
+        // this.originalJson = this.showData;
+        this.showData = json
+        console.log(this.showData)
+        this.editor.getEditor().set(this.showData)
+        this.isModified()
+        // this.editor.collapseAll()
+      })
     }
   }
   massageContent(json: any) {
     return new Observable((observer) => {
-      let exchange = Exchange[this.ieamService.selectedCall]
       let schema = JsonSchema[this.ieamService.selectedCall]
-      switch(exchange.type) {
+      switch(this.ieamService.selectedCall) {
         case 'getNode':
           this.ieamService.get(schema.policy)
           .subscribe((res) => {
             try {
-              json['registeredServices'].forEach((service) => {
-                if(service.indexOf(this.ieamService.selectedOrg) == 0) {
+              json['registeredServices'].forEach((service, idx) => {
+                if(service.url.indexOf(this.ieamService.selectedOrg) == 0) {
                   let orgService = service.url.split('/')
                   let policy = JSON.stringify(res)
+                  let oPolicy = JSON.parse(service.policy)
+                  let obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'cpus')
+                  if(obj) {
+                    policy = policy.replace(/\${cpus}/g, obj.value)
+                  }
+                  obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'ram')
+                  if(obj) {
+                    policy = policy.replace(/\${ram}/g, obj.value)
+                  }
                   policy = policy.replace(/\${orgId}/g, orgService[0])
                   policy = policy.replace(/\${service}/g, orgService[1])
                   policy = policy.replace(/\${version}/g, service.version)
                   policy = policy.replace(/\${arch}/g, json.arch)
-                  Object.keys(JsonToken).forEach((key) => {
-                    let val = this.ieamService.getPropFromJson(json, key)
-                    if(val) {
-
-                    }
-                  })
-
+                  obj = this.ieamService.setPropValueFromJson(service, 'propType', 'version', service.version)
+                  if(obj) {
+                    policy = policy.replace(/\${ram}/g, obj.value)
+                  }
+                  console.log(policy)
+                  json.registeredServices[idx].policy = policy
                 }
               })
+              observer.next(json)
+              observer.complete()
             } catch(e) {
               console.log(e)
             }
@@ -393,8 +406,14 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       console.log('Errors found', errors)
       editorJson.set(this.showData);
     } else {
-      this.showData = this.editor.get();
-      this.isModified()
+      this.massageContent(this.editor.get())
+      .subscribe((json) => {
+        this.showData = json
+        this.editor.update(this.showData)
+        this.isModified()
+        // this.editor.getEditor().set(this.showData)
+        // this.editor.expandAll()
+      })
     }
   }
   isModified() {
@@ -476,5 +495,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.psAgent.unsubscribe();
     }
     this.routeObserver.unsubscribe();
+    this.editor.destroy()
   }
 }

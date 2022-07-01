@@ -200,6 +200,6 @@ export const JsonToken = {
   hzVersion: '${hzVersion}',
   version: '${version}',
   arch: '${arch}',
-  cpu: '${cpu}',
+  cpus: '${cpus}',
   ram: '${ram}'
 } as const;
