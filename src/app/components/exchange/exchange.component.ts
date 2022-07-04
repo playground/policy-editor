@@ -1,10 +1,24 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Enum, Navigate, Exchange, IExchange, UrlToken } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
 import { Observable } from 'rxjs/internal/Observable';
+
+@Pipe({
+  name: 'sanitizeHtml'
+})
+export class SanitizeHtmlPipe implements PipeTransform {
+
+  constructor(private sanitizer:DomSanitizer) {
+  }
+
+  transform(v:string):SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(v);
+  }
+}
 
 @Component({
   selector: 'app-exchange',
@@ -19,7 +33,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private ieamService: IeamService
+    private ieamService: IeamService,
+    private elementRef:ElementRef
   ) {
     this.ieamService.isLoggedIn()
     this.method = this.ieamService.method;
@@ -60,7 +75,11 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   showContent() {
     let json = this.ieamService.getEditorStorage()
     if(json) {
-      this.content = prettyHtml(json.content)
+      this.content = this.ieamService.showJsonTree(json.content)
+
+      setTimeout(() => this.toggleTree(), 500)
+
+      // this.content = prettyHtml(json.content)
     }
   }
   async run(task: string) {
@@ -344,6 +363,15 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log(path)
     return path;
   }
+  toggleTree() {
+    this.elementRef.nativeElement.querySelectorAll('.caret').forEach((el) => {
+      el.addEventListener('click', (event) => {
+        console.log(event)
+        event.currentTarget.parentElement.querySelector(".nested").classList.toggle("active");
+        event.currentTarget.classList.toggle("caret-down");
+      });
+    })
+  }
   callExchange(path: string, exchange: IExchange, body: any) {
     // const method = exchange.method ? exchange.method : 'GET'
     // const json:any = this.ieamService.getEditorStorage();
@@ -356,14 +384,16 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(typeof res == 'string') {
           html = res
         } else {
-          html = prettyHtml(res)
+          html = this.ieamService.showJsonTree(res)
         }
+        console.log(html)
         this.content = html;
         this.ieamService.editable = exchange.editable == true
         if(this.ieamService.editable) {
           this.ieamService.activeExchangeFile = res
         }
         console.log(res)
+        setTimeout(() => this.toggleTree(), 500)
       }, error: (err) => console.log(err)
     })
   }

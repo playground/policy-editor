@@ -56,6 +56,7 @@ export class IeamService implements HttpInterceptor {
   editable = false;
   activeExchangeFile: any;
   nodeId = '';
+  jsonTree = {html: '', nested: 0}
 
   currentWorkingFile = '';
   titleText = 'IEAM';
@@ -509,8 +510,11 @@ export class IeamService implements HttpInterceptor {
   getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key]
   }
+  getContent(key: string = this.currentWorkingFile): IEditorStorage {
+    return this.editorStorage[key] ? this.editorStorage[key].content : {}
+  }
   getOriginalContent(key: string = this.currentWorkingFile): IEditorStorage {
-    return this.editorStorage['original'][key].content
+    return this.editorStorage['original'][key] ? this.editorStorage['original'][key].content : {}
   }
   updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
     this.editorStorage[key] = json;
@@ -610,5 +614,48 @@ export class IeamService implements HttpInterceptor {
         }
         if (typeof obj === 'object') return this.setPropValueFromJson(obj, prop, value, newValue);
       }, undefined);
+  }
+  showJsonTree(json = {}) {
+    if(Object.keys(json).length == 0) {
+      json = this.getContent()
+    }
+    if(json) {
+      this.initJsonTree()
+      this.buildJsonTree(json)
+      // for(let i=0; i<this.jsonTree.nested; i++) {
+      //   this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
+      // }
+    }
+    return this.jsonTree.html
+  }
+  initJsonTree() {
+    this.jsonTree = {html: '', nested: -1}
+  }
+  buildJsonTree(obj: any, key = '', nested = -1) {
+    let k;
+    if (obj instanceof Object) {
+      for (k in obj){
+        if (obj.hasOwnProperty(k)){
+          if(this.jsonTree.html.length == 0) {
+            this.jsonTree.html += '<ul "#tree-ul">'
+          }
+          if(typeof obj[k] === 'object') {
+            this.jsonTree.html += `<li><span class="caret">${k}</span><ul class="nested">`
+            if(nested <= 0 && this.jsonTree.nested > 0) {
+              for(let i=0; i<this.jsonTree.nested; i++) {
+                this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
+              }
+              this.jsonTree.nested = nested = -1
+            }
+            this.jsonTree.nested++;
+            this.buildJsonTree(obj[k], k, this.jsonTree.nested);
+          } else {
+            this.buildJsonTree(obj[k], k, this.jsonTree.nested);
+          }
+        }
+      }
+    } else {
+      this.jsonTree.html += `<li>${key}: ${obj}</li>`;
+    }
   }
 }
