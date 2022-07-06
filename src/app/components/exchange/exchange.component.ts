@@ -26,7 +26,7 @@ export class SanitizeHtmlPipe implements PipeTransform {
   styleUrls: ['./exchange.component.css']
 })
 export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
-  content: string = '';
+  content: any = {};
   psAgent!: { unsubscribe: () => void; };
   method: IMethod;
   tempName: string = '';
@@ -75,10 +75,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   showContent() {
     let json = this.ieamService.getEditorStorage()
     if(json) {
-      this.content = this.ieamService.showJsonTree(json.content)
+      this.content = json.content
 
-      setTimeout(() => this.toggleTree(), 500)
-
+      // this.content = this.ieamService.showJsonTree(json.content)
+      // setTimeout(() => this.toggleTree(), 500)
       // this.content = prettyHtml(json.content)
     }
   }
@@ -384,7 +384,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(typeof res == 'string') {
           html = res
         } else {
-          html = this.ieamService.showJsonTree(res)
+          // html = this.ieamService.showJsonTree(res)
+          html = res
         }
         console.log(html)
         this.content = html;
@@ -393,7 +394,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.activeExchangeFile = res
         }
         console.log(res)
-        setTimeout(() => this.toggleTree(), 500)
+        // setTimeout(() => this.toggleTree(), 500)
       }, error: (err) => console.log(err)
     })
   }

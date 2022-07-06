@@ -14,6 +14,7 @@ import { SigninComponent } from './components/signin/signin.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 import { ButtonsComponent } from './components/buttons/buttons.component';
 import { ExchangeComponent, SanitizeHtmlPipe } from './components/exchange/exchange.component';
+import { NgxJsonViewerModule } from 'ngx-json-viewer';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { ExchangeComponent, SanitizeHtmlPipe } from './components/exchange/excha
     ReactiveFormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    NgJsonEditorModule
+    NgJsonEditorModule,
+    NgxJsonViewerModule
   ],
   providers: [],
   bootstrap: [AppComponent]
