@@ -76,6 +76,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     let json = this.ieamService.getEditorStorage()
     if(json) {
       this.content = json.content
+      this.ieamService.editable = Exchange[this.ieamService.selectedCall].editable
 
       // this.content = this.ieamService.showJsonTree(json.content)
       // setTimeout(() => this.toggleTree(), 500)
@@ -173,6 +174,13 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((res: any) =>  this.confirmB4Calling(res.path, exchange, content))
     }
   }
+  checkIfHashNeeded(content) {
+    switch(this.ieamService.selectedCall) {
+      case 'addNode':
+        content.token = this.ieamService.sha256(content.token)
+        break
+    }
+  }
   async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}, cb?: any) {
     path = this.tokenReplace(path, content)
     let body = Object.keys(useThis).length > 0 ? useThis : content;
@@ -204,6 +212,11 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.callExchange(path, exchange, body)
         }
       }
+    } else if(!/GET$/.exec(exchange.method)) {
+      const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
+      if(resp) {
+        this.callExchange(path, exchange, body)
+      }
     } else {
       this.callExchange(path, exchange, body)
     }
@@ -214,18 +227,24 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       if(exchange.run || this.ieamService.hasServiceName(content)) {
         if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
           if(path.indexOf('${nodeId}') >= 0) {
-            this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-            .then((resp: any) => {
-              if(resp) {
-                const nodeId = this.ieamService.nodeId = resp.options.name;
-                path = path.replace(UrlToken['nodeId'], nodeId)
-                observer.next({path: path})
-                observer.complete()
-                // this.confirmB4Calling(path, exchange, content, useThis)
-              } else {
-                observer.error()
-              }
-            })
+            if(/GET$|DELETE$/.exec(exchange.method)) {
+              this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
+              .then((resp: any) => {
+                if(resp) {
+                  const nodeId = this.ieamService.nodeId = resp.options.name;
+                  path = path.replace(UrlToken['nodeId'], nodeId)
+                  observer.next({path: path})
+                  observer.complete()
+                  // this.confirmB4Calling(path, exchange, content, useThis)
+                } else {
+                  observer.error()
+                }
+              })
+            } else {
+              path = path.replace(UrlToken['nodeId'], this.ieamService.nodeId)
+              observer.next({path: path})
+              observer.complete()
+            }
           } else if(path.indexOf('${agId}') >= 0) {
             this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
             .then((resp: any) => {
@@ -377,6 +396,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     // const json:any = this.ieamService.getEditorStorage();
     // let content: IService = json.content;
     // let org: any = this
+    // this.checkIfHashNeeded(body)
     this.ieamService.callExchange(path, exchange, body)
     .subscribe({
       next: (res: any) => {

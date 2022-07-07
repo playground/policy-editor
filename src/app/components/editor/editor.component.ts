@@ -314,31 +314,34 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
             try {
               let oContent = this.ieamService.getOriginalContent()
               let oServices = oContent['registeredServices']
-              json['registeredServices'].forEach((service, idx) => {
-                if(service.url.indexOf(this.ieamService.selectedOrg) == 0) {
-                  let orgService = service.url.split('/')
-                  let policy = JSON.stringify(res)
-                  let oPolicy = JSON.parse(oServices[idx].policy)
-                  let obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'cpus')
-                  if(obj) {
-                    policy = policy.replace(/\${cpus}/g, obj.value)
+              if(oServices.length > 0) {
+                json['registeredServices'].forEach((service, idx) => {
+                  if(service.url.indexOf(this.ieamService.selectedOrg) == 0) {
+                    let orgService = service.url.split('/')
+                    let policy = JSON.stringify(res)
+                    // we only need to read from first oServices[0]
+                    let oPolicy = JSON.parse(oServices[0].policy)
+                    let obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'cpus')
+                    if(obj) {
+                      policy = policy.replace(/\${cpus}/g, obj.value)
+                    }
+                    obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'ram')
+                    if(obj) {
+                      policy = policy.replace(/\${ram}/g, obj.value)
+                    }
+                    policy = policy.replace(/\${orgId}/g, orgService[0])
+                    policy = policy.replace(/\${service}/g, orgService[1])
+                    policy = policy.replace(/\${version}/g, service.version)
+                    policy = policy.replace(/\${arch}/g, json.arch)
+                    obj = this.ieamService.setPropValueFromJson(service, 'propType', 'version', service.version)
+                    if(obj) {
+                      policy = policy.replace(/\${ram}/g, obj.value)
+                    }
+                    console.log(policy)
+                    json.registeredServices[idx].policy = policy
                   }
-                  obj = this.ieamService.getParentFromJson(oPolicy, 'name', 'ram')
-                  if(obj) {
-                    policy = policy.replace(/\${ram}/g, obj.value)
-                  }
-                  policy = policy.replace(/\${orgId}/g, orgService[0])
-                  policy = policy.replace(/\${service}/g, orgService[1])
-                  policy = policy.replace(/\${version}/g, service.version)
-                  policy = policy.replace(/\${arch}/g, json.arch)
-                  obj = this.ieamService.setPropValueFromJson(service, 'propType', 'version', service.version)
-                  if(obj) {
-                    policy = policy.replace(/\${ram}/g, obj.value)
-                  }
-                  console.log(policy)
-                  json.registeredServices[idx].policy = policy
-                }
-              })
+                })
+              }
               observer.next(json)
               observer.complete()
             } catch(e) {

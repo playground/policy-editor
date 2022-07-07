@@ -6,6 +6,7 @@ import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
 import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
+import shajs from 'sha.js';
 
 declare const window: any;
 
@@ -289,6 +290,13 @@ export class IeamService implements HttpInterceptor {
   isLoggedIn() {
     if(!this.loggedIn) {
       this.router.navigate([`/${Navigate.signin}`])
+    } else {
+      let session: any = this.getSession('loggedIn');
+      if(session) {
+        session = JSON.parse(session);
+        session.timestamp = Date.now()
+        this.setSession('loggedIn', JSON.stringify(session));
+      }
     }
     return this.loggedIn
   }
@@ -665,6 +673,9 @@ export class IeamService implements HttpInterceptor {
           return idx}
         else if (typeof obj === 'object') return this.getNodeLevel(obj, prop);
       }, undefined);
+  }
+  sha256(text: string) {
+    return shajs('sha256').update(text).digest('hex')
   }
   buildJsonTree2(obj: any, key = '', nested = -1) {
     let k;

@@ -40,6 +40,7 @@ export const Navigate = {
   editor: 'editor',
   about: 'about',
   exchange: 'exchange',
+  active: 'active',
   signin: 'signin'
 } as const;
 
@@ -174,6 +175,12 @@ export const Loader = {
   remotePolicy: {name: 'Remote File'}
 } as const;
 
+export const FileMap ={
+  getNode: {name: 'Node'},
+  getNodes: {name: 'All Nodes'},
+  getPattern: {name: 'Pattern'},
+  getPatterns: {name: 'Patterns'}
+}
 export const UrlToken = {
   orgId: '${orgId}',
   service: '${service}',

@@ -15,6 +15,7 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
 import { ButtonsComponent } from './components/buttons/buttons.component';
 import { ExchangeComponent, SanitizeHtmlPipe } from './components/exchange/exchange.component';
 import { NgxJsonViewerModule } from 'ngx-json-viewer';
+import { ActiveComponent } from './components/active/active.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +27,8 @@ import { NgxJsonViewerModule } from 'ngx-json-viewer';
     BreadcrumbComponent,
     ButtonsComponent,
     ExchangeComponent,
-    SanitizeHtmlPipe
+    SanitizeHtmlPipe,
+    ActiveComponent
   ],
   imports: [
     BrowserModule,
