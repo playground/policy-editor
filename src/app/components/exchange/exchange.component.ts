@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -55,7 +55,18 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         if(msg.type == Enum.EXCHANGE_CALL) {
           this.run(msg.payload)
         } else if(msg.type == Enum.EXCHANGE_SELECTED) {
-          this.showContent()
+          let exchange = Exchange[this.ieamService.selectedCall]
+          if(exchange.template) {
+            let schema = JsonSchema[this.ieamService.selectedCall]
+            this.ieamService.get(schema.file)
+            .subscribe((json) => {
+              this.ieamService.activeExchangeFile = json
+              this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+            })
+          }
+          else {
+            this.showContent()
+          }
         } else if(msg.type == Enum.LOAD_CONFIG) {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({
@@ -72,10 +83,13 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.psAgent.unsubscribe();
     }
   }
+  loadTemplat() {
+    this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+
+  }
   showContent() {
-    let json = this.ieamService.getEditorStorage()
-    if(json) {
-      this.content = json.content
+    if(this.ieamService.selectedCall) {
+      this.content = this.ieamService.getContent()
       this.ieamService.editable = Exchange[this.ieamService.selectedCall].editable
 
       // this.content = this.ieamService.showJsonTree(json.content)
@@ -225,7 +239,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     return new Observable((observer) => {
       let serviceName = ''
       if(exchange.run || this.ieamService.hasServiceName(content)) {
-        if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
+        if(/{orgId}|{nodeId}|{agId}|{pattern}/.exec(path)) {
           if(path.indexOf('${nodeId}') >= 0) {
             if(/GET$|DELETE$/.exec(exchange.method)) {
               this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
@@ -253,7 +267,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                 path = path.replace(UrlToken['agId'], agId)
                 observer.next({path: path})
                 observer.complete()
-                // this.confirmB4Calling(path, exchange, content, useThis)
               } else {
                 observer.error()
               }
@@ -266,7 +279,18 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                 path = path.replace(UrlToken['pattern'], pattern)
                 observer.next({path: path})
                 observer.complete()
-                // this.confirmB4Calling(path, exchange, content, useThis)
+              } else {
+                observer.error()
+              }
+            })
+          } else if(path.indexOf('${orgId}') >= 0) {
+            this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name'})
+            .then((resp: any) => {
+              if(resp) {
+                const orgId = resp.options.name;
+                path = path.replace(UrlToken['orgId'], orgId)
+                observer.next({path: path})
+                observer.complete()
               } else {
                 observer.error()
               }
@@ -411,7 +435,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.content = html;
         this.ieamService.editable = exchange.editable == true
         if(this.ieamService.editable) {
-          this.ieamService.activeExchangeFile = res
+          this.ieamService.activeExchangeFile = this.ieamService.getNodeContent(res)
         }
         console.log(res)
         // setTimeout(() => this.toggleTree(), 500)

@@ -189,9 +189,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     // };
   }
   ngAfterViewInit() {
-    // if(this.ieamService.selectedOrg.length > 0) {
-    //   this.updateEditorData(this.ieamService.selectedOrg)
-    // }
   }
   populateJson(input, output) {
     Object.keys(output).forEach((key) => {
@@ -202,21 +199,31 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   editExchangeFile(type: number) {
     switch(type) {
       case Enum.EDIT_EXCHANGE_FILE:
-        let json = this.ieamService.activeExchangeFile.nodes[`${this.ieamService.selectedOrg}/${this.ieamService.nodeId}`]
+        let json = this.ieamService.activeExchangeFile ? Object.assign({}, this.ieamService.activeExchangeFile) : this.ieamService.getContent()
         let schema = JsonSchema[this.ieamService.selectedCall]
-        this.ieamService.get(schema.file)
-        .subscribe((res) => {
+        let exchange = Exchange[this.ieamService.selectedCall]
+        this.ieamService.activeExchangeFile = null
+        if(exchange && !exchange.template && schema && schema.file && schema.file.length > 0) {
+          this.ieamService.get(schema.file)
+          .subscribe((res) => {
+            this.ieamService.currentWorkingFile = this.ieamService.selectedCall
+            json = this.populateJson(json, res)
+            this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
+            this.editJson = this.ieamService.getEditorStorage()
+            if(this.editJson) {
+              this.showData = this.data = this.editJson.content;
+              this.shouldLoadConfig().then(() => '')
+            } else {
+              console.log('file not found');
+            }
+          })
+        } else {
           this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-          json = this.populateJson(json, res)
           this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
           this.editJson = this.ieamService.getEditorStorage()
-          if(this.editJson) {
-            this.showData = this.data = this.editJson.content;
-            this.shouldLoadConfig().then(() => '')
-          } else {
-            console.log('file not found');
-          }
-        })
+          this.showData = this.data = this.editJson.content;
+          this.shouldLoadConfig().then(() => '')
+        }
         break;
       default:
         this.editJson = this.ieamService.getEditorStorage()
@@ -256,7 +263,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
   async updateEditorData(org: string) {
-    if(this.ieamService.configJson[org]) {
+    if(this.data && this.ieamService.configJson[org]) {
       let envVars: IEnvVars = this.ieamService.configJson[org].envVars;
       let policy = JSON.stringify(this.data)
       policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
@@ -350,6 +357,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           })
           break;
         default:
+          observer.next(json)
           observer.complete()
       }
 

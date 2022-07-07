@@ -3,7 +3,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
@@ -444,6 +444,18 @@ export class IeamService implements HttpInterceptor {
       return obj[key];
     });
   }
+  getNodeContent(json: any) {
+    let contentNode = '';
+    switch(this.selectedCall) {
+      case 'getNode':
+        contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: this.selectedOrg, nodeId: this.nodeId})
+        break;
+      case 'getOrg':
+        contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: this.selectedOrg, nodeId: this.nodeId})
+        break;
+      }
+    return contentNode.split('.').reduce((a, b) => a[b], json)
+  }
   promptDialog(title: string, type: string, options: any = {}) {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
     return new Promise((resolve, reject) => {
@@ -474,7 +486,9 @@ export class IeamService implements HttpInterceptor {
   }
   callExchange(endpoint: string, exchange: IExchange, body?: any) {
     const credential = this.configJson[this.selectedOrg]['credential']
-    const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
+    const b64 = exchange.role
+      ? btoa(`${credential[exchange.role]}`)
+      : btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {

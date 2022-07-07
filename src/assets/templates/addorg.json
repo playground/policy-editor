@@ -1,0 +1,17 @@
+{
+  "orgType": "my org type",
+  "label": "My org",
+  "description": "blah blah",
+  "tags": {
+    "ibmcloud_id": "abc123def456",
+    "cloud_id": "<account-id-here>"
+  },
+  "limits": {
+    "maxNodes": 50
+  },
+  "heartbeatIntervals": {
+    "minInterval": 10,
+    "maxInterval": 120,
+    "intervalAdjustment": 10
+  }
+}

@@ -18,7 +18,7 @@ const routes: Routes = [
   { path: 'exchange', component: ExchangeComponent },
   { path: 'active', component: ActiveComponent },
   { path: 'signin', component: SigninComponent },
-  { path: '', redirectTo: '/', pathMatch: 'full' },
+  { path: '', redirectTo: '/exchange', pathMatch: 'full' },
 ];
 
 @NgModule({

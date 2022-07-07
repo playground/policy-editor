@@ -80,6 +80,11 @@ export interface IEditorStorage {
   modified: boolean;
   remote: boolean;
 }
+export const Role = {
+  hubAdmin: 'HUB_ADMIN',
+  orgAdmin: 'ORG_ADMIN',
+  user: 'HZN_EXCHANGE_USER_AUTH'
+} as const;
 export interface IExchange {
   name: string;
   path: string;
@@ -93,12 +98,17 @@ export interface IExchange {
   type: string;
   run?: boolean;          // available to run regardless
   editable?: boolean;
+  template?: boolean;
+  role?: string;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
   adminVersion: {name: 'Admin Version', path: 'admin/version', run: true},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus', run: true},
-  addOrg: {name: 'Add Org', path: 'orgs', prompt: true, title: 'Enter org name', placeholder: 'Organization Name', run: true},
+
+  addOrg: {name: 'Add Org', path: 'orgs/${orgId}', method: 'POST', type: 'organization', role: Role.hubAdmin, title: 'Enter org name', placeholder: 'Organization Name', run: true, editable: true, template: true},
+  getOrg: {name: 'Get Org By Name', path: 'orgs/${orgId}', method: 'GET', type: 'organization', role: Role.hubAdmin, run: true, editable: true},
+  getOrgStatus: {name: 'Get Org Status', path: 'orgs/${orgId}/status', method: 'GET', type: 'organization', run: true},
 
   addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true},
   getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
@@ -195,9 +205,17 @@ export const UrlToken = {
   objectType: '${objectType}'
 } as const;
 
+export interface IJsonSchema {
+  name: string;
+  file?: string;
+  contentNode: string;
+  policy?: string;
+}
 export const JsonSchema = {
-  getNode: {name: 'Node Json', file: 'assets/templates/node.json', policy: 'assets/templates/policy.string.json'},
-  getService: 'assets/templates/service.json',
+  getNode: {name: 'Node Json', file: 'assets/templates/node.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
+  getService: {name: 'Service Json', file: 'assets/templates/service.json'},
+  getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
+  addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'}
 
 } as const;
 
