@@ -78,7 +78,7 @@
       </mat-autocomplete>
     </mat-form-field>
   </form>
-  <button mat-raised-button color="publish" type="button" (click)="edit()" [disabled]="ieamService.editable == false">
+  <button mat-raised-button color="publish" type="button" (click)="edit()" [disabled]="shouldNotEdit()">
     <mat-icon>edit</mat-icon>
   </button>
   <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>

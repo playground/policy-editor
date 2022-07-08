@@ -56,12 +56,19 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.run(msg.payload)
         } else if(msg.type == Enum.EXCHANGE_SELECTED) {
           let exchange = Exchange[this.ieamService.selectedCall]
-          if(exchange.template) {
+          if(exchange.template && !this.ieamService.hasContent()) {
+            // const resp:any = await this.ieamService.promptDialog(`${exchange.prompt}`, '', {okButton: 'Yes', cancelButton: 'No'})
+            // if(resp) {
+
+            // }
             let schema = JsonSchema[this.ieamService.selectedCall]
             this.ieamService.get(schema.file)
             .subscribe((json) => {
-              this.ieamService.activeExchangeFile = json
-              this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+              if(exchange.editable) {
+                this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(json)).subscribe(() => {
+                  this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+                })
+              }
             })
           }
           else {
@@ -83,10 +90,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.psAgent.unsubscribe();
     }
   }
-  loadTemplat() {
-    this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
-
-  }
   showContent() {
     if(this.ieamService.selectedCall) {
       this.content = this.ieamService.getContent()
@@ -98,15 +101,15 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   async run(task: string) {
+    const json = this.ieamService.getEditorStorage()
     const exchange: IExchange = Exchange[task]
-    console.log(task, exchange.path)
-    if(exchange.prompt) {
-      const answer:any = await this.ieamService.promptDialog(exchange.title || '', 'folder', {placeholder: exchange.placeholder})
-      if(answer) {
-        const path = `${exchange.path}/${answer.options.name}`
-        this.checkB4Calling(path, exchange)
+    if(json && json.modified) {
+      const resp:any = await this.ieamService.promptDialog(`${exchange.name}<br>This file is modified, proceed without saving?`, '', {okButton: 'Yes', cancelButton: 'No'})
+      if(resp) {
+        this.checkB4Calling(exchange.path, exchange)
       }
     } else {
+      console.log(task, exchange.path)
       this.checkB4Calling(exchange.path, exchange)
     }
   }
@@ -196,16 +199,22 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}, cb?: any) {
-    path = this.tokenReplace(path, content)
+    let orgId = this.ieamService.selectedOrg
+    this.tempName = ''
+    if(/addOrg$/.exec(this.ieamService.selectedCall)) {
+      this.tempName = orgId = content.label
+    } else {
+      this.tempName = this.tempName ? this.tempName : this.ieamService.getServiceName(content, path)
+    }
+    path = this.tokenReplace(path, content, orgId)
     let body = Object.keys(useThis).length > 0 ? useThis : content;
     if(!exchange.run && exchange.method != 'GET') {
-      this.tempName = this.tempName ? this.tempName : this.ieamService.getServiceName(content)
       const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
         if(exchange.callB4) {
           // Check if service exists, if so PUT instead of POST
           let callB4: IExchange = Object.assign({}, Exchange[exchange.callB4]);
-          let callB4Path = this.tokenReplace(callB4.path, content)
+          let callB4Path = this.tokenReplace(callB4.path, content, orgId)
           this.checkIfExist(callB4Path, callB4)
           .subscribe(({
             next: (data: any) => {
@@ -284,17 +293,24 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               }
             })
           } else if(path.indexOf('${orgId}') >= 0) {
-            this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name'})
-            .then((resp: any) => {
-              if(resp) {
-                const orgId = resp.options.name;
-                path = path.replace(UrlToken['orgId'], orgId)
-                observer.next({path: path})
-                observer.complete()
-              } else {
-                observer.error()
-              }
-            })
+            if(/addOrg$/.exec(this.ieamService.selectedCall)) {
+              const orgId = content.label
+              path = path.replace(UrlToken['orgId'], orgId)
+              observer.next({path: path})
+              observer.complete()
+            } else {
+              this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name', name: this.ieamService.selectedOrg})
+              .then((resp: any) => {
+                if(resp) {
+                  const orgId = resp.options.name;
+                  path = path.replace(UrlToken['orgId'], orgId)
+                  observer.next({path: path})
+                  observer.complete()
+                } else {
+                  observer.error()
+                }
+              })
+            }
           }
         }
         else {
@@ -302,6 +318,11 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           observer.complete()
           // this.confirmB4Calling(path, exchange, content, useThis)
         }
+      } else if(/addOrg$/.exec(this.ieamService.selectedCall)) {
+        const orgId = content.label
+        path = path.replace(UrlToken['orgId'], orgId)
+        observer.next({path: path})
+        observer.complete()
       } else {
         this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
         .then((resp: any) => {
@@ -376,20 +397,20 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     }
   }
-  tokenReplace(path: string, content: IService) {
+  tokenReplace(path: string, content: IService, orgId = this.ieamService.selectedOrg) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
       if(path.indexOf(UrlToken[key]) >= 0) {
         value = ''
         switch(key) {
           case 'service':
-            value = this.ieamService.getServiceName(content)
+            value = this.ieamService.getServiceName(content, path)
             break;
           case 'keyId':
             value = 'policy-editor'
             break;
           case 'orgId':
-            value = this.ieamService.selectedOrg
+            value = orgId
             break;
           case 'pattern':
             value = content.label
@@ -434,8 +455,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log(html)
         this.content = html;
         this.ieamService.editable = exchange.editable == true
-        if(this.ieamService.editable) {
-          this.ieamService.activeExchangeFile = this.ieamService.getNodeContent(res)
+        if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
+          this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')
         }
         console.log(res)
         // setTimeout(() => this.toggleTree(), 500)

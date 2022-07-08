@@ -3,7 +3,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
@@ -444,17 +444,23 @@ export class IeamService implements HttpInterceptor {
       return obj[key];
     });
   }
-  getNodeContent(json: any) {
-    let contentNode = '';
-    switch(this.selectedCall) {
-      case 'getNode':
-        contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: this.selectedOrg, nodeId: this.nodeId})
-        break;
-      case 'getOrg':
-        contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: this.selectedOrg, nodeId: this.nodeId})
-        break;
+  getNodeContent(json: any, orgId = this.selectedOrg) {
+    if(JsonSchema[this.selectedCall].contentNode) {
+      let contentNode = '';
+      switch(this.selectedCall) {
+        case 'getNode':
+          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+          break;
+        case 'getOrg':
+          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+          break;
+        default:
+          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
       }
-    return contentNode.split('.').reduce((a, b) => a[b], json)
+      return contentNode.split('.').reduce((a, b) => a[b], json)
+    } else {
+      return json;
+    }
   }
   promptDialog(title: string, type: string, options: any = {}) {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
@@ -478,17 +484,32 @@ export class IeamService implements HttpInterceptor {
       this.dialog.closeAll();
     });
   }
+  shouldLoadConfig(toPage = {toEditor: false}) {
+    return new Promise(async (resolve, reject) => {
+      let editJson= this.getEditorStorage('hznConfig')
+      if(!editJson || Object.keys(editJson.content).length == 0) {
+        const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+        if(answer) {
+          // payload indicates we are in editor route
+          this.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: toPage});
+        }
+        resolve(editJson);
+      } else {
+        resolve(editJson);
+      }
+    })
+  }
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
   getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
-  callExchange(endpoint: string, exchange: IExchange, body?: any) {
-    const credential = this.configJson[this.selectedOrg]['credential']
-    const b64 = exchange.role
+  callExchange(endpoint: string, exchange: IExchange, body = {}, orgId = this.selectedOrg) {
+    const credential = this.configJson[orgId]['credential']
+    const b64 = exchange.role == Role.hubAdmin
       ? btoa(`${credential[exchange.role]}`)
-      : btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
+      : btoa(`${orgId}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {
@@ -523,7 +544,7 @@ export class IeamService implements HttpInterceptor {
       }
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
-  addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {
+  addEditorStorage(content: any, name = this.currentWorkingFile, key = this.currentWorkingFile) {
     this.editorStorage[key] = {content: content, name: name}
     if(!this.editorStorage['original']) {
       this.editorStorage['original'] = {}
@@ -536,6 +557,9 @@ export class IeamService implements HttpInterceptor {
   getContent(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key] ? this.editorStorage[key].content : {}
   }
+  hasContent() {
+    return Object.keys(this.getContent()).length > 0
+  }
   getOriginalContent(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage['original'][key] ? this.editorStorage['original'][key].content : {}
   }
@@ -546,7 +570,7 @@ export class IeamService implements HttpInterceptor {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
       if(type.length > 0) {
-        if(!Exchange[key].type || Exchange[key].run || this.checkType(type, Exchange[key].type)) {
+        if(!Exchange[key].type || Exchange[key].run || Exchange[key].type == Exchange[type].type || this.checkType(type, Exchange[key].type)) {
           exchange.push({name: Exchange[key].name, id: key})
         }
       }
@@ -593,9 +617,9 @@ export class IeamService implements HttpInterceptor {
       org.metaVars.ARCH = arch;
     }
   }
-  getServiceName(content: IService, org = this.getOrg()) {
-    let serviceName = ''
-    if(org) {
+  getServiceName(content: IService, path: string,  org = this.getOrg()) {
+    let serviceName = path
+    if(org && content && Object.keys(content).length > 0) {
       serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;
@@ -690,6 +714,37 @@ export class IeamService implements HttpInterceptor {
   }
   sha256(text: string) {
     return shajs('sha256').update(text).digest('hex')
+  }
+  populateJson(input, output) {
+    Object.keys(output).forEach((key) => {
+      output[key] = input[key]
+    })
+    return output
+  }
+  setActiveExchangeFile(json: any) {
+    return new Observable((observer) => {
+      if(json && Object.keys(json).length > 0) {
+        let schema = JsonSchema[this.selectedCall]
+        if(schema && schema.file && schema.file.length > 0) {
+          this.get(schema.file)
+          .subscribe((res) => {
+            this.currentWorkingFile = this.selectedCall
+            json = this.populateJson(json, res)
+            this.addEditorStorage(json)
+            observer.next()
+            observer.complete()
+          })
+        } else {
+          this.currentWorkingFile = this.selectedCall
+          this.addEditorStorage(json)
+          observer.next()
+          observer.complete()
+        }
+      } else {
+        observer.next()
+        observer.complete()
+      }
+    })
   }
   buildJsonTree2(obj: any, key = '', nested = -1) {
     let k;

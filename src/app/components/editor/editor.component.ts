@@ -32,34 +32,35 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   currentPolicy = '';
   originalJson: any;
   editJson: IEditorStorage;
-  template = {
-    "org": "$HZN_ORG_ID",
-    "label": "$SERVICE_NAME for $ARCH",
-    "url": "$SERVICE_NAME",
-    "version": "$SERVICE_VERSION",
-    "arch": "$ARCH",
-    "public": true,
-    "sharable": "singleton",
-    "requiredServices": [],
-    "userInput": [],
-    "deployment": {
-      "services": {
-        "$SERVICE_NAME": {
-          "image": "$SERVICE_CONTAINER",
-          "binds": [
-            "$MMS_SHARED_VOLUME:$VOLUME_MOUNT:rw"
-          ],
-          "ports": [
-            {
-            "HostIP": "0.0.0.0",
-            "HostPort": "3000:3000/tcp"
-            }
-          ],
-          "privileged": true
-        }
-      }
-    }
-  }
+  template = {}
+  // {
+  //   "org": "$HZN_ORG_ID",
+  //   "label": "$SERVICE_NAME for $ARCH",
+  //   "url": "$SERVICE_NAME",
+  //   "version": "$SERVICE_VERSION",
+  //   "arch": "$ARCH",
+  //   "public": true,
+  //   "sharable": "singleton",
+  //   "requiredServices": [],
+  //   "userInput": [],
+  //   "deployment": {
+  //     "services": {
+  //       "$SERVICE_NAME": {
+  //         "image": "$SERVICE_CONTAINER",
+  //         "binds": [
+  //           "$MMS_SHARED_VOLUME:$VOLUME_MOUNT:rw"
+  //         ],
+  //         "ports": [
+  //           {
+  //           "HostIP": "0.0.0.0",
+  //           "HostPort": "3000:3000/tcp"
+  //           }
+  //         ],
+  //         "privileged": true
+  //       }
+  //     }
+  //   }
+  // }
   dialogRef?: MatDialogRef<DialogComponent, any>;
   selectedOrg = '';
 
@@ -198,33 +199,34 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   editExchangeFile(type: number) {
     switch(type) {
+      // case Enum.EDIT_EXCHANGE_FILE:
+      //   let json = this.ieamService.activeExchangeFile ? Object.assign({}, this.ieamService.activeExchangeFile) : this.ieamService.getContent()
+      //   let schema = JsonSchema[this.ieamService.selectedCall]
+      //   let exchange = Exchange[this.ieamService.selectedCall]
+      //   this.ieamService.activeExchangeFile = null
+      //   if(exchange && !exchange.template && schema && schema.file && schema.file.length > 0) {
+      //     this.ieamService.get(schema.file)
+      //     .subscribe((res) => {
+      //       this.ieamService.currentWorkingFile = this.ieamService.selectedCall
+      //       json = this.populateJson(json, res)
+      //       this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
+      //       this.editJson = this.ieamService.getEditorStorage()
+      //       if(this.editJson) {
+      //         this.showData = this.data = this.editJson.content;
+      //         this.shouldLoadConfig().then(() => '')
+      //       } else {
+      //         console.log('file not found');
+      //       }
+      //     })
+      //   } else {
+      //     this.ieamService.currentWorkingFile = this.ieamService.selectedCall
+      //     this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
+      //     this.editJson = this.ieamService.getEditorStorage()
+      //     this.showData = this.data = this.editJson.content;
+      //     this.shouldLoadConfig().then(() => '')
+      //   }
+      //   break;
       case Enum.EDIT_EXCHANGE_FILE:
-        let json = this.ieamService.activeExchangeFile ? Object.assign({}, this.ieamService.activeExchangeFile) : this.ieamService.getContent()
-        let schema = JsonSchema[this.ieamService.selectedCall]
-        let exchange = Exchange[this.ieamService.selectedCall]
-        this.ieamService.activeExchangeFile = null
-        if(exchange && !exchange.template && schema && schema.file && schema.file.length > 0) {
-          this.ieamService.get(schema.file)
-          .subscribe((res) => {
-            this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-            json = this.populateJson(json, res)
-            this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
-            this.editJson = this.ieamService.getEditorStorage()
-            if(this.editJson) {
-              this.showData = this.data = this.editJson.content;
-              this.shouldLoadConfig().then(() => '')
-            } else {
-              console.log('file not found');
-            }
-          })
-        } else {
-          this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-          this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
-          this.editJson = this.ieamService.getEditorStorage()
-          this.showData = this.data = this.editJson.content;
-          this.shouldLoadConfig().then(() => '')
-        }
-        break;
       default:
         this.editJson = this.ieamService.getEditorStorage()
         if(this.editJson) {
@@ -250,6 +252,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
   shouldLoadConfig() {
+    // TODO:  move this to ieamService
     return new Promise(async (resolve, reject) => {
       this.editJson= this.ieamService.getEditorStorage('hznConfig')
       if(!this.editJson || Object.keys(this.editJson.content).length == 0) {

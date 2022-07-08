@@ -230,7 +230,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   publish() {
-    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader)
+    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader.length > 0 ? this.ieamService.selectedLoader : this.ieamService.selectedCall)
     this.setExchangeOptions()
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
@@ -249,6 +249,10 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0 || (!this.ieamService.editorStorage[this.ieamService.selectedCall] && Exchange[this.ieamService.selectedCall].run != true))
   }
 
+  shouldNotEdit() {
+    return !this.ieamService.selectedOrg || (Object.keys(this.ieamService.getContent()).length == 0 || !this.ieamService.editable)
+  }
+
   onChange(evt: any) {
     if(evt.isUserInput) {
       console.log(evt.source.value)
@@ -261,7 +265,11 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value.id ? evt.source.value.id : evt.source.value
+      this.ieamService.currentWorkingFile = this.ieamService.selectedCall
       this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+      // this.ieamService.shouldLoadConfig().then(() => {
+      //   this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+      // })
     }
   }
 

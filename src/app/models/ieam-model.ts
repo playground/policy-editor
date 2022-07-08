@@ -89,7 +89,7 @@ export interface IExchange {
   name: string;
   path: string;
   method: string;
-  prompt?: boolean;        // prompt for input
+  prompt?: string;        // prompt for input
   title?: string;
   placeholder?: string;
   signature: string;
@@ -106,9 +106,12 @@ export const Exchange = {
   adminVersion: {name: 'Admin Version', path: 'admin/version', run: true},
   adminOrgStatus: {name: 'Admin Org Status', path: 'admin/orgstatus', run: true},
 
-  addOrg: {name: 'Add Org', path: 'orgs/${orgId}', method: 'POST', type: 'organization', role: Role.hubAdmin, title: 'Enter org name', placeholder: 'Organization Name', run: true, editable: true, template: true},
+  addOrg: {name: 'Add/Update Org', path: 'orgs/${orgId}', method: 'POST', type: 'organization', role: Role.hubAdmin, title: 'Enter org name', placeholder: 'Organization Name', editable: true, template: true, callB4: 'getOrg'},
   getOrg: {name: 'Get Org By Name', path: 'orgs/${orgId}', method: 'GET', type: 'organization', role: Role.hubAdmin, run: true, editable: true},
+  getOrgs: {name: 'Get All Orgs', path: 'orgs', method: 'GET', type: 'organization', role: Role.hubAdmin, run: true},
   getOrgStatus: {name: 'Get Org Status', path: 'orgs/${orgId}/status', method: 'GET', type: 'organization', run: true},
+  getOrgNodesHealth: {name: 'Get Org Nodes Health', path: 'orgs/${orgId}/search/nodehealth', method: 'POST', type: 'organization', role: Role.user, run: true, editable: true, template: true, description: 'Returns the lastHeartbeat and agreement times for all nodes in this org that do not have a pattern and have changed since the specified lastTime. Can be run by a user or agbot (but not a node).'},
+  deleteOrg: {name: 'Delete Org By Name', path: 'orgs/${orgId}', method: 'DELETE', type: 'organization', role: Role.hubAdmin, run: true},
 
   addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true},
   getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
@@ -185,9 +188,9 @@ export const Loader = {
   remotePolicy: {name: 'Remote File'}
 } as const;
 
-export const FileMap ={
-  getNode: {name: 'Node'},
-  getNodes: {name: 'All Nodes'},
+export const ActionMap ={
+  getOrg: {mapTo: 'addOrg'},
+  getNode: {mapTo: 'addNode'},
   getPattern: {name: 'Pattern'},
   getPatterns: {name: 'Patterns'}
 }
@@ -215,7 +218,8 @@ export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
-  addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'}
+  addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
+  getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'}
 
 } as const;
 
