@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
-import { Enum, Organization, Exchange, IOption, Loader, Navigate } from 'src/app/models/ieam-model';
+import { Enum, Organization, Exchange, IOption, Loader, Navigate, ActionMap } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -313,6 +313,12 @@ export class ButtonsComponent implements OnInit, OnDestroy {
 
   edit() {
     if(this.ieamService.isLoggedIn()) {
+      let actionMap = ActionMap[this.ieamService.selectedCall]
+      if(actionMap) {
+        let json = this.ieamService.getContent()
+        this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+        this.ieamService.currentWorkingFile = actionMap.mapTo
+      }
       this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
     }
   }

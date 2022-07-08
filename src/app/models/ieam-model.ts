@@ -188,7 +188,7 @@ export const Loader = {
   remotePolicy: {name: 'Remote File'}
 } as const;
 
-export const ActionMap ={
+export const ActionMap = {
   getOrg: {mapTo: 'addOrg'},
   getNode: {mapTo: 'addNode'},
   getPattern: {name: 'Pattern'},

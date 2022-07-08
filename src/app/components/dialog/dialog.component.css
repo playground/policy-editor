@@ -9,3 +9,8 @@
 ::ng-deep div.mat-radio-label-content {
   padding-right: 15px;
 }
+
+::ng-deep div.align-elements mat-form-field div.mat-form-field-infix {
+  width: 50%;
+  padding-right: 2px;
+}

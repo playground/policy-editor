@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -63,9 +63,14 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             // }
             let schema = JsonSchema[this.ieamService.selectedCall]
             this.ieamService.get(schema.file)
-            .subscribe((json) => {
+            .subscribe((res) => {
               if(exchange.editable) {
-                this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(json)).subscribe(() => {
+                let json = this.ieamService.getNodeContent(res)
+                this.ieamService.setActiveExchangeFile(json).subscribe(() => {
+                  let actionMap = ActionMap[this.ieamService.selectedCall]
+                  if(actionMap) {
+                    this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+                  }
                   this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
                 })
               }
@@ -203,10 +208,11 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tempName = ''
     if(/addOrg$/.exec(this.ieamService.selectedCall)) {
       this.tempName = orgId = content.label
+      path = this.tokenReplace(path, content, orgId)
     } else {
+      path = this.tokenReplace(path, content, orgId)
       this.tempName = this.tempName ? this.tempName : this.ieamService.getServiceName(content, path)
     }
-    path = this.tokenReplace(path, content, orgId)
     let body = Object.keys(useThis).length > 0 ? useThis : content;
     if(!exchange.run && exchange.method != 'GET') {
       const resp:any = await this.ieamService.promptDialog(`${exchange.name}: <br>${this.tempName}`, '', {okButton: 'Yes', cancelButton: 'No'})
@@ -249,69 +255,95 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       let serviceName = ''
       if(exchange.run || this.ieamService.hasServiceName(content)) {
         if(/{orgId}|{nodeId}|{agId}|{pattern}/.exec(path)) {
-          if(path.indexOf('${nodeId}') >= 0) {
-            if(/GET$|DELETE$/.exec(exchange.method)) {
-              this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-              .then((resp: any) => {
-                if(resp) {
-                  const nodeId = this.ieamService.nodeId = resp.options.name;
-                  path = path.replace(UrlToken['nodeId'], nodeId)
-                  observer.next({path: path})
-                  observer.complete()
-                  // this.confirmB4Calling(path, exchange, content, useThis)
-                } else {
-                  observer.error()
-                }
-              })
-            } else {
-              path = path.replace(UrlToken['nodeId'], this.ieamService.nodeId)
-              observer.next({path: path})
-              observer.complete()
-            }
-          } else if(path.indexOf('${agId}') >= 0) {
-            this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
+          let tokens = path.split('/').filter((t) => t.indexOf('${') == 0)
+          let tokenInput: any[] = []
+          tokens.forEach((t) => {
+            let key = t.replace(/\$|{|}/g, '')
+            let name = key == 'orgId' ? this.ieamService.selectedOrg : ''
+            tokenInput.push({key: key, name: name, placeholder: key})
+          })
+          if(tokenInput.length > 0) {
+            this.ieamService.promptDialog(`Please provide the following info`, 'multiple', {extra: tokenInput})
             .then((resp: any) => {
               if(resp) {
-                const agId = resp.options.name;
-                path = path.replace(UrlToken['agId'], agId)
+                resp.options.extra.forEach((op) => {
+                  path = path.replace(UrlToken[op.key], op.name)
+                  if(op.key == 'nodeId') {
+                    this.ieamService.nodeId = op.key
+                  }
+                })
                 observer.next({path: path})
                 observer.complete()
+                // this.confirmB4Calling(path, exchange, content, useThis)
               } else {
                 observer.error()
               }
             })
-          } else if(path.indexOf('${pattern}') >= 0) {
-            this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
-            .then((resp: any) => {
-              if(resp) {
-                const pattern = resp.options.name;
-                path = path.replace(UrlToken['pattern'], pattern)
-                observer.next({path: path})
-                observer.complete()
-              } else {
-                observer.error()
-              }
-            })
-          } else if(path.indexOf('${orgId}') >= 0) {
-            if(/addOrg$/.exec(this.ieamService.selectedCall)) {
-              const orgId = content.label
-              path = path.replace(UrlToken['orgId'], orgId)
-              observer.next({path: path})
-              observer.complete()
-            } else {
-              this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name', name: this.ieamService.selectedOrg})
-              .then((resp: any) => {
-                if(resp) {
-                  const orgId = resp.options.name;
-                  path = path.replace(UrlToken['orgId'], orgId)
-                  observer.next({path: path})
-                  observer.complete()
-                } else {
-                  observer.error()
-                }
-              })
-            }
           }
+          // if(path.indexOf('${nodeId}') >= 0) {
+          //   if(/GET$|DELETE$/.exec(exchange.method)) {
+          //     // this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
+          //     this.ieamService.promptDialog(`Please provide the following info`, 'multiple', {extra: tokenInput})
+          //     .then((resp: any) => {
+          //       if(resp) {
+          //         const nodeId = this.ieamService.nodeId = resp.options.name;
+          //         path = path.replace(UrlToken['nodeId'], nodeId)
+          //         observer.next({path: path})
+          //         observer.complete()
+          //         // this.confirmB4Calling(path, exchange, content, useThis)
+          //       } else {
+          //         observer.error()
+          //       }
+          //     })
+          //   } else {
+          //     path = path.replace(UrlToken['nodeId'], this.ieamService.nodeId)
+          //     observer.next({path: path})
+          //     observer.complete()
+          //   }
+          // } else if(path.indexOf('${agId}') >= 0) {
+          //   this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
+          //   .then((resp: any) => {
+          //     if(resp) {
+          //       const agId = resp.options.name;
+          //       path = path.replace(UrlToken['agId'], agId)
+          //       observer.next({path: path})
+          //       observer.complete()
+          //     } else {
+          //       observer.error()
+          //     }
+          //   })
+          // } else if(path.indexOf('${pattern}') >= 0) {
+          //   this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
+          //   .then((resp: any) => {
+          //     if(resp) {
+          //       const pattern = resp.options.name;
+          //       path = path.replace(UrlToken['pattern'], pattern)
+          //       observer.next({path: path})
+          //       observer.complete()
+          //     } else {
+          //       observer.error()
+          //     }
+          //   })
+          // } else if(path.indexOf('${orgId}') >= 0) {
+          //   if(/addOrg$/.exec(this.ieamService.selectedCall)) {
+          //     const orgId = content.label
+          //     path = path.replace(UrlToken['orgId'], orgId)
+          //     observer.next({path: path})
+          //     observer.complete()
+          //   } else {
+          //     this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name', name: this.ieamService.selectedOrg})
+          //     .then((resp: any) => {
+          //       if(resp) {
+          //         const orgId = resp.options.name;
+          //         path = path.replace(UrlToken['orgId'], orgId)
+          //         observer.next({path: path})
+          //         observer.complete()
+          //       } else {
+          //         observer.error()
+          //       }
+          //     })
+          //   }
+          // }
         }
         else {
           observer.next({path: path})

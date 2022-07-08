@@ -13,6 +13,13 @@
         >
       </mat-form-field>
     </div>
+    <div *ngSwitchCase="'multiple'">
+      <mat-form-field *ngFor="let option of data.options.extra">
+        <input matInput class="full-width" placeholder="{{option.placeholder}}" (ngModelChange)="isOK($event)"
+        name="name" [(ngModel)]="option.name"
+        >
+      </mat-form-field>
+    </div>
     <div *ngSwitchCase="'loader'">
       <mat-form-field appearance="fill" class="device-form-field">
         <mat-label>Type</mat-label>
