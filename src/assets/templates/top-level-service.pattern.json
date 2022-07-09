@@ -1,5 +1,5 @@
 {
-  "label": "$MMS_SERVICE_NAME_$MMS_SERVICE_VERSION_$ARCH",
+  "label": "pattern-$MMS_SERVICE_NAME-$ARCH",
   "description": "Pattern for $MMS_SERVICE_NAME for $ARCH",
   "public": false,
   "services": [

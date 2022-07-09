@@ -110,6 +110,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           .subscribe((res) => {
             console.log(res)
             this.ieamService.addEditorStorage(res, Loader[this.ieamService.currentWorkingFile].name)
+            this.ieamService.mapTo()
             this.editJson = this.ieamService.getEditorStorage()
             this.showData = this.data = this.editJson.content;
             console.log('is config loaded')

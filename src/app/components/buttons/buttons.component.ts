@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
@@ -13,6 +13,8 @@ declare const window: any;
   styleUrls: ['./buttons.component.css']
 })
 export class ButtonsComponent implements OnInit, OnDestroy {
+  @ViewChild('exchangInput', { static: false, read: ElementRef})
+  exchangeInput: ElementRef;
   noBucket = true;
   noneSelected = true;
   notEditor = true;
@@ -232,6 +234,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   publish() {
     this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader.length > 0 ? this.ieamService.selectedLoader : this.ieamService.selectedCall)
     this.setExchangeOptions()
+    this.setValue()
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
 
@@ -250,7 +253,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   shouldNotEdit() {
-    return !this.ieamService.selectedOrg || (Object.keys(this.ieamService.getContent()).length == 0 || !this.ieamService.editable)
+    return !this.ieamService.selectedOrg.length || (Object.keys(this.ieamService.getContent()).length == 0 || !this.ieamService.editable)
   }
 
   onChange(evt: any) {
@@ -288,7 +291,6 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       }
     }
   }
-
   hasConfig() {
     return Object.keys(this.ieamService.configJson).length > 0 && !this.ieamService.editingConfig
   }
@@ -313,13 +315,24 @@ export class ButtonsComponent implements OnInit, OnDestroy {
 
   edit() {
     if(this.ieamService.isLoggedIn()) {
-      let actionMap = ActionMap[this.ieamService.selectedCall]
-      if(actionMap) {
-        let json = this.ieamService.getContent()
-        this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
-        this.ieamService.currentWorkingFile = actionMap.mapTo
-      }
+      this.ieamService.mapTo(this.ieamService.selectedCall)
+      // let actionMap = ActionMap[this.ieamService.selectedCall]
+      // if(actionMap) {
+      //   let json = this.ieamService.getContent()
+      //   this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+      //   this.ieamService.selectedCall = this.ieamService.currentWorkingFile = actionMap.mapTo
+      // }
       this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
     }
+  }
+
+  refresh() {
+    this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
+    this.exchangeCalls = this.ieamService.getExchange()
+    this.setExchangeOptions()
+    this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
+  }
+  setValue() {
+    this.exchangeInput.nativeElement.value = Exchange[this.ieamService.selectedCall].name
   }
 }

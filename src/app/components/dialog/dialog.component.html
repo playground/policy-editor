@@ -7,21 +7,19 @@
           <mat-radio-button checked value="relative">Relative path</mat-radio-button>
           <mat-radio-button value="absolute">Absolute</mat-radio-button>
       </mat-radio-group> -->
-      <mat-form-field>
+      <mat-form-field appearance="outline" class="mat-dialog-input">
         <input matInput class="full-width" placeholder="{{data.options.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="data.options.name"
-        >
+        name="name" [(ngModel)]="data.options.name">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'multiple'">
-      <mat-form-field *ngFor="let option of data.options.extra">
+      <mat-form-field *ngFor="let option of data.options.extra" appearance="outline" class="mat-dialog-input">
         <input matInput class="full-width" placeholder="{{option.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="option.name"
-        >
+        name="name" [(ngModel)]="option.name">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'loader'">
-      <mat-form-field appearance="fill" class="device-form-field">
+      <mat-form-field appearance="outline" class="mat-dialog-input">
         <mat-label>Type</mat-label>
         <input
           type="text"
@@ -40,7 +38,7 @@
   </div>
 </div>
 <div mat-dialog-actions>
-  <button mat-raised-button (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
+  <button mat-raised-button class="device-form-button" (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
   <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
 </div>
 </form>

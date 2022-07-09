@@ -5,3 +5,10 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.device-form-button {
+  margin-right: 1px;
+  padding-top: 10px;
+  height: 36px;
+  width: 65px;
+}

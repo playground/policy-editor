@@ -79,6 +79,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           else {
             this.showContent()
           }
+        } else if(msg.type == Enum.EXCHANGE_CALL_REFRESH) {
+          this.content = {}
+          this.ieamService.editable = false
         } else if(msg.type == Enum.LOAD_CONFIG) {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({
@@ -103,6 +106,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       // this.content = this.ieamService.showJsonTree(json.content)
       // setTimeout(() => this.toggleTree(), 500)
       // this.content = prettyHtml(json.content)
+    } else if(this.ieamService.selectedLoader) {
+      this.content = this.ieamService.getContent()
+      this.ieamService.editable = true
     }
   }
   async run(task: string) {
@@ -205,7 +211,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}, cb?: any) {
     let orgId = this.ieamService.selectedOrg
-    this.tempName = ''
+    // this.tempName = ''
     if(/addOrg$/.exec(this.ieamService.selectedCall)) {
       this.tempName = orgId = content.label
       path = this.tokenReplace(path, content, orgId)
@@ -274,7 +280,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
                 })
                 observer.next({path: path})
                 observer.complete()
-                // this.confirmB4Calling(path, exchange, content, useThis)
               } else {
                 observer.error()
               }
@@ -348,14 +353,13 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         else {
           observer.next({path: path})
           observer.complete()
-          // this.confirmB4Calling(path, exchange, content, useThis)
         }
       } else if(/addOrg$/.exec(this.ieamService.selectedCall)) {
         const orgId = content.label
         path = path.replace(UrlToken['orgId'], orgId)
         observer.next({path: path})
         observer.complete()
-      } else {
+      } else if(this.ieamService.selectedArch.length == 0) {
         this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
         .then((resp: any) => {
           if (resp) {
@@ -370,11 +374,22 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             observer.next({path: path})
             observer.complete()
-            // this.confirmB4Calling(path, exchange, content, useThis)
           } else {
             observer.error()
           }
         })
+      } else {
+        const org = this.ieamService.getOrg()
+        const arch = this.ieamService.selectedArch
+        if(/service$|servicePolicy$|servicePattern$/.exec(exchange.type) && this.ieamService.selectedLoader !== 'topLevelService') {
+          this.tempName = `pattern-${org.envVars.SERVICE_NAME}-${arch}`
+          // path = path.replace(UrlToken[exchange.type], this.tempName)
+        } else if(/deploymentPolicy$|topLevelService$|topLevelServicePattern$/.exec(exchange.type)) {
+          this.tempName = `pattern-${org.envVars.MMS_SERVICE_NAME}-${arch}`
+          // path = path.replace(UrlToken[exchange.type], this.tempName)
+        }
+        observer.next({path: path})
+        observer.complete()
       }
     })
   }

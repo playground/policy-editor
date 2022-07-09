@@ -57,3 +57,7 @@
   height: 3em;
   font-size: 12px;
 }
+::ng-deep mat-icon.mat-icon-refresh {
+  margin-left: -8px;
+  cursor: pointer;
+}

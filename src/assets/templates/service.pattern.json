@@ -1,5 +1,5 @@
 {
-  "label": "$SERVICE_NAME_$SERVICE_VERSION_$ARCH",
+  "label": "pattern-$SERVICE_NAME-$ARCH",
   "description": "Pattern for $SERVICE_NAME for $ARCH",
   "services": [
     {

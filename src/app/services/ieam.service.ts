@@ -3,7 +3,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role, ActionMap } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
@@ -570,7 +570,7 @@ export class IeamService implements HttpInterceptor {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
       if(type.length > 0) {
-        if(!Exchange[key].type || Exchange[key].run || Exchange[key].type == Exchange[type].type || this.checkType(type, Exchange[key].type)) {
+        if(!Exchange[key].type || Exchange[key].run || (Exchange[type] && Exchange[key].type == Exchange[type].type) || this.checkType(type, Exchange[key].type)) {
           exchange.push({name: Exchange[key].name, id: key})
         }
       }
@@ -662,46 +662,6 @@ export class IeamService implements HttpInterceptor {
         if (typeof obj === 'object') return this.setPropValueFromJson(obj, prop, value, newValue);
       }, undefined);
   }
-  showJsonTree(json = {}) {
-    if(Object.keys(json).length == 0) {
-      json = this.getContent()
-    }
-    if(json) {
-      this.initJsonTree()
-      this.buildJsonTree2(json)
-      // for(let i=0; i<this.jsonTree.nested; i++) {
-      //   this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-      // }
-    }
-    return this.jsonTree.html
-  }
-  initJsonTree() {
-    this.jsonTree = {html: '', nested: -1}
-  }
-  buildJsonTree(obj: any, key = '', parent = 0, level = 0, nested = 0) {
-    let k;
-    if (obj instanceof Object) {
-      for (k in obj){
-        if (obj.hasOwnProperty(k)){
-          if(this.jsonTree.html.length == 0) {
-            this.jsonTree.html += '<ul "#tree-ul">'
-          }
-          if(typeof obj[k] === 'object') {
-             this.jsonTree.html += `<li><span class="caret">${k}</span><ul class="nested">`
-             level++
-             parent = level-1
-             this.buildJsonTree(obj[k], k, parent, level, ++nested);
-          } else {
-            this.buildJsonTree(obj[k], k, parent, level, nested);
-          }
-        } else {
-          this.buildJsonTree(obj[k], k, parent, level, nested);
-        }
-      }
-    } else {
-      this.jsonTree.html += `<li>${key}: ${obj}</li>`;
-    }
-  }
   getNodeLevel(json: any, prop: string) {
     return prop in json
     ? json[prop]
@@ -746,62 +706,12 @@ export class IeamService implements HttpInterceptor {
       }
     })
   }
-  buildJsonTree2(obj: any, key = '', nested = -1) {
-    let k;
-    if (obj instanceof Object) {
-      for (k in obj){
-        if (obj.hasOwnProperty(k)){
-          if(this.jsonTree.html.length == 0) {
-            this.jsonTree.html += '<ul "#tree-ul">'
-          }
-          if(typeof obj[k] === 'object') {
-            if(nested <= 0 && this.jsonTree.nested > 0) {
-              for(let i=0; i<this.jsonTree.nested; i++) {
-                this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-              }
-              this.jsonTree.nested = nested = 0
-            } else if(this.jsonTree.nested > nested) {
-              for(let i=0; i<this.jsonTree.nested-nested; i++) {
-                this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-              }
-              this.jsonTree.nested = nested = 0
-            }
-            this.jsonTree.nested++;
-            this.jsonTree.html += `<li><span class="caret">${k}</span><ul class="nested">`
-            this.buildJsonTree2(obj[k], k, this.jsonTree.nested);
-          } else {
-            if(nested <= 0 && this.jsonTree.nested > 0) {
-              for(let i=0; i<this.jsonTree.nested; i++) {
-                this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-              }
-              this.jsonTree.nested = nested = 0
-            } else if(this.jsonTree.nested > nested) {
-              for(let i=nested; i<this.jsonTree.nested; i++) {
-                this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-              }
-              this.jsonTree.nested = nested = 0
-            }
-            this.buildJsonTree2(obj[k], k, this.jsonTree.nested);
-          }
-        }
-      }
-      if(nested <= 0 && this.jsonTree.nested > 0) {
-        for(let i=0; i<this.jsonTree.nested; i++) {
-          this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-        }
-        this.jsonTree.nested = nested = 0
-        this.jsonTree.nested++;
-      } else if(this.jsonTree.nested > nested) {
-        for(let i=nested; i<this.jsonTree.nested; i++) {
-          this.jsonTree.html += i+1 >= this.jsonTree.nested ? '</ul>' : '</ul></li>'
-        }
-        this.jsonTree.nested = nested = 0
-        this.jsonTree.nested++;
-      } else if(this.jsonTree.nested == 0) {
-        this.jsonTree.nested++
-      }
-    } else {
-      this.jsonTree.html += `<li>${key}: ${obj}</li>`;
+  mapTo(type = this.selectedLoader) {
+    let actionMap = ActionMap[type]
+    if(actionMap) {
+      let json = this.getContent()
+      this.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+      this.selectedCall = this.currentWorkingFile = actionMap.mapTo
     }
   }
 }
