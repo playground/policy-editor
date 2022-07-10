@@ -543,6 +543,9 @@ export class IeamService implements HttpInterceptor {
       case 'PUT':
         return this.http.put(`${url}/${endpoint}`, body, {headers: header})
         break;
+      case 'PATCH':
+        return this.http.patch(`${url}/${endpoint}`, body, {headers: header})
+        break;
       case 'DELETE':
           return this.http.delete(`${url}/${endpoint}`, {headers: header})
           break;

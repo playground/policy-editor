@@ -212,8 +212,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   async confirmB4Calling(path: string, exchange: IExchange, content: IService, useThis: any = {}, cb?: any) {
     let orgId = this.ieamService.selectedOrg
     // this.tempName = ''
-    if(/addOrg$/.exec(this.ieamService.selectedCall)) {
-      this.tempName = orgId = content.label
+    if(/addOrg$|patchNode$/.exec(this.ieamService.selectedCall)) {
+      this.tempName = orgId = content.label ? content.label : this.ieamService.nodeId
       path = this.tokenReplace(path, content, orgId)
     } else {
       path = this.tokenReplace(path, content, orgId)
