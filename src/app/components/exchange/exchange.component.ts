@@ -274,9 +274,10 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               if(resp) {
                 resp.options.extra.forEach((op) => {
                   path = path.replace(UrlToken[op.key], op.name)
-                  if(op.key == 'nodeId') {
-                    this.ieamService.nodeId = op.key
-                  }
+                  this.ieamService[op.key] = op.name
+                  // if(op.key == 'nodeId') {
+                  //   this.ieamService.nodeId = op.key
+                  // }
                 })
                 observer.next({path: path})
                 observer.complete()
@@ -511,5 +512,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
   ngAfterViewInit() {
+    this.ieamService.broadcast({type: Enum.SET_EXCHANGE_CALL});
   }
 }

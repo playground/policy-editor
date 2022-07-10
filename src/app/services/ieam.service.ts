@@ -3,7 +3,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role, ActionMap } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role, ActionMap, JsonKeyMap } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
@@ -57,6 +57,7 @@ export class IeamService implements HttpInterceptor {
   editable = false;
   activeExchangeFile: any;
   nodeId = '';
+  agId = '';
   jsonTree = {html: '', nested: 0}
 
   currentWorkingFile = '';
@@ -445,18 +446,22 @@ export class IeamService implements HttpInterceptor {
     });
   }
   getNodeContent(json: any, orgId = this.selectedOrg) {
-    if(JsonSchema[this.selectedCall].contentNode) {
+    if(JsonSchema[this.selectedCall] && JsonSchema[this.selectedCall].contentNode) {
       let contentNode = '';
-      switch(this.selectedCall) {
-        case 'getNode':
-          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
-          break;
-        case 'getOrg':
-          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
-          break;
-        default:
-          contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
-      }
+      contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, agId: this.agId, nodeId: this.nodeId})
+      // switch(this.selectedCall) {
+      //   case 'getNode':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      //     break;
+      //   case 'getOrg':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      //     break;
+      //   case 'getNodeAgreement':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {agId: this.agId})
+      //     break;
+      //   default:
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      // }
       return contentNode.split('.').reduce((a, b) => a[b], json)
     } else {
       return json;
@@ -677,7 +682,7 @@ export class IeamService implements HttpInterceptor {
   }
   populateJson(input, output) {
     Object.keys(output).forEach((key) => {
-      output[key] = input[key]
+      output[key] = JsonKeyMap[key] ? input[JsonKeyMap[key].mapTo] : input[key]
     })
     return output
   }

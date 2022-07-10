@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
@@ -12,8 +12,8 @@ declare const window: any;
   templateUrl: './buttons.component.html',
   styleUrls: ['./buttons.component.css']
 })
-export class ButtonsComponent implements OnInit, OnDestroy {
-  @ViewChild('exchangInput', { static: false, read: ElementRef})
+export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('autoExchange')
   exchangeInput: ElementRef;
   noBucket = true;
   noneSelected = true;
@@ -34,7 +34,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    public ieamService: IeamService
+    public ieamService: IeamService,
+    private changeDetector: ChangeDetectorRef
   ) { }
 
   setExchangeOptions() {
@@ -106,6 +107,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
         case Enum.TRIGGER_LOAD_CONFIG:
           this.loadConfig(msg.payload)
           break;
+        case Enum.SET_EXCHANGE_CALL:
+          this.setValue()
+          break;
         }
     });
   }
@@ -118,6 +122,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.routeObserver.unsubscribe();
   }
 
+  ngAfterViewInit(): void {
+  }
   populateOrgs() {
     this.orgs = [];
     Object.keys(this.ieamService.configJson).forEach((key) => {
@@ -232,9 +238,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   publish() {
-    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader.length > 0 ? this.ieamService.selectedLoader : this.ieamService.selectedCall)
+    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedCall)
     this.setExchangeOptions()
-    this.setValue()
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
 
@@ -269,10 +274,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value.id ? evt.source.value.id : evt.source.value
       this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-      this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
-      // this.ieamService.shouldLoadConfig().then(() => {
-      //   this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
-      // })
+      this.ieamService.shouldLoadConfig().then(() => {
+        this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+      })
     }
   }
 
@@ -300,7 +304,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   isExchange() {
-    return !(location.pathname.indexOf('/exchange') == 0)
+    return location.pathname.indexOf('/exchange') == 0
   }
 
   isBucket() {
@@ -333,6 +337,11 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
   }
   setValue() {
-    this.exchangeInput.nativeElement.value = Exchange[this.ieamService.selectedCall].name
+    const exchange = Exchange[this.ieamService.selectedCall]
+    if(exchange) {
+      this.changeDetector.detectChanges()
+      this.exchangeControl.setValue({name: Exchange[this.ieamService.selectedCall].name, id: this.ieamService.selectedCall})
+      this.changeDetector.detectChanges()
+    }
   }
 }

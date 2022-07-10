@@ -30,6 +30,7 @@ export enum Enum {
   EXCHANGE_CALL_REFRESH,
   NOT_EXCHANGE,
   EXCHANGE_CALL,
+  SET_EXCHANGE_CALL,
   EDIT_EXCHANGE_FILE,
   NETWORK,
   JSON_MODIFIED,
@@ -114,7 +115,7 @@ export const Exchange = {
   getOrgNodesHealth: {name: 'Get Org Nodes Health', path: 'orgs/${orgId}/search/nodehealth', method: 'POST', type: 'organization', role: Role.user, run: true, editable: true, template: true, description: 'Returns the lastHeartbeat and agreement times for all nodes in this org that do not have a pattern and have changed since the specified lastTime. Can be run by a user or agbot (but not a node).'},
   deleteOrg: {name: 'Delete Org By Name', path: 'orgs/${orgId}', method: 'DELETE', type: 'organization', role: Role.hubAdmin, run: true},
 
-  addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true},
+  addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true, editable: true},
   getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
   getNodes: {name: 'Get All Nodes', path: 'orgs/${orgId}/nodes', method: 'GET', type: 'node', run: true},
   deleteNode: {name: 'Delete Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'DELETE', type: 'node', run: true},
@@ -137,8 +138,8 @@ export const Exchange = {
   getNodePolicy: {name: 'Get Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'GET', type: 'nodePolicy', run: true},
   deleteNodePolicy: {name: 'Delete Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'DELETE', type: 'nodePolicy', run: true},
 
-  addNodeAgreement: {name: 'Add/Update Node Agreement', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'PUT', type: 'nodeAgreement', run: true, description: 'Adds a new agreement of a node, or updates an existing agreement. This is called by the node or owning user to give their information about the agreement.'},
-  getNodeAgreement: {name: 'Get Node Agreement By Name', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'GET', type: 'nodeAgreement', run: true},
+  addNodeAgreement: {name: 'Add/Update Node Agreement', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'PUT', type: 'nodeAgreement', run: true, editable: true, description: 'Adds a new agreement of a node, or updates an existing agreement. This is called by the node or owning user to give their information about the agreement.'},
+  getNodeAgreement: {name: 'Get Node Agreement By Name', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'GET', type: 'nodeAgreement', run: true, editable: true},
   getNodeAgreements: {name: 'Get Node Agreements', path: 'orgs/${orgId}/nodes/${nodeId}/agreements', method: 'GET', type: 'nodeAgreement', run: true},
   deleteNodeAgreement: {name: 'Delete Node Agreement By Name', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'DELETE', type: 'nodeAgreement', run: true},
   deleteNodeAgreements: {name: 'Delete All Node Agreements', path: 'orgs/${orgId}/nodes/${nodeId}/agreements', method: 'DELETE', type: 'nodeAgreement', run: true},
@@ -202,6 +203,9 @@ export const ActionMap = {
   getPattern: {mapTo: 'addPattern'},
   getPatterns: {mapTo: 'Patterns'}
 }
+export const JsonKeyMap = {
+  agreementService: {mapTo: 'agrService'}
+}
 export const UrlToken = {
   orgId: '${orgId}',
   service: '${service}',
@@ -227,7 +231,8 @@ export const JsonSchema = {
   getService: {name: 'Service Json', file: 'assets/templates/service.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
-  getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'}
+  getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'},
+  getNodeAgreement: {name: 'Agreement Json', file: 'assets/templates/agreement.add.json', contentNode: 'agreements.${agId}'}
 } as const;
 
 export const JsonToken = {

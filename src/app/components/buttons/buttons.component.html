@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<div mat-card-actions class="center" *ngIf="!isExchange()">
+<div mat-card-actions class="center" *ngIf="isExchange()">
   <div class="align-elements">
     <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
@@ -65,14 +65,13 @@
     <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Exchange api</mat-label>
       <input
-        #exchangeInput
         type="text"
         matInput
         aria-label="Exchange api"
         placeholder="Pick one"
         [formControl]="exchangeControl"
-        [matAutocomplete]="auto">
-      <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+        [matAutocomplete]="autoExchange">
+      <mat-autocomplete #autoExchange="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
         <mat-option class="mat-autocomplete-option" *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
           {{option.name}}
         </mat-option>
