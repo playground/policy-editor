@@ -102,6 +102,7 @@ export interface IExchange {
   editable?: boolean;
   template?: boolean;
   role?: string;
+  contentType?: string;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
@@ -124,13 +125,15 @@ export const Exchange = {
   getNodeHeartbeat: {name: 'Get Node Heartbeat', path: 'orgs/${orgId}/nodes/${nodeId}/heartbeat', method: 'POST', type: 'node'},
   setNodeConfig: {name: 'Change Node Config State', path: 'orgs/${orgId}/nodes/${nodeId}/services_configstate', method: 'POST', type: 'node'},
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
-  addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', callB4: 'getService'},
-  getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService'},
-  getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
-  deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'DELETE', type: 'service|topLevelService'},
 
-  addServiceCert: {name: 'Add/Update Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'PUT', type: 'serviceCert|service|topLevelService', signature: 'getPublicKey', description: 'Adds a new signing public key/cert, or updates an existing key/cert, for this service. This can only be run by the service owning user.'},
-  getServiceCert: {name: 'Get Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'GET', type: 'serviceCert', run: true, description: 'Returns the signing public key/cert with the specified keyid for this service. The raw content of the key/cert is returned, not json. Can be run by any credentials able to view the service.'},
+  addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', callB4: 'getService'},
+  getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
+  getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
+  deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'DELETE', type: 'service|topLevelService', run: true},
+
+  // addServiceCert: {name: 'Add/Update Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'PUT', type: 'serviceCert|service|topLevelService', signature: 'getPublicKey', description: 'Adds a new signing public key/cert, or updates an existing key/cert, for this service. This can only be run by the service owning user.'},
+  getServiceCert: {name: 'Get Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'GET', type: 'serviceCert', run: true, editable: true, contentType: 'text/plan', description: 'Returns the signing public key/cert with the specified keyid for this service. The raw content of the key/cert is returned, not json. Can be run by any credentials able to view the service.'},
+  putServiceCert: {name: 'Add/Update Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'PUT', type: 'serviceCert', run: true, editable: true, template: true, contentType: 'text/plan', description: 'Adds a new signing public key/cert, or updates an existing key/cert, for this service. This can only be run by the service owning user.'},
   deleteServiceCert: {name: 'Delete Service Cert', path: 'orgs/${orgId}/services/${service}/keys/${keyId}', method: 'DELETE', type: 'serviceCert', run: true, description: 'Deletes a key/cert for this service. This can only be run by the service owning user.'},
   getServiceCerts: {name: 'Get All Service Certs', path: 'orgs/${orgId}/services/${service}/keys', method: 'GET', type: 'serviceCert', run: true, description: 'Returns all the signing public keys/certs for this service. Can be run by any credentials able to view the service.'},
   deleteServiceCerts: {name: 'Delete All Service Certs', path: 'orgs/${orgId}/services/${service}/keys', method: 'DELETE', type: 'serviceCert', run: true, description: 'Deletes all of the current keys/certs for this service. This can only be run by the service owning user.'},
@@ -203,6 +206,7 @@ export const ActionMap = {
   servicePolicy: {mapTo: 'addServicePolicy'},
   nodePolicy: {mapTo: 'addNodePolicy'},
   getPattern: {mapTo: 'addPattern'},
+  getServiceCert: {mapTo: 'putServiceCert'},
   getNodeAgreement: {mapTo: 'addNodeAgreement'}
 }
 export const JsonKeyMap = {
@@ -234,6 +238,7 @@ export const JsonSchema = {
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
   getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'},
+  putServiceCert: {name: 'Service Key Json', file: 'assets/templates/service.key.json'},
   getNodeAgreement: {name: 'Agreement Json', file: 'assets/templates/agreement.add.json', contentNode: 'agreements.${agId}'}
 } as const;
 

@@ -510,22 +510,29 @@ export class IeamService implements HttpInterceptor {
   getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
-  callExchange(endpoint: string, exchange: IExchange, body = {}, orgId = this.selectedOrg) {
+  callExchange(endpoint: string, exchange: IExchange, body: any = {}, orgId = this.selectedOrg) {
     const credential = this.configJson[orgId]['credential']
     const b64 = exchange.role == Role.hubAdmin
       ? btoa(`${credential[exchange.role]}`)
       : btoa(`${orgId}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
     const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
-    let headerOptions: any = {};
-    Object.keys(HeaderOptions).forEach((key) => {
-      headerOptions[key] = HeaderOptions[key]
-    })
-    headerOptions['Authorization'] = `Basic ${b64}`;
+    // let headerOptions: any = {};
+    // Object.keys(HeaderOptions).forEach((key) => {
+    //   headerOptions[key] = HeaderOptions[key]
+    // })
+    // headerOptions['Authorization'] = `Basic ${b64}`;
     if(!exchange.method) {
       exchange.method = 'GET'
     }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
+    if(exchange.contentType) {
+      header = header.append('Content-Type', exchange.contentType);
+      header = header.append('Accept', exchange.contentType);
+      body = body.text;
+    } else {
+      header = header.append('Content-Type', 'application/json');
+    }
 
     switch(exchange.method) {
       case 'GET':
@@ -536,7 +543,7 @@ export class IeamService implements HttpInterceptor {
         // header = header.append('Access-Control-Allow-Credentials', 'true')
         // header = header.append('Access-Control-Allow-Origin', '*')
         // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-        header = header.append('Content-Type', 'application/json');
+        // header = header.append('Content-Type', 'application/json');
         header = header.append('Accept', 'application/json');
         return this.http.post(`${url}/${endpoint}`, body, {headers: header})
         break;
@@ -627,7 +634,7 @@ export class IeamService implements HttpInterceptor {
   }
   getServiceName(content: IService, path: string,  org = this.getOrg()) {
     let serviceName = path
-    if(org && content && Object.keys(content).length > 0) {
+    if(org && content && Object.keys(content).length > 0 && content.url) {
       serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;

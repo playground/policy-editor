@@ -19,5 +19,11 @@
         "privileged": true
       }
     }
+  },
+  "deploymentSignature": "",
+  "clusterDeployment": "",
+  "clusterDeploymentSignature": "",
+  "imageStore": {
+    "storeType": "dockerRegistry"
   }
 }

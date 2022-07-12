@@ -71,6 +71,13 @@ export class Server {
     this.params.region = this.localJson[env]['region'];
     this.cosClient = new CosClient(this.params)
 
+    if(!existsSync(privateKey)) {
+      anax.createPublicPrivateKey()
+      .subscribe({
+        next: (data: any) => console.log(data),
+        error: (err: any) => console.log(err)
+      })
+    }
     let app = this.app;
     app.options('*', cors());
     app.use(cors({
@@ -296,6 +303,13 @@ export class Server {
             error: (err: any) => next(err)
           })
         }, error: (err) => next(err)
+      })
+    })
+    app.get('/create_private_public_key', (req: express.Request, res: express.Response, next) => {
+      anax.createPublicPrivateKey()
+      .subscribe({
+        next: (data: any) => res.send({data: data}),
+        error: (err: any) => next(err)
       })
     })
     app.get('/get_public_key', (req: express.Request, res: express.Response, next) => {

@@ -1,0 +1,33 @@
+{
+  "label": "Location for amd64",
+  "description": "blah blah",
+  "public": true,
+  "documentation": "https://console.cloud.ibm.com/docs/services/edge-fabric/poc/sdr.html",
+  "url": "github.com.open-horizon.examples.sdr2msghub",
+  "version": "1.0.0",
+  "arch": "amd64",
+  "sharable": "singleton",
+  "requiredServices": [
+    {
+      "org": "myorg",
+      "url": "mydomain.com.gps",
+      "version": "[1.0.0,INFINITY)",
+      "arch": "amd64"
+    }
+  ],
+  "userInput": [
+    {
+      "name": "foo",
+      "label": "The Foo Value",
+      "type": "string",
+      "defaultValue": "bar"
+    }
+  ],
+  "deployment": "{\"services\":{\"location\":{\"image\":\"summit.hovitos.engineering/x86/location:2.0.6\"}}}",
+  "deploymentSignature": "EURzSkDyk66qE6esYUDkLWLzM=",
+  "clusterDeployment": "{\"services\":{\"location\":{\"image\":\"summit.hovitos.engineering/x86/location:2.0.6\"}}}",
+  "clusterDeploymentSignature": "EURzSkDyk66qE6esYUDkLWLzM=",
+  "imageStore": {
+    "storeType": "dockerRegistry"
+  }
+}
