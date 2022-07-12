@@ -550,7 +550,7 @@ export class IeamService implements HttpInterceptor {
         // header = header.append('Access-Control-Allow-Credentials', 'true')
         // header = header.append('Access-Control-Allow-Origin', '*')
         // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-        header = header.append('Content-Type', 'application/json');
+        // header = header.append('Content-Type', 'application/json');
         header = header.append('Accept', 'application/json');
         return this.http.post(`${url}/${endpoint}`, body, {headers: header})
         break;

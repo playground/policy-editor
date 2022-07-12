@@ -188,7 +188,8 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               if(typeof body !== 'string') {
                 content.deployment = JSON.stringify(body)
               }
-              content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
+              // content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
+              content.deploymentSignature = res.signature.replace(/[\r\n]/gm, '')
               this.hasServiceName(path, exchange, content)
               .subscribe((res: any) => {
                 this.confirmB4Calling(res.path, exchange, content, {})
