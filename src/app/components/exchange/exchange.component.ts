@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -110,11 +110,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.content = this.ieamService.getContent()
       this.ieamService.editable = true
     }
+    this.ieamService.setTitleText();
   }
   async run(task: string) {
     const json = this.ieamService.getEditorStorage()
     const exchange: IExchange = Exchange[task]
-    if(json && json.modified) {
+    if(json && json.modified && exchange.editable) {
       const resp:any = await this.ieamService.promptDialog(`${exchange.name}<br>This file is modified, proceed without saving?`, '', {okButton: 'Yes', cancelButton: 'No'})
       if(resp) {
         this.checkB4Calling(exchange.path, exchange)
@@ -156,14 +157,14 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     })
   }
   addServiceKey(content: IService) {
-    const exchange: IExchange = Exchange.addServiceCert
-    let path = this.tokenReplace(exchange.path, content)
-    this.getPublicKey()
-    .subscribe({
-      next: (key: any) => {
-        this.callExchange(path, exchange, {key: key})
-      }
-    })
+    // const exchange: IExchange = Exchange.addServiceCert
+    // let path = this.tokenReplace(exchange.path, content)
+    // this.getPublicKey()
+    // .subscribe({
+    //   next: (key: any) => {
+    //     this.callExchange(path, exchange, {key: key})
+    //   }
+    // })
   }
   checkB4Calling(path: string, exchange: IExchange) {
     const json:any = this.ieamService.getEditorStorage();
@@ -184,13 +185,15 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.post(this.method.signDeployment, body)
           .subscribe({
             next: (res) => {
-              content.deployment = JSON.stringify(body)
+              if(typeof body !== 'string') {
+                content.deployment = JSON.stringify(body)
+              }
               content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
               this.hasServiceName(path, exchange, content)
               .subscribe((res: any) => {
-                this.confirmB4Calling(res.path, exchange, content, {}, 'addServiceKey')
+                this.confirmB4Calling(res.path, exchange, content, {})
+                // this.confirmB4Calling(res.path, exchange, content, {}, 'addServiceKey')
               })
-              // this.addServiceKey(content)
             }
           })
         }
@@ -217,7 +220,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       path = this.tokenReplace(path, content, orgId)
     } else {
       path = this.tokenReplace(path, content, orgId)
-      this.tempName = this.tempName ? this.tempName : this.ieamService.getServiceName(content, path)
+      this.tempName = this.ieamService.getServiceName(content, path)
     }
     let body = Object.keys(useThis).length > 0 ? useThis : content;
     if(!exchange.run && exchange.method != 'GET') {
@@ -501,7 +504,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           html = res
         }
         console.log(html)
-        this.content = html;
+        this.content = html ? html : {};
         this.ieamService.editable = exchange.editable == true
         if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
           this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')

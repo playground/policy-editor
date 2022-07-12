@@ -8,6 +8,7 @@ export interface IMethod {
   delete: string;
   deleteFolder: string;
   signDeployment: string;
+  signDeploymentWithHash: string;
   getPublicKey: string;
   post: string;
 }

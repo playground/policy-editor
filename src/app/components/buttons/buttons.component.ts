@@ -274,9 +274,13 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value.id ? evt.source.value.id : evt.source.value
       this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-      this.ieamService.shouldLoadConfig().then(() => {
+      if(Exchange[this.ieamService.selectedCall].template) {
         this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
-      })
+      } else {
+        this.ieamService.shouldLoadConfig().then(() => {
+          this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+        })
+      }
     }
   }
 

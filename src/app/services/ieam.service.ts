@@ -58,6 +58,7 @@ export class IeamService implements HttpInterceptor {
   activeExchangeFile: any;
   nodeId = '';
   agId = '';
+  service = '';
   jsonTree = {html: '', nested: 0}
 
   currentWorkingFile = '';
@@ -81,6 +82,7 @@ export class IeamService implements HttpInterceptor {
       delete: `${backendUrl}/delete`,
       deleteFolder: `${backendUrl}/delete_folder`,
       signDeployment: `${backendUrl}/sign_deployment`,
+      signDeploymentWithHash: `${backendUrl}/sign_deployment_hash`,
       getPublicKey: `${backendUrl}/get_public_key`,
       post: 'post'
     };
@@ -447,8 +449,15 @@ export class IeamService implements HttpInterceptor {
   }
   getNodeContent(json: any, orgId = this.selectedOrg) {
     if(JsonSchema[this.selectedCall] && JsonSchema[this.selectedCall].contentNode) {
-      let contentNode = '';
-      contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, agId: this.agId, nodeId: this.nodeId})
+      // let contentNode = '';
+      // contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, agId: this.agId, nodeId: this.nodeId})
+      const node = JsonSchema[this.selectedCall].contentNode;
+      const nodes = node.split('.')
+      let nodePath: string[] = []
+      this.service = this.service.trim()
+      nodes.forEach((n, idx) => {
+        nodePath[idx] = this.tokenReplace(n, {orgId: orgId, agId: this.agId, nodeId: this.nodeId, service: this.service})
+      })
       // switch(this.selectedCall) {
       //   case 'getNode':
       //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
@@ -462,7 +471,7 @@ export class IeamService implements HttpInterceptor {
       //   default:
       //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
       // }
-      return contentNode.split('.').reduce((a, b) => a[b], json)
+      return nodePath.reduce((a, b) => a[b], json)
     } else {
       return json;
     }
@@ -510,7 +519,7 @@ export class IeamService implements HttpInterceptor {
   getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
-  callExchange(endpoint: string, exchange: IExchange, body = {}, orgId = this.selectedOrg) {
+  callExchange(endpoint: string, exchange: IExchange, body: any = {}, orgId = this.selectedOrg) {
     const credential = this.configJson[orgId]['credential']
     const b64 = exchange.role == Role.hubAdmin
       ? btoa(`${credential[exchange.role]}`)
@@ -526,7 +535,12 @@ export class IeamService implements HttpInterceptor {
     }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
-
+    if(exchange.contentType) {
+      header = header.append('Content-Type', exchange.contentType);
+      body = body.text;
+    } else {
+      header = header.append('Content-Type', 'application/json');
+    }
     switch(exchange.method) {
       case 'GET':
       default:
@@ -627,7 +641,7 @@ export class IeamService implements HttpInterceptor {
   }
   getServiceName(content: IService, path: string,  org = this.getOrg()) {
     let serviceName = path
-    if(org && content && Object.keys(content).length > 0) {
+    if(org && content && Object.keys(content).length > 0 && content.url) {
       serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;
@@ -721,5 +735,20 @@ export class IeamService implements HttpInterceptor {
       this.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
       this.selectedCall = this.currentWorkingFile = actionMap.mapTo
     }
+  }
+  getKeyFromValue(json: any, obj: any) {
+    let key = ''
+    Object.keys(json).some((val, obj, idx) => {
+        key = val;
+        return this.deepEqual(json[val], obj)
+    })
+    return key
+  }
+  deepEqual(x, y) {
+    const ok = Object.keys, tx = typeof x, ty = typeof y;
+    return x && y && tx === 'object' && tx === ty ? (
+      ok(x).length === ok(y).length &&
+        ok(x).every(key => this.deepEqual(x[key], y[key]))
+    ) : (x === y);
   }
 }
