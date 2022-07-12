@@ -15,7 +15,7 @@
     <div *ngSwitchCase="'multiple'">
       <mat-form-field *ngFor="let option of data.options.extra" appearance="outline" class="mat-dialog-input">
         <input matInput class="full-width" placeholder="{{option.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="option.name">
+        name="option.name" [(ngModel)]="option.name">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'loader'">

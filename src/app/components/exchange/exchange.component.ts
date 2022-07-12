@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -110,6 +110,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       this.content = this.ieamService.getContent()
       this.ieamService.editable = true
     }
+    this.ieamService.setTitleText();
   }
   async run(task: string) {
     const json = this.ieamService.getEditorStorage()
@@ -184,7 +185,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.post(this.method.signDeployment, body)
           .subscribe({
             next: (res) => {
-              content.deployment = JSON.stringify(body)
+              if(typeof body !== 'string') {
+                content.deployment = JSON.stringify(body)
+              }
               content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
               this.hasServiceName(path, exchange, content)
               .subscribe((res: any) => {
@@ -501,15 +504,45 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           html = res
         }
         console.log(html)
-        this.content = html;
-        this.ieamService.editable = exchange.editable == true
+        this.content = html ? html : {};
+        this.ieamService.editable = exchange.editable == true;
         if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
           this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')
         }
         console.log(res)
-        // setTimeout(() => this.toggleTree(), 500)
+        setTimeout(() => this.nextAction(path, exchange, this.ieamService.selectedCall), 1000)
       }, error: (err) => console.log(err)
     })
+  }
+  nextAction(path: string, exchange: IExchange, current: string) {
+    if(exchange.nextAction) {
+      let next = this.ieamService.getKeyFromValue(ActionMap, {mapTo: current})
+      switch(exchange.nextAction) {
+        case NextAction.CLEAR:
+          break;
+        case NextAction.RELOAD:
+          this.ieamService.selectedCall = next
+          this.ieamService.callExchange(path, exchange)
+          .subscribe({
+            next: (res: any) => {
+              let html = ''
+              if(typeof res == 'string') {
+                html = res
+              } else {
+                html = res
+              }
+              this.content = html;
+              this.ieamService.editable = exchange.editable == true;
+              if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
+                this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')
+              }
+              console.log(res)
+              // setTimeout(() => this.toggleTree(), 500)
+            }, error: (err) => console.log(err)
+          })
+          break;
+      }
+    }
   }
   ngAfterViewInit() {
     this.ieamService.broadcast({type: Enum.SET_EXCHANGE_CALL});

@@ -87,6 +87,11 @@ export const Role = {
   orgAdmin: 'ORG_ADMIN',
   user: 'HZN_EXCHANGE_USER_AUTH'
 } as const;
+
+export enum NextAction {
+  CLEAR,
+  RELOAD
+}
 export interface IExchange {
   name: string;
   path: string;
@@ -103,6 +108,7 @@ export interface IExchange {
   template?: boolean;
   role?: string;
   contentType?: string;
+  nextAction?: string | NextAction;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
@@ -126,7 +132,7 @@ export const Exchange = {
   setNodeConfig: {name: 'Change Node Config State', path: 'orgs/${orgId}/nodes/${nodeId}/services_configstate', method: 'POST', type: 'node'},
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
 
-  addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', callB4: 'getService'},
+  addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
   getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
   deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'DELETE', type: 'service|topLevelService', run: true},
@@ -199,7 +205,7 @@ export const ActionMap = {
   getNode: {mapTo: 'patchNode'},
   // getNode: {mapTo: 'addNode'},
   servicePattern: {mapTo: 'addPattern'},
-  service: {mapTo: 'addService'},
+  getService: {mapTo: 'addService'},
   topLevelServicePattern: {mapTo: 'addPattern'},
   topLevelService: {mapTo: 'addService'},
   deploymentPolicy: {mapTo: 'addDeploymentPolicy'},
@@ -234,7 +240,8 @@ export interface IJsonSchema {
 }
 export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
-  getService: {name: 'Service Json', file: 'assets/templates/service.json'},
+  getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
+  addService: {name: 'Add Service Json', file: 'assets/templates/service.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
   getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'},

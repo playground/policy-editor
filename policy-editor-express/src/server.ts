@@ -39,7 +39,7 @@ export class Server {
     res.header("Access-Control-Allow-Headers", "Content-type,Accept,X-Custom-Header");
 
   }
-  streamData(req: express.Request, res: express.Response) {
+  streamData(req: express.Request, res: express.Response, parse = true) {
     let params = this.getParams(req.query as unknown as Params);
     let body = ''
     return new Observable((observer) => {
@@ -50,9 +50,13 @@ export class Server {
         try {
           console.log(body)
           let data = JSON.parse(body);
-          Object.keys(data).forEach((key) => {
-            params[key] = data[key];
-          })
+          if(!parse) {
+            params.body = data
+          } else {
+            Object.keys(data).forEach((key) => {
+              params[key] = data[key];
+            })
+          }
           observer.next(params)
           observer.complete()
         } catch(e) {
@@ -292,10 +296,25 @@ export class Server {
       res.send({valid: util.validateSession(params.sessionId)})
     })
     app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
-      this.streamData(req, res)
+      this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
-          let hash = util.encryptSha256(JSON.stringify(params.body))
+          let body = `'${JSON.stringify(params.body)}'`
+          console.log('no hash', body)
+          anax.signDeployment(privateKey, body)
+          .subscribe({
+            next: (data: any) => res.send({signature: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
+    app.post('/sign_deployment_hash', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
+          let body = `'${JSON.stringify(params.body)}'`
+          let hash = util.encryptSha256(body)
           console.log('hash', hash)
           anax.signDeployment(privateKey, hash)
           .subscribe({

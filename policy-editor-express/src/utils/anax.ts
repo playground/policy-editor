@@ -2,7 +2,11 @@ import { Observable } from 'rxjs';
 import { shell, isSha256, privateKey, publicKey } from '../utility';
 
 export const anax: any = {
-  signDeployment: (privatKey: string, deploymentHash: string): Observable<any> => {
+  signDeployment: (privatKey: string, deployment: string): Observable<any> => {
+    const arg = `echo ${deployment} | hzn util sign -k ${privatKey}`
+    return shell(arg);
+  },
+  signDeploymentWithHash: (privatKey: string, deploymentHash: string): Observable<any> => {
     const arg = isSha256(deploymentHash) ?
       `echo ${deploymentHash} | hzn util sign -k ${privatKey} -v` :
       `cat ${deploymentHash} | hzn util sign -k ${privatKey} -v`
