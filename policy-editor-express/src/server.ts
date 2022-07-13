@@ -299,7 +299,7 @@ export class Server {
       this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
-          let body = `'"${JSON.stringify(params.body).replace(/"/g, '\\"')}"'`
+          let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
           console.log('no hash', body)
           anax.signDeployment(privateKey, body)
           .subscribe({
@@ -313,7 +313,7 @@ export class Server {
       this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
-          let body = `'"${JSON.stringify(params.body).replace(/"/g, '\\"')}"'`
+          let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
           console.log('before hash', body)
           let hash = util.encryptSha256(body)
           console.log('hash', hash)
