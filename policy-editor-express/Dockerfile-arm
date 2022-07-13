@@ -1,7 +1,6 @@
 FROM arm32v7/node:16.3.0
 
 RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg curl -y && apt-get install mpg123 -y && apt-get install vim -y
-RUN curl -sSL https://github.com/open-horizon/anax/releases/latest/download/agent-install.sh | sudo -s -E bash -s -- -i anax: -k css: -c
 
 WORKDIR /server
 
