@@ -1,5 +1,5 @@
 {
-  "label": "$MMS_SERVICE_NAME for $ARCH",
+  "label": "$MMS_SERVICE_NAME_$MMS_SERVICE_VERSION_$ARCH",
   "description": "$MMS_SERVICE_NAME for $ARCH",
   "public": true,
   "documentation": "https://console.cloud.ibm.com/docs/services/edge-fabric/poc/sdr.html",

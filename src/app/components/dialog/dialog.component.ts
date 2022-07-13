@@ -10,6 +10,13 @@ export class Option {
   placeholder: string;
   okButton: string;
   cancelButton: string;
+  extra: IExtra[];
+}
+
+interface IExtra {
+  key: string;
+  name: string;
+  placeholder: string;
 }
 export interface DialogData {
   title: string;

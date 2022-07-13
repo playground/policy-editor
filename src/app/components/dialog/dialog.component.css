@@ -9,3 +9,13 @@
 ::ng-deep div.mat-radio-label-content {
   padding-right: 15px;
 }
+
+::ng-deep mat-form-field.mat-dialog-input {
+  width: 100%;
+}
+::ng-deep div.align-elements mat-form-field div.mat-form-field-infix {
+  padding-right: 2px;
+}
+::ng-deep div.cdk-overlay-pane {
+  height: fit-content !important;
+}

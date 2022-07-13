@@ -1,0 +1,24 @@
+{
+  "header": {
+    "name": "Policy for ${orgId}_${service}",
+    "version": "2.0"
+  },
+  "apiSpec": [
+    {
+      "specRef": "${service}",
+      "organization": "${orgId}",
+      "version": "${version}",
+      "exclusiveAccess": true,
+      "arch": "${arch}"
+    }
+  ],
+  "valueExchange": {},
+  "dataVerification": { "metering": {} },
+  "proposalRejection": {},
+  "properties": [
+    { "name": "cpus", "value": "${cpus}" },
+    { "name": "ram", "value": "${ram}" }
+  ],
+  "ha_group": {},
+  "nodeHealth": {}
+}

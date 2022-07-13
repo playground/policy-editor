@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { ActiveComponent } from './components/active/active.component';
 import { EditorComponent } from './components/editor/editor.component';
 import { ExchangeComponent } from './components/exchange/exchange.component';
 import { HomeComponent } from './components/home/home.component';
@@ -15,8 +16,9 @@ const routes: Routes = [
   },
   { path: 'editor', component: EditorComponent },
   { path: 'exchange', component: ExchangeComponent },
+  { path: 'active', component: ActiveComponent },
   { path: 'signin', component: SigninComponent },
-  { path: '', redirectTo: '/', pathMatch: 'full' },
+  { path: '', redirectTo: '/exchange', pathMatch: 'full' },
 ];
 
 @NgModule({

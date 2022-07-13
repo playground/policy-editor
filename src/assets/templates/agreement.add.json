@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "orgid": "${orgId}",
+      "url": "mydomain.com.rtlsdr"
+    }
+  ],
+  "agreementService": {
+    "orgid": "${orgId}",
+    "pattern": "myorg/mypattern",
+    "url": "${orgId}/mydomain.com.sdr"
+  },
+  "state": "negotiating"
+}

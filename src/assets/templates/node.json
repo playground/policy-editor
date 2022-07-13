@@ -1,18 +1,18 @@
 {
-  "token": "abc",
-  "name": "rpi3",
+  "token": "${random}",
+  "name": "${nodeId}",
   "nodeType": "device",
-  "pattern": "myorg/mypattern",
-  "arch": "arm",
+  "pattern": "${orgId}/${pattern}",
+  "arch": "${arch}",
   "registeredServices": [
     {
-      "url": "IBM/github.com.open-horizon.examples.cpu",
+      "url": "${orgId}/${service}",
       "numAgreements": 1,
       "policy": "{}",
       "properties": [
         {
           "name": "arch",
-          "value": "arm",
+          "value": "${arch}",
           "propType": "string",
           "op": "="
         }

@@ -3,7 +3,7 @@ import { MatSidenav } from '@angular/material/sidenav';
 import { Enum, Navigate } from './models/ieam-model';
 import { IeamService } from './services/ieam.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, NavigationExtras } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +31,12 @@ export class AppComponent implements OnInit {
     this.ieamService.broadcastAgent.subscribe((data: any) => {
       if(data.type == Enum.NAVIGATE) {
         this.setValues()
-        this.router.navigate([`/${data.to}`], {queryParams: data.payload})
+        let navigationExtras: NavigationExtras = {
+          queryParams: {
+            type: data.payload
+          }
+        }
+        this.router.navigate([`/${data.to}`], navigationExtras)
       } else if(data.type == Enum.LOGGED_IN) {
         this.setValues()
       }

@@ -3,9 +3,10 @@ import { HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpR
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
 import { Params, IMethod, IEnvVars, IHznConfig, IService } from '../interface';
-import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken } from '../models/ieam-model';
+import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Loader, Exchange, IOption, UrlToken, JsonSchema, Role, ActionMap, JsonKeyMap } from '../models/ieam-model';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
+import shajs from 'sha.js';
 
 declare const window: any;
 
@@ -53,9 +54,16 @@ export class IeamService implements HttpInterceptor {
   configFilename = '';
   isJsonModified = false;
   method: IMethod;
+  editable = false;
+  activeExchangeFile: any;
+  nodeId = '';
+  agId = '';
+  service = '';
+  jsonTree = {html: '', nested: 0}
 
   currentWorkingFile = '';
   titleText = 'IEAM';
+  nodeLevel: number;
 
   constructor(
     private route: ActivatedRoute,
@@ -74,6 +82,8 @@ export class IeamService implements HttpInterceptor {
       delete: `${backendUrl}/delete`,
       deleteFolder: `${backendUrl}/delete_folder`,
       signDeployment: `${backendUrl}/sign_deployment`,
+      signDeploymentWithHash: `${backendUrl}/sign_deployment_hash`,
+      getPublicKey: `${backendUrl}/get_public_key`,
       post: 'post'
     };
 
@@ -283,6 +293,13 @@ export class IeamService implements HttpInterceptor {
   isLoggedIn() {
     if(!this.loggedIn) {
       this.router.navigate([`/${Navigate.signin}`])
+    } else {
+      let session: any = this.getSession('loggedIn');
+      if(session) {
+        session = JSON.parse(session);
+        session.timestamp = Date.now()
+        this.setSession('loggedIn', JSON.stringify(session));
+      }
     }
     return this.loggedIn
   }
@@ -430,6 +447,35 @@ export class IeamService implements HttpInterceptor {
       return obj[key];
     });
   }
+  getNodeContent(json: any, orgId = this.selectedOrg) {
+    if(JsonSchema[this.selectedCall] && JsonSchema[this.selectedCall].contentNode) {
+      // let contentNode = '';
+      // contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, agId: this.agId, nodeId: this.nodeId})
+      const node = JsonSchema[this.selectedCall].contentNode;
+      const nodes = node.split('.')
+      let nodePath: string[] = []
+      this.service = this.service.trim()
+      nodes.forEach((n, idx) => {
+        nodePath[idx] = this.tokenReplace(n, {orgId: orgId, agId: this.agId, nodeId: this.nodeId, service: this.service})
+      })
+      // switch(this.selectedCall) {
+      //   case 'getNode':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      //     break;
+      //   case 'getOrg':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      //     break;
+      //   case 'getNodeAgreement':
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {agId: this.agId})
+      //     break;
+      //   default:
+      //     contentNode = this.tokenReplace(JsonSchema[this.selectedCall].contentNode, {orgId: orgId, nodeId: this.nodeId})
+      // }
+      return nodePath.reduce((a, b) => a[b], json)
+    } else {
+      return json;
+    }
+  }
   promptDialog(title: string, type: string, options: any = {}) {
     // this.openDialog({title: `What is the name of the new folder?`, type: 'folder', placeholder: 'Folder name'}, (resp: { name: string; }) => {
     return new Promise((resolve, reject) => {
@@ -452,16 +498,33 @@ export class IeamService implements HttpInterceptor {
       this.dialog.closeAll();
     });
   }
+  shouldLoadConfig(toPage = {toEditor: false}) {
+    return new Promise(async (resolve, reject) => {
+      let editJson= this.getEditorStorage('hznConfig')
+      if(!editJson || Object.keys(editJson.content).length == 0) {
+        const answer:any = await this.promptDialog('Would you like to load config file?', '', {okButton: 'Yes', cancelButton: 'No'})
+        if(answer) {
+          // payload indicates we are in editor route
+          this.broadcast({type: Enum.TRIGGER_LOAD_CONFIG, payload: toPage});
+        }
+        resolve(editJson);
+      } else {
+        resolve(editJson);
+      }
+    })
+  }
   getCurrentFilename() {
     return this.editingConfig ? this.configFilename : this.currentFilename;
   }
   getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
-  callExchange(endpoint: string, exchange: IExchange, body?: any) {
-    const credential = this.configJson[this.selectedOrg]['credential']
-    const b64 = btoa(`${this.selectedOrg}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
-    const url = credential['HZN_EXCHANGE_URL']
+  callExchange(endpoint: string, exchange: IExchange, body: any = {}, orgId = this.selectedOrg) {
+    const credential = this.configJson[orgId]['credential']
+    const b64 = exchange.role == Role.hubAdmin
+      ? btoa(`${credential[exchange.role]}`)
+      : btoa(`${orgId}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
+    const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {
       headerOptions[key] = HeaderOptions[key]
@@ -472,7 +535,12 @@ export class IeamService implements HttpInterceptor {
     }
     let header = new HttpHeaders ()
     header = header.append('Authorization', `Basic ${b64}`)
-
+    if(exchange.contentType) {
+      header = header.append('Content-Type', exchange.contentType);
+      body = body.text;
+    } else {
+      header = header.append('Content-Type', 'application/json');
+    }
     switch(exchange.method) {
       case 'GET':
       default:
@@ -482,12 +550,15 @@ export class IeamService implements HttpInterceptor {
         // header = header.append('Access-Control-Allow-Credentials', 'true')
         // header = header.append('Access-Control-Allow-Origin', '*')
         // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-        header = header.append('Content-Type', 'application/json');
+        // header = header.append('Content-Type', 'application/json');
         header = header.append('Accept', 'application/json');
         return this.http.post(`${url}/${endpoint}`, body, {headers: header})
         break;
       case 'PUT':
         return this.http.put(`${url}/${endpoint}`, body, {headers: header})
+        break;
+      case 'PATCH':
+        return this.http.patch(`${url}/${endpoint}`, body, {headers: header})
         break;
       case 'DELETE':
           return this.http.delete(`${url}/${endpoint}`, {headers: header})
@@ -495,11 +566,24 @@ export class IeamService implements HttpInterceptor {
       }
     return this.get(`${url}/${endpoint}`, {headers: header})
   }
-  addEditorStorage(content: any, name: string, key = this.currentWorkingFile) {
-    this.editorStorage[key] = {content: content, name: name, original: content}
+  addEditorStorage(content: any, name = this.currentWorkingFile, key = this.currentWorkingFile) {
+    this.editorStorage[key] = {content: content, name: name}
+    if(!this.editorStorage['original']) {
+      this.editorStorage['original'] = {}
+    }
+    this.editorStorage['original'][key] = {content: content, name: name}
   }
   getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key]
+  }
+  getContent(key: string = this.currentWorkingFile): IEditorStorage {
+    return this.editorStorage[key] ? this.editorStorage[key].content : {}
+  }
+  hasContent() {
+    return Object.keys(this.getContent()).length > 0
+  }
+  getOriginalContent(key: string = this.currentWorkingFile): IEditorStorage {
+    return this.editorStorage['original'][key] ? this.editorStorage['original'][key].content : {}
   }
   updateEditorStorage(json: IEditorStorage, key = this.currentWorkingFile) {
     this.editorStorage[key] = json;
@@ -508,7 +592,7 @@ export class IeamService implements HttpInterceptor {
     let exchange: IOption[] = [];
     Object.keys(Exchange).forEach((key) => {
       if(type.length > 0) {
-        if(!Exchange[key].type || Exchange[key].run || this.checkType(type, Exchange[key].type)) {
+        if(!Exchange[key].type || Exchange[key].run || (Exchange[type] && Exchange[key].type == Exchange[type].type) || this.checkType(type, Exchange[key].type)) {
           exchange.push({name: Exchange[key].name, id: key})
         }
       }
@@ -555,46 +639,116 @@ export class IeamService implements HttpInterceptor {
       org.metaVars.ARCH = arch;
     }
   }
-  getServiceName(content: IService, org = this.getOrg()) {
-    let serviceName = ''
-    if(org) {
+  getServiceName(content: IService, path: string,  org = this.getOrg()) {
+    let serviceName = path
+    if(org && content && Object.keys(content).length > 0 && content.url) {
       serviceName = `${content.url}_${content.version}_${content.arch}`;
     }
     return serviceName;
   }
   hasServiceName(content: IService) {
-    return content.url && content.version && content.arch;
+    return content && content.url && content.version && content.arch;
   }
-  // getServiceName2(content: IService, org = this.getOrg()) {
-  //   return new Observable((observer) => {
-  //     let serviceName = ''
-  //     if(org) {
-  //       if(content.url && content.version && content.arch) {
-  //         serviceName = `${content.url}_${content.version}_${content.arch}`;
-  //         observer.next(serviceName)
-  //         observer.complete()
-  //       } else {
-  //         this.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture'})
-  //         .then((resp: any) => {
-  //           if (resp) {
-  //             const arch = resp.options.name;
-  //             if(this.selectedLoader == 'servicePolicy') {
-  //               serviceName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`;
-  //             } else if(this.selectedLoader == 'deploymentPolicy') {
-  //               serviceName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`;
-  //             }
-  //             observer.next(serviceName)
-  //             observer.complete()
-  //           } else {
-  //             observer.next(serviceName)
-  //             observer.complete()
-  //           }
-  //         })
-  //       }
-  //     } else {
-  //       observer.next(serviceName)
-  //       observer.complete()
-  //     }
-  //   })
-  // }
+  getPropFromJson(json: any, prop: string) {
+    return prop in json
+    ? json[prop]
+    : Object.values(json).reduce((val, obj) => {
+        if (val !== undefined) return val;
+        if (typeof obj === 'object') return this.getPropFromJson(obj, prop);
+      }, undefined);
+  }
+  getPropValueFromJson(json: any, prop: string, value: string) {
+    return json[prop] && json[prop] == value
+    ? json[prop]
+    : Object.values(json).reduce((val, obj) => {
+        if (val !== undefined && val == value) return val;
+        if (typeof obj === 'object') return this.getPropValueFromJson(obj, prop, value);
+      }, undefined);
+  }
+  getParentFromJson(json: any, prop: string, value: string) {
+    return json[prop] && json[prop] == value
+    ? json
+    : Object.values(json).reduce((val, obj) => {
+        if (val !== undefined && this.getPropValueFromJson(val, prop, value) == value) return val;
+        if (typeof obj === 'object') return this.getParentFromJson(obj, prop, value);
+      }, undefined);
+  }
+  setPropValueFromJson(json: any, prop: string, value: string, newValue: string) {
+    return json[prop] && json[prop] == value
+    ? json
+    : Object.values(json).reduce((val: any, obj) => {
+        if (val !== undefined && this.getPropValueFromJson(val, prop, value) == value) {
+          val.value = newValue
+          return val;
+        }
+        if (typeof obj === 'object') return this.setPropValueFromJson(obj, prop, value, newValue);
+      }, undefined);
+  }
+  getNodeLevel(json: any, prop: string) {
+    return prop in json
+    ? json[prop]
+    :Object.values(json).reduce((val, obj:any, idx) => { console.log(idx, val, obj, prop)
+        if(typeof obj === 'object' && obj[prop]) {
+          if(this.nodeLevel < 0) this.nodeLevel = idx;
+          return idx}
+        else if (typeof obj === 'object') return this.getNodeLevel(obj, prop);
+      }, undefined);
+  }
+  sha256(text: string) {
+    return shajs('sha256').update(text).digest('hex')
+  }
+  populateJson(input, output) {
+    Object.keys(output).forEach((key) => {
+      output[key] = JsonKeyMap[key] ? input[JsonKeyMap[key].mapTo] : input[key]
+    })
+    return output
+  }
+  setActiveExchangeFile(json: any) {
+    return new Observable((observer) => {
+      if(json && Object.keys(json).length > 0) {
+        let schema = JsonSchema[this.selectedCall]
+        if(schema && schema.file && schema.file.length > 0) {
+          this.get(schema.file)
+          .subscribe((res) => {
+            this.currentWorkingFile = this.selectedCall
+            json = this.populateJson(json, res)
+            this.addEditorStorage(json)
+            observer.next()
+            observer.complete()
+          })
+        } else {
+          this.currentWorkingFile = this.selectedCall
+          this.addEditorStorage(json)
+          observer.next()
+          observer.complete()
+        }
+      } else {
+        observer.next()
+        observer.complete()
+      }
+    })
+  }
+  mapTo(type = this.selectedLoader) {
+    let actionMap = ActionMap[type]
+    if(actionMap) {
+      let json = this.getContent()
+      this.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+      this.selectedCall = this.currentWorkingFile = actionMap.mapTo
+    }
+  }
+  getKeyFromValue(json: any, obj: any) {
+    let key = ''
+    Object.keys(json).some((val, obj, idx) => {
+        key = val;
+        return this.deepEqual(json[val], obj)
+    })
+    return key
+  }
+  deepEqual(x, y) {
+    const ok = Object.keys, tx = typeof x, ty = typeof y;
+    return x && y && tx === 'object' && tx === ty ? (
+      ok(x).length === ok(y).length &&
+        ok(x).every(key => this.deepEqual(x[key], y[key]))
+    ) : (x === y);
+  }
 }

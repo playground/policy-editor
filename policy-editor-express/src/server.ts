@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'fs';
 import cors = require('cors');
 import { CosClient } from './cos-client';
 import { Params } from './params';
-import { util, homePath, privateKey } from './utility';
+import { util, homePath, privateKey, publicKey } from './utility';
 import { anax } from './utils';
 import express = require('express');
 import { Stream } from 'stream';
@@ -39,7 +39,7 @@ export class Server {
     res.header("Access-Control-Allow-Headers", "Content-type,Accept,X-Custom-Header");
 
   }
-  streamData(req: express.Request, res: express.Response) {
+  streamData(req: express.Request, res: express.Response, parse = true) {
     let params = this.getParams(req.query as unknown as Params);
     let body = ''
     return new Observable((observer) => {
@@ -50,9 +50,13 @@ export class Server {
         try {
           console.log(body)
           let data = JSON.parse(body);
-          Object.keys(data).forEach((key) => {
-            params[key] = data[key];
-          })
+          if(!parse) {
+            params.body = data
+          } else {
+            Object.keys(data).forEach((key) => {
+              params[key] = data[key];
+            })
+          }
           observer.next(params)
           observer.complete()
         } catch(e) {
@@ -71,6 +75,13 @@ export class Server {
     this.params.region = this.localJson[env]['region'];
     this.cosClient = new CosClient(this.params)
 
+    if(!existsSync(privateKey)) {
+      anax.createPublicPrivateKey()
+      .subscribe({
+        next: (data: any) => console.log(data),
+        error: (err: any) => console.log(err)
+      })
+    }
     let app = this.app;
     app.options('*', cors());
     app.use(cors({
@@ -285,10 +296,26 @@ export class Server {
       res.send({valid: util.validateSession(params.sessionId)})
     })
     app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
-      this.streamData(req, res)
+      this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
-          let hash = util.encryptSha256(JSON.stringify(params.body))
+          let body = `'"${JSON.stringify(params.body).replace(/"/g, '\\"')}"'`
+          console.log('no hash', body)
+          anax.signDeployment(privateKey, body)
+          .subscribe({
+            next: (data: any) => res.send({signature: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
+    app.post('/sign_deployment_hash', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
+          let body = `'"${JSON.stringify(params.body).replace(/"/g, '\\"')}"'`
+          console.log('before hash', body)
+          let hash = util.encryptSha256(body)
           console.log('hash', hash)
           anax.signDeployment(privateKey, hash)
           .subscribe({
@@ -297,7 +324,18 @@ export class Server {
           })
         }, error: (err) => next(err)
       })
-    })    
+    })
+    app.get('/create_private_public_key', (req: express.Request, res: express.Response, next) => {
+      anax.createPublicPrivateKey()
+      .subscribe({
+        next: (data: any) => res.send({data: data}),
+        error: (err: any) => next(err)
+      })
+    })
+    app.get('/get_public_key', (req: express.Request, res: express.Response, next) => {
+      const content = readFileSync(publicKey, {encoding:'utf8', flag:'r'});
+      res.send({publicKey: content})
+    })
     app.get('/bcrypt', (req: express.Request, res: express.Response, next) => {
       let params = this.getParams(req.query as unknown as Params);
       util.bcryptHash(params)

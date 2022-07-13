@@ -31,6 +31,9 @@ export interface IService extends IDeploymentPolicy {
   }
 }
 
+export interface IKey {
+  key: string;
+}
 export interface IVersion {
   version: string;
   priority: any;
@@ -53,4 +56,3 @@ export interface IDeploymentPolicy {
   constraints: string[];
   userInput: any;
 }
-

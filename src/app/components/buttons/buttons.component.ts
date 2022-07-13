@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { filter, Observable, map, startWith } from 'rxjs';
-import { Enum, Organization, Exchange, IOption, Loader, Navigate } from 'src/app/models/ieam-model';
+import { Enum, Organization, Exchange, IOption, Loader, Navigate, ActionMap } from 'src/app/models/ieam-model';
 import { IeamService, Broadcast } from '../../services/ieam.service';
 
 declare const window: any;
@@ -12,7 +12,9 @@ declare const window: any;
   templateUrl: './buttons.component.html',
   styleUrls: ['./buttons.component.css']
 })
-export class ButtonsComponent implements OnInit, OnDestroy {
+export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('autoExchange')
+  exchangeInput: ElementRef;
   noBucket = true;
   noneSelected = true;
   notEditor = true;
@@ -32,7 +34,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    public ieamService: IeamService
+    public ieamService: IeamService,
+    private changeDetector: ChangeDetectorRef
   ) { }
 
   setExchangeOptions() {
@@ -104,6 +107,9 @@ export class ButtonsComponent implements OnInit, OnDestroy {
         case Enum.TRIGGER_LOAD_CONFIG:
           this.loadConfig(msg.payload)
           break;
+        case Enum.SET_EXCHANGE_CALL:
+          this.setValue()
+          break;
         }
     });
   }
@@ -116,6 +122,8 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     this.routeObserver.unsubscribe();
   }
 
+  ngAfterViewInit(): void {
+  }
   populateOrgs() {
     this.orgs = [];
     Object.keys(this.ieamService.configJson).forEach((key) => {
@@ -162,7 +170,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
         }
       })
     } else if(json && Object.keys(json.content).length > 0) {
-      this.loadNewFile('Would you like to load a new file?', type, payload, Enum.LOAD_EXISTING_POLICY)
+      this.loadNewFile('Would you like to load a new file?', type, payload, this.ieamService.selectedLoader === 'localPolicy' ? Enum.LOAD_EXISTING_POLICY : Enum.LOAD_TEMPLATE_POLICY)
     } else {
       this.doThis(type, payload)
     }
@@ -230,7 +238,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   publish() {
-    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedLoader)
+    this.exchangeCalls = this.ieamService.getExchange(this.ieamService.selectedCall)
     this.setExchangeOptions()
     this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
   }
@@ -246,7 +254,11 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   shouldNotRun() {
     // const match = this.ieamService.selectedCall && (new RegExp(`^${Exchange[this.ieamService.selectedCall].type}$`)).exec(this.ieamService.selectedLoader)
     // const run = this.ieamService.selectedCall && Exchange[this.ieamService.selectedCall].run
-    return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0)
+    return (this.ieamService.selectedCall.length == 0 || this.ieamService.selectedOrg.length == 0 || Object.keys(this.ieamService.configJson).length == 0 || (!this.ieamService.editorStorage[this.ieamService.selectedCall] && Exchange[this.ieamService.selectedCall].run != true))
+  }
+
+  shouldNotEdit() {
+    return !this.ieamService.selectedOrg.length || (Object.keys(this.ieamService.getContent()).length == 0 || !this.ieamService.editable)
   }
 
   onChange(evt: any) {
@@ -261,7 +273,14 @@ export class ButtonsComponent implements OnInit, OnDestroy {
     if(evt.isUserInput) {
       console.log(evt.source.value)
       this.ieamService.selectedCall = evt.source.value.id ? evt.source.value.id : evt.source.value
-      this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+      this.ieamService.currentWorkingFile = this.ieamService.selectedCall
+      if(Exchange[this.ieamService.selectedCall].template) {
+        this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+      } else {
+        this.ieamService.shouldLoadConfig().then(() => {
+          this.broadcast(Enum.EXCHANGE_SELECTED, Exchange[this.ieamService.selectedCall]);
+        })
+      }
     }
   }
 
@@ -280,7 +299,6 @@ export class ButtonsComponent implements OnInit, OnDestroy {
       }
     }
   }
-
   hasConfig() {
     return Object.keys(this.ieamService.configJson).length > 0 && !this.ieamService.editingConfig
   }
@@ -290,7 +308,7 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   isExchange() {
-    return !(location.pathname.indexOf('/exchange') == 0)
+    return location.pathname.indexOf('/exchange') == 0
   }
 
   isBucket() {
@@ -298,6 +316,36 @@ export class ButtonsComponent implements OnInit, OnDestroy {
   }
 
   run() {
-    this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
+    if(this.ieamService.isLoggedIn()) {
+      this.broadcast(Enum.EXCHANGE_CALL, this.ieamService.selectedCall);
+    }
+  }
+
+  edit() {
+    if(this.ieamService.isLoggedIn()) {
+      this.ieamService.mapTo(this.ieamService.selectedCall)
+      // let actionMap = ActionMap[this.ieamService.selectedCall]
+      // if(actionMap) {
+      //   let json = this.ieamService.getContent()
+      //   this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+      //   this.ieamService.selectedCall = this.ieamService.currentWorkingFile = actionMap.mapTo
+      // }
+      this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+    }
+  }
+
+  refresh() {
+    this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
+    this.exchangeCalls = this.ieamService.getExchange()
+    this.setExchangeOptions()
+    this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
+  }
+  setValue() {
+    const exchange = Exchange[this.ieamService.selectedCall]
+    if(exchange) {
+      this.changeDetector.detectChanges()
+      this.exchangeControl.setValue({name: Exchange[this.ieamService.selectedCall].name, id: this.ieamService.selectedCall})
+      this.changeDetector.detectChanges()
+    }
   }
 }

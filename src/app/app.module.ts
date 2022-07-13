@@ -13,7 +13,9 @@ import { HomeComponent } from './components/home/home.component';
 import { SigninComponent } from './components/signin/signin.component';
 import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.component';
 import { ButtonsComponent } from './components/buttons/buttons.component';
-import { ExchangeComponent } from './components/exchange/exchange.component';
+import { ExchangeComponent, SanitizeHtmlPipe } from './components/exchange/exchange.component';
+import { NgxJsonViewerModule } from 'ngx-json-viewer';
+import { ActiveComponent } from './components/active/active.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +26,9 @@ import { ExchangeComponent } from './components/exchange/exchange.component';
     SigninComponent,
     BreadcrumbComponent,
     ButtonsComponent,
-    ExchangeComponent
+    ExchangeComponent,
+    SanitizeHtmlPipe,
+    ActiveComponent
   ],
   imports: [
     BrowserModule,
@@ -33,7 +37,8 @@ import { ExchangeComponent } from './components/exchange/exchange.component';
     ReactiveFormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    NgJsonEditorModule
+    NgJsonEditorModule,
+    NgxJsonViewerModule
   ],
   providers: [],
   bootstrap: [AppComponent]

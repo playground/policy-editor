@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<div mat-card-actions class="center" *ngIf="!isExchange()">
+<div mat-card-actions class="center" *ngIf="isExchange()">
   <div class="align-elements">
     <form>
     <mat-form-field appearance="fill" class="device-form-field" *ngIf="hasConfig()">
@@ -63,21 +63,25 @@
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button>
   <form>
     <mat-form-field appearance="fill" class="device-form-field">
-      <mat-label>Call</mat-label>
+      <mat-label>Exchange api</mat-label>
       <input
         type="text"
         matInput
-        aria-label="Call"
+        aria-label="Exchange api"
         placeholder="Pick one"
         [formControl]="exchangeControl"
-        [matAutocomplete]="auto">
-      <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
+        [matAutocomplete]="autoExchange">
+      <mat-autocomplete #autoExchange="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
         <mat-option class="mat-autocomplete-option" *ngFor="let option of filterExchangeOptions | async" [value]="option" (onSelectionChange)="onExchangeChange($event)">
           {{option.name}}
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
+    <mat-icon class="mat-icon-refresh" (click)="refresh()">refresh</mat-icon>
   </form>
+  <button mat-raised-button color="publish" type="button" (click)="edit()" [disabled]="shouldNotEdit()">
+    <mat-icon>edit</mat-icon>
+  </button>
   <button mat-raised-button color="publish" type="button" (click)="run()" [disabled]="shouldNotRun()">Run</button>
   </div>
 </div>

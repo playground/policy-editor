@@ -1,0 +1,24 @@
+{
+  "label": "pattern-$MMS_SERVICE_NAME-$ARCH",
+  "description": "Pattern for $MMS_SERVICE_NAME for $ARCH",
+  "public": false,
+  "services": [
+    {
+      "serviceUrl": "$MMS_SERVICE_NAME",
+      "serviceOrgid": "$HZN_ORG_ID",
+      "serviceArch": "$ARCH",
+      "serviceVersions": [
+        {
+          "version": "$MMS_SERVICE_VERSION"
+        }
+      ]
+    }
+  ],
+  "userInput": [],
+  "secretBinding": [],
+  "agreementProtocols": [
+    {
+      "name": "Basic"
+    }
+  ]
+}
