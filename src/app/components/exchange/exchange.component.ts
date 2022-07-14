@@ -61,6 +61,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             // if(resp) {
 
             // }
+            let multiple = exchange.type.split('|')
             let schema = JsonSchema[this.ieamService.selectedCall]
             this.ieamService.get(schema.file)
             .subscribe((res) => {
@@ -185,11 +186,12 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ieamService.post(this.method.signDeployment, body)
           .subscribe({
             next: (res) => {
-              if(typeof body !== 'string') {
-                content.deployment = JSON.stringify(body)
-              }
               // content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
               content.deploymentSignature = res.signature.replace(/[\r\n]/gm, '')
+              let services = content.deployment.services
+              if(typeof res.deployment === 'string') {
+                content.deployment = res.deployment
+              }
               this.hasServiceName(path, exchange, content)
               .subscribe((res: any) => {
                 this.confirmB4Calling(res.path, exchange, content, {})

@@ -295,11 +295,37 @@ export class Server {
       let params = this.getParams(req.query as unknown as Params);
       res.send({valid: util.validateSession(params.sessionId)})
     })
+    app.get('/encrypt_sha256', (req: express.Request, res: express.Response) => {
+      let params = this.getParams(req.query as unknown as Params);
+      res.send({encrypt_sha256: util.encryptSha256(params.url)})
+    })
     app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
       this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
+          let services = params.body.services
+          let hash = {}
+          Object.keys(services).forEach((service: any) => {
+            hash[service] = util.encryptSha256(services[service].image)
+            services[service].image = `${services[service].image}@sha256:${hash[service]}`
+          })
+          // let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
+          let deployment = `"${JSON.stringify(params.body)}"`
+          console.log('no hash', deployment)
+          anax.signDeployment(privateKey, deployment)
+          .subscribe({
+            next: (data: any) => res.send({signature: data, deployment: deployment}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
+    app.post('/sign_deployment2', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
           let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
+          // let body = `'${JSON.stringify(params.body)}'`
           console.log('no hash', body)
           anax.signDeployment(privateKey, body)
           .subscribe({
@@ -314,6 +340,7 @@ export class Server {
       .subscribe({
         next: (params: Params) => {
           let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
+          // let body = `'${JSON.stringify(params.body)}'`
           console.log('before hash', body)
           let hash = util.encryptSha256(body)
           console.log('hash', hash)
