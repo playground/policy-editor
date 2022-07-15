@@ -309,12 +309,14 @@ export class Server {
             hash[service] = util.encryptSha256(services[service].image)
             services[service].image = `${services[service].image}@sha256:${hash[service]}`
           })
-          // let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
-          let deployment = `"${JSON.stringify(params.body)}"`
+          // NOTES: if escape \", agreement failed with no public key available
+          let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
+          // NOTES: if escape \", agreement gets verified but failed with marshalling error, invalid character
+          // let deployment = `'${JSON.stringify(params.body)}'`
           console.log('no hash', deployment)
           anax.signDeployment(privateKey, deployment)
           .subscribe({
-            next: (data: any) => res.send({signature: data, deployment: deployment}),
+            next: (data: any) => res.send({signature: data, deployment: JSON.stringify(params.body)}),
             error: (err: any) => next(err)
           })
         }, error: (err) => next(err)
