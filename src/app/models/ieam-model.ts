@@ -134,6 +134,7 @@ export const Exchange = {
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
 
   // addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
+  // addTopLevelService: {name: 'Add/Update Top Level Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
   addService: {name: 'Add/Update Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   addTopLevelService: {name: 'Add/Update Top Level Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
