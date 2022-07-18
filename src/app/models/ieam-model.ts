@@ -109,6 +109,7 @@ export interface IExchange {
   role?: string;
   contentType?: string;
   nextAction?: string | NextAction;
+  callHzn?: boolean;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
@@ -133,7 +134,8 @@ export const Exchange = {
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
 
   // addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
-  addService: {name: 'Add/Update Service', path: 'publishService', method: 'POST', type: 'service|topLevelService|hzn', editable: true, template: true, run: true},
+  addService: {name: 'Add/Update Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
+  addTopLevelService: {name: 'Add/Update Top Level Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
   getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
   patchService: {name: 'Patch Service', path: 'orgs/${orgId}/services/${service}', method: 'PATCH', type: 'service|topLevelService', run: true, editable: true, template: true},
@@ -245,6 +247,7 @@ export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
   addService: {name: 'Add Service Json', file: 'assets/templates/service.json'},
+  addTopLevelService: {name: 'Add Service Json', file: 'assets/templates/top-level-service.json'},
   patchService: {name: 'Add Service Json', file: 'assets/templates/service.patch.json'},
   addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},

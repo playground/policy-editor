@@ -530,7 +530,7 @@ export class IeamService implements HttpInterceptor {
     let url = ''
     let callThis = ''
     let body: any;
-    if(/hzn$/.exec(exchange.type)) {
+    if(exchange.callHzn) {
       callThis = this.method[exchange.path]
       body = {
         service: {
