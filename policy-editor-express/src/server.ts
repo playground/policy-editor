@@ -299,6 +299,22 @@ export class Server {
       let params = this.getParams(req.query as unknown as Params);
       res.send({encrypt_sha256: util.encryptSha256(params.url)})
     })
+    app.post('/publish_service', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
+          let service = params.body.service
+          service.json = `${JSON.stringify(service.json)}`
+
+          anax.publishService(service)
+          .subscribe({
+            // next: (data: any) => res.send({signature: data, deployment: deployment}),
+            next: (data: any) => res.send({data: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
     app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
       this.streamData(req, res, false)
       .subscribe({
@@ -310,12 +326,14 @@ export class Server {
             services[service].image = `${services[service].image}@sha256:${hash[service]}`
           })
           // NOTES: if escape \", agreement failed with no public key available
-          let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
-          // NOTES: if escape \", agreement gets verified but failed with marshalling error, invalid character
+          let deployment = `${JSON.stringify(params.body).replace(/"/g, '\\"')}`
+          // let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
+          // NOTES: if not escape \", agreement gets verified but failed with marshalling error, invalid character
           // let deployment = `'${JSON.stringify(params.body)}'`
           console.log('no hash', deployment)
-          anax.signDeployment(privateKey, deployment)
+          anax.signDeployment(privateKey, `'${deployment}'`)
           .subscribe({
+            // next: (data: any) => res.send({signature: data, deployment: deployment}),
             next: (data: any) => res.send({signature: data, deployment: JSON.stringify(params.body)}),
             error: (err: any) => next(err)
           })

@@ -182,6 +182,14 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           })
         } else {
+          let services = content.deployment.services
+          Object.keys(services).forEach((service) => {
+            let ordered = Object.keys(services[service]).sort().reduce((obj, key) => {
+              obj[key] = services[service][key]
+              return obj
+            }, {})
+            content.deployment.services[service] = ordered;
+          })
           let body: any = content.deployment
           this.ieamService.post(this.method.signDeployment, body)
           .subscribe({

@@ -10,5 +10,6 @@ export interface IMethod {
   signDeployment: string;
   signDeploymentWithHash: string;
   getPublicKey: string;
+  publishService: string;
   post: string;
 }

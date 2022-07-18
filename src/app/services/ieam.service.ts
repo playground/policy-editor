@@ -7,6 +7,7 @@ import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Lo
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
+import { Content } from '@angular/compiler/src/render3/r3_ast';
 
 declare const window: any;
 
@@ -56,6 +57,7 @@ export class IeamService implements HttpInterceptor {
   method: IMethod;
   editable = false;
   activeExchangeFile: any;
+  orgId = '';
   nodeId = '';
   agId = '';
   service = '';
@@ -84,6 +86,7 @@ export class IeamService implements HttpInterceptor {
       signDeployment: `${backendUrl}/sign_deployment`,
       signDeploymentWithHash: `${backendUrl}/sign_deployment_hash`,
       getPublicKey: `${backendUrl}/get_public_key`,
+      publishService: `${backendUrl}/publish_service`,
       post: 'post'
     };
 
@@ -519,12 +522,29 @@ export class IeamService implements HttpInterceptor {
   getOrg(org = this.selectedOrg): IHznConfig {
     return this.configJson[org]
   }
-  callExchange(endpoint: string, exchange: IExchange, body: any = {}, orgId = this.selectedOrg) {
+  callExchange(endpoint: string, exchange: IExchange, payload: any = {}, orgId = this.selectedOrg) {
     const credential = this.configJson[orgId]['credential']
     const b64 = exchange.role == Role.hubAdmin
       ? btoa(`${credential[exchange.role]}`)
       : btoa(`${orgId}/${credential['HZN_EXCHANGE_USER_AUTH']}`)
-    const url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
+    let url = ''
+    let callThis = ''
+    let body: any;
+    if(/hzn$/.exec(exchange.type)) {
+      callThis = this.method[exchange.path]
+      body = {
+        service: {
+          json: payload,
+          credentials: this.configJson[orgId]['envVars']['SERVICE_CONTAINER_CREDS'],
+          org: this.orgId.length > 0 ? this.orgId : orgId,
+          userPw: credential['HZN_EXCHANGE_USER_AUTH']
+        }
+      }
+    } else {
+      url = exchange.type == 'css' ? credential['HZN_FSS_CSSURL'].replace(/\/+$/, '') : credential['HZN_EXCHANGE_URL']
+      callThis = `${url}/${endpoint}`
+      body = payload
+    }
     let headerOptions: any = {};
     Object.keys(HeaderOptions).forEach((key) => {
       headerOptions[key] = HeaderOptions[key]
@@ -544,7 +564,7 @@ export class IeamService implements HttpInterceptor {
     switch(exchange.method) {
       case 'GET':
       default:
-        return this.get(`${url}/${endpoint}`, {headers: header})
+        return this.get(callThis, {headers: header})
         break;
       case 'POST':
         // header = header.append('Access-Control-Allow-Credentials', 'true')
@@ -552,19 +572,19 @@ export class IeamService implements HttpInterceptor {
         // header = header.append('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
         // header = header.append('Content-Type', 'application/json');
         header = header.append('Accept', 'application/json');
-        return this.http.post(`${url}/${endpoint}`, body, {headers: header})
+        return this.http.post(callThis, body, {headers: header})
         break;
       case 'PUT':
-        return this.http.put(`${url}/${endpoint}`, body, {headers: header})
+        return this.http.put(callThis, body, {headers: header})
         break;
       case 'PATCH':
-        return this.http.patch(`${url}/${endpoint}`, body, {headers: header})
+        return this.http.patch(callThis, body, {headers: header})
         break;
       case 'DELETE':
-          return this.http.delete(`${url}/${endpoint}`, {headers: header})
+          return this.http.delete(callThis, {headers: header})
           break;
       }
-    return this.get(`${url}/${endpoint}`, {headers: header})
+    return this.get(callThis, {headers: header})
   }
   addEditorStorage(content: any, name = this.currentWorkingFile, key = this.currentWorkingFile) {
     this.editorStorage[key] = {content: content, name: name}

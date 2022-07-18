@@ -15,5 +15,11 @@ export const anax: any = {
   createPublicPrivateKey: (privateKeyName = privateKey, publicKeyName = publicKey, org = 'IEAM', email = 'ieam@ibm.com'): Observable<any> => {
     const arg = `hzn key create -k ${privateKeyName} -K ${publicKeyName} ${org} ${email}`
     return shell(arg);
+  },
+  publishService: (service: any) => {
+    let json = JSON.stringify(service.json)
+    console.log(json)
+    const arg = `echo ${json} | hzn exchange service publish -O ${service.credentials} -f- -P -o ${service.org} -u ${service.userPw}`;
+    return shell(arg, 'done publishing service', 'failed to publish service');
   }
 }
