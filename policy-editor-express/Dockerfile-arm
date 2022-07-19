@@ -2,16 +2,13 @@ FROM arm32v7/node:16.3.0
 
 RUN apt-get update -y && apt-get install -y apt-utils curl vim sudo
 
-RUN curl -sSL https://github.com/open-horizon/anax/releases/latest/download/agent-install.sh -o agent-install.sh
-RUN chmod a+x agent-install.sh
-RUN ./agent-install.sh -C
-
 WORKDIR /server
 
 COPY . /server
 
 RUN npm install -g npm
 RUN npm install
+RUN npm run build
 
 RUN ["chmod", "+x", "./input.sh"]
 RUN ["chmod", "+x", "./agent-install.sh"]
