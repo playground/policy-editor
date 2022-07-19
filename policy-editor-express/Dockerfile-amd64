@@ -26,4 +26,5 @@ RUN ["chmod", "+x", "./agent-install.sh"]
 
 #VOLUME /mms_shared_volume
 # CMD [ "npm", "start" ]
+EXPOSE 3000
 ENTRYPOINT ["sh", "./input.sh"]

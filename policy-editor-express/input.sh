@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Input Org Id"
+echo "Input HZN_ORG_ID"
 read org_id
 export HZN_ORG_ID=${org_id}
 echo "Input HZN_FSS_CSSURL"
@@ -14,12 +14,16 @@ read user_auth
 export HZN_EXCHANGE_USER_AUTH=${user_auth}
 
 ARCH=$(uname -m)
+echo $ARCH
 FILE="horizon-agent-linux-deb-amd64.tar.gz"
-if [${ARCH} == "x86_64"]; then
+if [ "$ARCH" = "x86_64" ]
+then
  FILE="horizon-agent-linux-deb-amd64.tar.gz"
-elif [${ARCH} == "armv71"]; then
+elif [ "$ARCH" = "armv71" ]
+then
  FILE="horizon-agent-linux-deb-armhf.tar.gz"
-elif [${ARCH} == "arrch64"]; then
+elif [ "$ARCH" == "arrch64" ]
+then
  FILE="horizon-agent-linux-deb-arm64.tar.gz"
 else
  FILE="horizon-agent-linux-deb-amd64.tar.gz"

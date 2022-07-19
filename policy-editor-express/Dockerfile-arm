@@ -1,11 +1,6 @@
 FROM arm32v7/node:16.3.0
 
-RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg curl -y && apt-get install mpg123 -y && apt-get install vim -y
-
-ENV HZN_ORG_ID=myorg
-ENV HZN_FSS_CSSURL=
-ENV HZN_EXCHANGE_URL=
-ENV HZN_EXCHANGE_USER_AUTH=
+RUN apt-get update -y && apt-get install -y apt-utils curl vim sudo
 
 RUN curl -sSL https://github.com/open-horizon/anax/releases/latest/download/agent-install.sh -o agent-install.sh
 RUN chmod a+x agent-install.sh
@@ -18,7 +13,8 @@ COPY . /server
 RUN npm install -g npm
 RUN npm install
 
-VOLUME /mms_shared_volume
-EXPOSE 3000
+RUN ["chmod", "+x", "./input.sh"]
+RUN ["chmod", "+x", "./agent-install.sh"]
 
-CMD [ "npm", "start" ]
+EXPOSE 3000
+ENTRYPOINT ["sh", "./input.sh"]
