@@ -24,7 +24,7 @@ export class Server {
   localJson = EnvJson as any;
   cosClient: CosClient;
   app = express();
-  apiUrl = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/96fd655207897b11587cfcf2b3f58f6e0792f788cf2a04daa79b53fc3d4efb32/liquidprep-cf-api'
+  apiUrl = ''
   constructor() {
     this.initialise()
   }
@@ -66,14 +66,16 @@ export class Server {
     })
   }
   initialise() {
-    this.params.accessKeyId = this.localJson[env]['access_key_id'];
-    this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
-    this.params.serviceInstanceId = this.localJson[env]['resource_instance_id'];
-    this.params.bucket = this.localJson[env]['bucket'];
-    this.params.ibmAuthEndpoint = this.localJson[env]['ibmAuthEndpoint'];
-    this.params.endpoint = this.localJson[env]['endpoint'];
-    this.params.region = this.localJson[env]['region'];
-    this.cosClient = new CosClient(this.params)
+    if(this.localJson[env]['access_key_id']) {
+      this.params.accessKeyId = this.localJson[env]['access_key_id'];
+      this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
+      this.params.serviceInstanceId = this.localJson[env]['resource_instance_id'];
+      this.params.bucket = this.localJson[env]['bucket'];
+      this.params.ibmAuthEndpoint = this.localJson[env]['ibmAuthEndpoint'];
+      this.params.endpoint = this.localJson[env]['endpoint'];
+      this.params.region = this.localJson[env]['region'];
+      this.cosClient = new CosClient(this.params)
+    }
 
     if(!existsSync(privateKey)) {
       anax.createPublicPrivateKey()
