@@ -4,6 +4,15 @@ FROM node:16.15.1
 # RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg -y && apt-get install mpg123 -y && apt-get install vim -y
 RUN apt-get update -y && apt-get install -y apt-utils vim curl
 
+ENV HZN_ORG_ID=myorg
+ENV HZN_FSS_CSSURL=
+ENV HZN_EXCHANGE_URL=
+ENV HZN_EXCHANGE_USER_AUTH=
+
+RUN curl -sSL https://github.com/open-horizon/anax/releases/latest/download/agent-install.sh -o agent-install.sh
+RUN chmod a+x agent-install.sh
+RUN ./agent-install.sh -C
+
 WORKDIR /server
 
 COPY . /server
