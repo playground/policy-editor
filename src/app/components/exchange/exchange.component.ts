@@ -339,57 +339,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     })
   }
-  hasServiceName2(path: string, exchange: IExchange, content: IService, useThis = {}) {
-    let serviceName = ''
-    if(exchange.run || this.ieamService.hasServiceName(content)) {
-      if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
-        if(path.indexOf('${nodeId}') >= 0) {
-          this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-          .then((resp: any) => {
-            const nodeId = this.ieamService.nodeId = resp.options.name;
-            path = path.replace(UrlToken['nodeId'], nodeId)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-        if(path.indexOf('${agId}') >= 0) {
-          this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
-          .then((resp: any) => {
-            const agId = resp.options.name;
-            path = path.replace(UrlToken['agId'], agId)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-        if(path.indexOf('${pattern}') >= 0) {
-          this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
-          .then((resp: any) => {
-            const pattern = resp.options.name;
-            path = path.replace(UrlToken['pattern'], pattern)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-      }
-      else {
-        this.confirmB4Calling(path, exchange, content, useThis)
-      }
-    } else {
-      this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
-      .then((resp: any) => {
-        if (resp) {
-          const arch = this.ieamService.selectedArch = resp.options.name;
-          const org = this.ieamService.getOrg()
-          if(/service$|servicePolicy$|servicePattern$/.exec(exchange.type) && this.ieamService.selectedLoader !== 'topLevelService') {
-            this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`
-            // path = path.replace(UrlToken[exchange.type], this.tempName)
-          } else if(/deploymentPolicy$|topLevelService$|topLevelServicePattern$/.exec(exchange.type)) {
-            this.tempName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`
-            // path = path.replace(UrlToken[exchange.type], this.tempName)
-          }
-          this.confirmB4Calling(path, exchange, content, useThis)
-        } else {
-        }
-      })
-    }
-  }
   tokenReplace(path: string, content: IService, orgId = this.ieamService.selectedOrg) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {

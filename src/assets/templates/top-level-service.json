@@ -24,7 +24,7 @@
   "deployment": {
     "services": {
       "$MMS_SERVICE_NAME": {
-        "image": "$MMS_CONTAINER",
+        "image": "$MMS_CONTAINER_NAME",
         "binds": ["$MMS_SHARED_VOLUME:$VOLUME_MOUNT:rw"]
       }
     }

@@ -13,9 +13,9 @@
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'multiple'">
-      <mat-form-field *ngFor="let option of data.options.extra" appearance="outline" class="mat-dialog-input">
+      <mat-form-field *ngFor="let option of data.options.extra; let i = index" appearance="outline" class="mat-dialog-input">
         <input matInput class="full-width" placeholder="{{option.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="option.name">
+        [(ngModel)]="option.name" [value]="option.name" [ngModelOptions]="{standalone: true}">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'loader'">

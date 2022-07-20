@@ -11,7 +11,7 @@
   "deployment": {
     "services": {
       "$SERVICE_NAME": {
-        "image": "$SERVICE_CONTAINER",
+        "image": "$SERVICE_CONTAINER_NAME",
         "binds": ["$MMS_SHARED_VOLUME:$VOLUME_MOUNT:rw"],
         "ports": [
           { "HostIP": "0.0.0.0", "HostPort": "3000:3000/tcp" }

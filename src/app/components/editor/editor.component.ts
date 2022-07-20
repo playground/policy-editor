@@ -2,12 +2,13 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } fr
 import { Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import { Observable, forkJoin } from  'rxjs';
 import { filter } from 'rxjs/operators';
-import { Enum, IEditorStorage, Navigate, Loader, JsonSchema, Exchange, JsonToken } from '../../models/ieam-model';
+import { Enum, IEditorStorage, Navigate, Loader, JsonSchema, Exchange, JsonToken, TemplateToken } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsoneditor/src/public_api';
 import { DialogComponent } from '../dialog/dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { IEnvVars } from 'src/app/interface';
+import { ThisReceiver } from '@angular/compiler';
 
 @Component({
   selector: 'app-editor',
@@ -270,51 +271,115 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     if(this.data && this.ieamService.configJson[org]) {
       let envVars: IEnvVars = this.ieamService.configJson[org].envVars;
       let policy = JSON.stringify(this.data)
-      policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
-      Object.keys(envVars).forEach((key) => {
-        policy = policy.replace(new RegExp(`"\\$${key}"`, 'g'), `"${envVars[key]}"`)
-        if(key === 'VOLUME_MOUNT') {
-          policy = policy.replace(new RegExp(`\\$MMS_SHARED_VOLUME:\\$${key}`, 'g'), `${envVars['MMS_SHARED_VOLUME']}:${envVars[key]}`)
-        }
-      })
-      Object.keys(envVars).forEach((key) => {
-        policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
-      })
-      if(policy.indexOf('$ARCH') >= 0) {
-        const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type', name: this.ieamService.selectedArch})
-        if(arch) {
-          this.ieamService.setArch(arch.options.name)
-          this.ieamService.selectedArch = arch.options.name;
-          policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
-          if(policy.indexOf('$MMS_CONTAINER') > 0) {
-            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
-            if(answer) {
-              this.ieamService.selectedDockerHubId = answer.options.name;
-              let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
-              // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
-              policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
-            }
-          }
-          if(policy.indexOf('$SERVICE_CONTAINER') > 0) {
-            const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
-            if(answer) {
-              this.ieamService.selectedDockerHubId = answer.options.name;
-              let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
-              // let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}`
-              policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
-            }
-          }
-        }
+      let tokenInput: any[] = []
+      let name = '', arch = '', dockerId = ''
+      if(policy.indexOf('CONTAINER_NAME') > 0) {
+        tokenInput.push({key: '$DOCKER_ID', name: this.ieamService.selectedDockerHubId || '', placeholder: 'Docker Id'})
       }
-      this.massageContent(JSON.parse(policy))
-      .subscribe((json) => {
-        // this.originalJson = this.showData;
-        this.showData = json
-        console.log(this.showData)
-        this.editor.getEditor().set(this.showData)
-        this.isModified()
-        // this.editor.collapseAll()
+      Object.keys(TemplateToken).forEach((key) => {
+        if(policy.indexOf(key) >= 0) {
+          if(key == '$HZN_ORG_ID') {
+            name = org;
+          } else if(key == '$ARCH') {
+            name = this.ieamService.selectedArch || ''
+          } else {
+            name = envVars[key.replace('$', '')]
+          }
+          tokenInput.push({key: key, name: name, placeholder: TemplateToken[key].name})
+        }
       })
+      if(tokenInput.length > 0) {
+        this.ieamService.promptDialog(`Please provide the following info`, 'multiple', {extra: tokenInput})
+        .then((resp: any) => {
+          if(resp) {
+            let op = resp.options.extra
+            for(let i in op) {
+              if(op[i].key == '$DOCKER_ID') {
+                this.ieamService.selectedDockerHubId = dockerId = op[i].name;
+              } else if(op[i].key == '$SERVICE_CONTAINER_NAME') {
+                let key = op[i].key.replace('$', '')
+                let container = `${dockerId}/${op[i].name}_${arch}:${envVars['SERVICE_VERSION']}`
+                // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
+                policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), container)
+              } else if(op[i].key == '$MMS_CONTAINER_NAME') {
+                let key = op[i].key.replace('$', '')
+                let container = `${dockerId}/${op[i].name}_${arch}:${envVars['MMS_SERVICE_VERSION']}`
+                // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
+                policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), container)
+              } else {
+                if(op[i].key == '$ARCH') {
+                  this.ieamService.selectedArch = arch = op[i].name;
+                }
+                policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), op[i].name)
+              }
+            }
+            Object.keys(envVars).forEach((key) => {
+              policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
+            })
+          }
+          this.massageContent(JSON.parse(policy))
+          .subscribe((json) => {
+            this.showData = json
+            console.log(this.showData)
+            this.editor.getEditor().set(this.showData)
+            this.isModified()
+          })
+        })
+      } else {
+        this.massageContent(JSON.parse(policy))
+        .subscribe((json) => {
+          this.showData = json
+          console.log(this.showData)
+          this.editor.getEditor().set(this.showData)
+          this.isModified()
+        })
+      }
+
+      // policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
+      // Object.keys(envVars).forEach((key) => {
+      //   policy = policy.replace(new RegExp(`"\\$${key}"`, 'g'), `"${envVars[key]}"`)
+      //   if(key === 'VOLUME_MOUNT') {
+      //     policy = policy.replace(new RegExp(`\\$MMS_SHARED_VOLUME:\\$${key}`, 'g'), `${envVars['MMS_SHARED_VOLUME']}:${envVars[key]}`)
+      //   }
+      // })
+      // Object.keys(envVars).forEach((key) => {
+      //   policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
+      // })
+      // if(policy.indexOf('$ARCH') >= 0) {
+      //   const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type', name: this.ieamService.selectedArch})
+      //   if(arch) {
+      //     this.ieamService.setArch(arch.options.name)
+      //     this.ieamService.selectedArch = arch.options.name;
+      //     policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
+      //     if(policy.indexOf('$MMS_CONTAINER') > 0) {
+      //       const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
+      //       if(answer) {
+      //         this.ieamService.selectedDockerHubId = answer.options.name;
+      //         let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
+      //         // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
+      //         policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
+      //       }
+      //     }
+      //     if(policy.indexOf('$SERVICE_CONTAINER') > 0) {
+      //       const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
+      //       if(answer) {
+      //         this.ieamService.selectedDockerHubId = answer.options.name;
+      //         let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
+      //         // let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}`
+      //         policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
+      //       }
+      //     }
+      //   }
+      // }
+      // this.massageContent(JSON.parse(policy))
+      // .subscribe((json) => {
+      //   // this.originalJson = this.showData;
+      //   this.showData = json
+      //   console.log(this.showData)
+      //   this.editor.getEditor().set(this.showData)
+      //   this.isModified()
+      //   // this.editor.collapseAll()
+      // })
     }
   }
   massageContent(json: any) {
@@ -512,8 +577,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     delete this.dialogRef;
     if (this.psAgent) {
       this.psAgent.unsubscribe();
+      this.editor.destroy()
     }
     this.routeObserver.unsubscribe();
-    this.editor.destroy()
   }
 }

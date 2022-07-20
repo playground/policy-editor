@@ -53,11 +53,13 @@ export class DialogComponent implements OnInit {
   }
   ngOnInit() {
     this.loaders = this.data.options.loaders;
-    this.filteredOptions = this.loaderControl.valueChanges.pipe(
-      startWith(''),
-      map(value => (typeof value === 'string' ? value : value?.id)),
-      map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
-    )
+    if(this.loaders) {
+      this.filteredOptions = this.loaderControl.valueChanges.pipe(
+        startWith(''),
+        map(value => (typeof value === 'string' ? value : value?.id)),
+        map(name => (name ? this.ieamService.optionFilter(name, this.loaders) : this.loaders.slice()))
+      )
+    }
 
     if (this.data.type !== 'folder') {
       this.notOK = false;
