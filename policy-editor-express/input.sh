@@ -33,4 +33,10 @@ curl -sSL https://github.com/open-horizon/anax/releases/latest/download/${FILE} 
 tar -zxvf ${FILE}
 /bin/bash ./agent-install.sh -C
 
+#docker run -v /var/run/docker.sock:/var/run/docker.sock -ti docker
+# echo "Docker login"
+# read docker_user
+# read -s -p "Password: " password
+# docker login --username=$docker_user --password=$password
+
 npm start
