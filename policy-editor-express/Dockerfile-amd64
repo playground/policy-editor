@@ -2,7 +2,16 @@ FROM node:16.15.1
 
 # RUN apk add --no-cache --update nodejs-current npm curl bash procps
 # RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg -y && apt-get install mpg123 -y && apt-get install vim -y
-RUN apt-get update -y && apt-get install -y apt-utils vim curl
+RUN apt-get update -y && apt-get install -y apt-utils vim curl sudo
+
+# COPY "input.sh" .
+# RUN ["chmod", "+x", "./input.sh"]
+
+# COPY "agent-install.sh" .
+# RUN ["chmod", "+x", "./agent-install.sh"]
+
+# RUN ["ls", "-l", "./input.sh"]
+# ENTRYPOINT ["sh", "./input.sh"]
 
 WORKDIR /server
 
@@ -12,5 +21,10 @@ RUN npm install -g npm
 RUN npm install
 RUN npm run build
 
+RUN ["chmod", "+x", "./input.sh"]
+RUN ["chmod", "+x", "./agent-install.sh"]
+
 #VOLUME /mms_shared_volume
-CMD [ "npm", "start" ]
+# CMD [ "npm", "start" ]
+EXPOSE 3000
+ENTRYPOINT ["sh", "./input.sh"]

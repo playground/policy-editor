@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction, IOption, Loader } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -57,11 +57,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if(msg.type == Enum.EXCHANGE_SELECTED) {
           let exchange = Exchange[this.ieamService.selectedCall]
           if(exchange.template && !this.ieamService.hasContent()) {
-            // const resp:any = await this.ieamService.promptDialog(`${exchange.prompt}`, '', {okButton: 'Yes', cancelButton: 'No'})
-            // if(resp) {
-
-            // }
-            let schema = JsonSchema[this.ieamService.selectedCall]
+            let schema = JsonSchema[this.ieamService.currentWorkingFile]
             this.ieamService.get(schema.file)
             .subscribe((res) => {
               if(exchange.editable) {
@@ -181,15 +177,24 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           })
         } else {
+          let services = content.deployment.services
+          Object.keys(services).forEach((service) => {
+            let ordered = Object.keys(services[service]).sort().reduce((obj, key) => {
+              obj[key] = services[service][key]
+              return obj
+            }, {})
+            content.deployment.services[service] = ordered;
+          })
           let body: any = content.deployment
           this.ieamService.post(this.method.signDeployment, body)
           .subscribe({
             next: (res) => {
-              if(typeof body !== 'string') {
-                content.deployment = JSON.stringify(body)
-              }
               // content.deploymentSignature = res.signature.replace(/^\s+|\s+$/g, '')
               content.deploymentSignature = res.signature.replace(/[\r\n]/gm, '')
+              let services = content.deployment.services
+              if(typeof res.deployment === 'string') {
+                content.deployment = res.deployment
+              }
               this.hasServiceName(path, exchange, content)
               .subscribe((res: any) => {
                 this.confirmB4Calling(res.path, exchange, content, {})
@@ -290,70 +295,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
               }
             })
           }
-          // if(path.indexOf('${nodeId}') >= 0) {
-          //   if(/GET$|DELETE$/.exec(exchange.method)) {
-          //     // this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-          //     this.ieamService.promptDialog(`Please provide the following info`, 'multiple', {extra: tokenInput})
-          //     .then((resp: any) => {
-          //       if(resp) {
-          //         const nodeId = this.ieamService.nodeId = resp.options.name;
-          //         path = path.replace(UrlToken['nodeId'], nodeId)
-          //         observer.next({path: path})
-          //         observer.complete()
-          //         // this.confirmB4Calling(path, exchange, content, useThis)
-          //       } else {
-          //         observer.error()
-          //       }
-          //     })
-          //   } else {
-          //     path = path.replace(UrlToken['nodeId'], this.ieamService.nodeId)
-          //     observer.next({path: path})
-          //     observer.complete()
-          //   }
-          // } else if(path.indexOf('${agId}') >= 0) {
-          //   this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
-          //   .then((resp: any) => {
-          //     if(resp) {
-          //       const agId = resp.options.name;
-          //       path = path.replace(UrlToken['agId'], agId)
-          //       observer.next({path: path})
-          //       observer.complete()
-          //     } else {
-          //       observer.error()
-          //     }
-          //   })
-          // } else if(path.indexOf('${pattern}') >= 0) {
-          //   this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
-          //   .then((resp: any) => {
-          //     if(resp) {
-          //       const pattern = resp.options.name;
-          //       path = path.replace(UrlToken['pattern'], pattern)
-          //       observer.next({path: path})
-          //       observer.complete()
-          //     } else {
-          //       observer.error()
-          //     }
-          //   })
-          // } else if(path.indexOf('${orgId}') >= 0) {
-          //   if(/addOrg$/.exec(this.ieamService.selectedCall)) {
-          //     const orgId = content.label
-          //     path = path.replace(UrlToken['orgId'], orgId)
-          //     observer.next({path: path})
-          //     observer.complete()
-          //   } else {
-          //     this.ieamService.promptDialog(`What is the Organization Name`, 'folder', {placeholder: 'Org Name', name: this.ieamService.selectedOrg})
-          //     .then((resp: any) => {
-          //       if(resp) {
-          //         const orgId = resp.options.name;
-          //         path = path.replace(UrlToken['orgId'], orgId)
-          //         observer.next({path: path})
-          //         observer.complete()
-          //       } else {
-          //         observer.error()
-          //       }
-          //     })
-          //   }
-          // }
         }
         else {
           observer.next({path: path})

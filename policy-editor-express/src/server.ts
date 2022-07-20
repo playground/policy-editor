@@ -24,7 +24,7 @@ export class Server {
   localJson = EnvJson as any;
   cosClient: CosClient;
   app = express();
-  apiUrl = 'https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/96fd655207897b11587cfcf2b3f58f6e0792f788cf2a04daa79b53fc3d4efb32/liquidprep-cf-api'
+  apiUrl = ''
   constructor() {
     this.initialise()
   }
@@ -66,14 +66,16 @@ export class Server {
     })
   }
   initialise() {
-    this.params.accessKeyId = this.localJson[env]['access_key_id'];
-    this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
-    this.params.serviceInstanceId = this.localJson[env]['resource_instance_id'];
-    this.params.bucket = this.localJson[env]['bucket'];
-    this.params.ibmAuthEndpoint = this.localJson[env]['ibmAuthEndpoint'];
-    this.params.endpoint = this.localJson[env]['endpoint'];
-    this.params.region = this.localJson[env]['region'];
-    this.cosClient = new CosClient(this.params)
+    if(this.localJson[env]['access_key_id']) {
+      this.params.accessKeyId = this.localJson[env]['access_key_id'];
+      this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
+      this.params.serviceInstanceId = this.localJson[env]['resource_instance_id'];
+      this.params.bucket = this.localJson[env]['bucket'];
+      this.params.ibmAuthEndpoint = this.localJson[env]['ibmAuthEndpoint'];
+      this.params.endpoint = this.localJson[env]['endpoint'];
+      this.params.region = this.localJson[env]['region'];
+      this.cosClient = new CosClient(this.params)
+    }
 
     if(!existsSync(privateKey)) {
       anax.createPublicPrivateKey()
@@ -295,11 +297,57 @@ export class Server {
       let params = this.getParams(req.query as unknown as Params);
       res.send({valid: util.validateSession(params.sessionId)})
     })
+    app.get('/encrypt_sha256', (req: express.Request, res: express.Response) => {
+      let params = this.getParams(req.query as unknown as Params);
+      res.send({encrypt_sha256: util.encryptSha256(params.url)})
+    })
+    app.post('/publish_service', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
+          let service = params.body.service
+          service.json = `${JSON.stringify(service.json)}`
+
+          anax.publishService(service)
+          .subscribe({
+            // next: (data: any) => res.send({signature: data, deployment: deployment}),
+            next: (data: any) => res.send({data: data}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
     app.post('/sign_deployment', (req: express.Request, res: express.Response, next) => {
       this.streamData(req, res, false)
       .subscribe({
         next: (params: Params) => {
+          let services = params.body.services
+          let hash = {}
+          Object.keys(services).forEach((service: any) => {
+            hash[service] = util.encryptSha256(services[service].image)
+            services[service].image = `${services[service].image}@sha256:${hash[service]}`
+          })
+          // NOTES: if escape \", agreement failed with no public key available
+          let deployment = `${JSON.stringify(params.body).replace(/"/g, '\\"')}`
+          // let deployment = `"${JSON.stringify(params.body).replace(/"/g, '\\"')}"`
+          // NOTES: if not escape \", agreement gets verified but failed with marshalling error, invalid character
+          // let deployment = `'${JSON.stringify(params.body)}'`
+          console.log('no hash', deployment)
+          anax.signDeployment(privateKey, `'${deployment}'`)
+          .subscribe({
+            // next: (data: any) => res.send({signature: data, deployment: deployment}),
+            next: (data: any) => res.send({signature: data, deployment: JSON.stringify(params.body)}),
+            error: (err: any) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
+    app.post('/sign_deployment2', (req: express.Request, res: express.Response, next) => {
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
           let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
+          // let body = `'${JSON.stringify(params.body)}'`
           console.log('no hash', body)
           anax.signDeployment(privateKey, body)
           .subscribe({
@@ -314,6 +362,7 @@ export class Server {
       .subscribe({
         next: (params: Params) => {
           let body = `'${JSON.stringify(params.body).replace(/"/g, '\\"')}'`
+          // let body = `'${JSON.stringify(params.body)}'`
           console.log('before hash', body)
           let hash = util.encryptSha256(body)
           console.log('hash', hash)

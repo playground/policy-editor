@@ -180,7 +180,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
     if(type === Enum.LOAD_TEMPLATE_POLICY) {
       this.broadcast(type, payload);
     } else {
-      this.ieamService.promptDialog('What type of file?', 'loader')
+      this.ieamService.promptDialog('What type of file?', 'loader', {loaders: this.ieamService.getLoader()})
       .then((answer: any) => {
         if(answer) {
           this.ieamService.openFilePicker(payload, type)

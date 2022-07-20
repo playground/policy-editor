@@ -11,6 +11,7 @@ export class Option {
   okButton: string;
   cancelButton: string;
   extra: IExtra[];
+  loaders: IOption[];
 }
 
 interface IExtra {
@@ -51,7 +52,7 @@ export class DialogComponent implements OnInit {
     this.dialogRef.close(this.data);
   }
   ngOnInit() {
-    this.loaders = this.ieamService.getLoader();
+    this.loaders = this.data.options.loaders;
     this.filteredOptions = this.loaderControl.valueChanges.pipe(
       startWith(''),
       map(value => (typeof value === 'string' ? value : value?.id)),

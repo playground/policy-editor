@@ -109,6 +109,7 @@ export interface IExchange {
   role?: string;
   contentType?: string;
   nextAction?: string | NextAction;
+  callHzn?: boolean;
 }
 export const Exchange = {
   admintatus: {name: 'Admin Status', path: 'admin/status', method: 'GET', run: true},
@@ -132,7 +133,10 @@ export const Exchange = {
   setNodeConfig: {name: 'Change Node Config State', path: 'orgs/${orgId}/nodes/${nodeId}/services_configstate', method: 'POST', type: 'node'},
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
 
-  addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
+  // addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
+  // addTopLevelService: {name: 'Add/Update Top Level Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
+  addService: {name: 'Add/Update Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
+  addTopLevelService: {name: 'Add/Update Top Level Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
   getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
   patchService: {name: 'Patch Service', path: 'orgs/${orgId}/services/${service}', method: 'PATCH', type: 'service|topLevelService', run: true, editable: true, template: true},
@@ -169,11 +173,12 @@ export const Exchange = {
   getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},
   deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', description: 'Deletes the policy of a service. Can be run by the owning user.'},
 
-  addPattern: {name: 'Add/Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
+  addPattern: {name: 'Add/Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
   getPattern: {name: 'Get Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true},
+  addTopLevelPattern: {name: 'Add Top Level Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
   getPatterns: {name: 'Get All Patterns', path: 'orgs/${orgId}/patterns', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
-  deletePattern: {name: 'Delete Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'DELETE', type: 'servicePattern|topLevelServicePattern', description: ''},
-  updatePattern: {name: 'Update Pattern Attribute', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', description: 'Updates one attribute of a pattern. This can only be called by the user that originally created this pattern resource.'},
+  deletePattern: {name: 'Delete Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'DELETE', type: 'servicePattern|topLevelServicePattern', run: true, description: ''},
+  updatePattern: {name: 'Update Pattern Attribute', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Updates one attribute of a pattern. This can only be called by the user that originally created this pattern resource.'},
   getPatternNodes: {name: 'Get All Nodes of Pattern', path: 'orgs/${orgId}/patterns/${pattern}/search', method: 'POST', type: 'servicePattern|topLevelServicePattern', description: 'Returns the matching nodes that are using this pattern and do not already have an agreement for the specified service. Can be run by a user or agbot (but not a node).'},
   getPatternNodeHealth: {name: 'Get Health Nodes of Pattern', path: 'orgs/${orgId}/patterns/${pattern}/nodehealth', method: 'POST', type: 'servicePattern|topLevelServicePattern', description: 'Returns the lastHeartbeat and agreement times for all nodes that are this pattern and have changed since the specified lastTime. Can be run by a user or agbot (but not a node).'},
 
@@ -243,7 +248,10 @@ export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
   addService: {name: 'Add Service Json', file: 'assets/templates/service.json'},
+  addTopLevelService: {name: 'Add Service Json', file: 'assets/templates/top-level-service.json'},
   patchService: {name: 'Add Service Json', file: 'assets/templates/service.patch.json'},
+  addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
+  addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
   getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'},

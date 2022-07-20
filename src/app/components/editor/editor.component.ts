@@ -291,6 +291,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
             if(answer) {
               this.ieamService.selectedDockerHubId = answer.options.name;
               let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
+              // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
               policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
             }
           }
@@ -299,6 +300,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
             if(answer) {
               this.ieamService.selectedDockerHubId = answer.options.name;
               let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
+              // let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}`
               policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
             }
           }

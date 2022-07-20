@@ -5,4 +5,5 @@ export interface Params {
   signature: string;
   publicKey: string;
   path: string;
+  deployment: string;
 }

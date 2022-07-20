@@ -1,6 +1,6 @@
 FROM arm64v8/node:16.3.0
 
-RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg -y && apt-get install mpg123 -y && apt-get install vim -y
+RUN apt-get update -y && apt-get install -y apt-utils curl vim sudo
 
 WORKDIR /server
 
@@ -10,6 +10,8 @@ RUN npm install -g npm
 RUN npm install
 RUN npm run build
 
-VOLUME /mms_shared_volume
+RUN ["chmod", "+x", "./input.sh"]
+RUN ["chmod", "+x", "./agent-install.sh"]
+
 EXPOSE 3000
-CMD [ "npm", "start" ]
+ENTRYPOINT ["sh", "./input.sh"]
