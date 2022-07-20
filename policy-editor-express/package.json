@@ -9,6 +9,7 @@
     "start": "node dist/find-node.js",
     "npm-link-policy-editor-lib": "npm link policy-editor-lib",
     "watch:deploy": "nodemon -e ts,js --watch 'src/**/*.ts' --watch 'dist/policy-editor/*.js' --exec 'npm run build && npm run start'",
+    "dev:backend": "npm run watch:deploy",
     "debug": "DEBUG=policy-editor npm run watch:deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
