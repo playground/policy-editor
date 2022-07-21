@@ -149,7 +149,7 @@ export const Exchange = {
   getServiceCerts: {name: 'Get All Service Certs', path: 'orgs/${orgId}/services/${service}/keys', method: 'GET', type: 'serviceCert', run: true, description: 'Returns all the signing public keys/certs for this service. Can be run by any credentials able to view the service.'},
   deleteServiceCerts: {name: 'Delete All Service Certs', path: 'orgs/${orgId}/services/${service}/keys', method: 'DELETE', type: 'serviceCert', run: true, description: 'Deletes all of the current keys/certs for this service. This can only be run by the service owning user.'},
 
-  addNodePolicy: {name: 'Add/Update Node Policy', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'PUT', type: 'nodePolicy', run: true, description: 'Adds or updates the policy of a node. This is called by the node or owning user.'},
+  addNodePolicy: {name: 'Add/Update Node Policy', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'PUT', type: 'nodePolicy', editable: true, template: true, run: true, description: 'Adds or updates the policy of a node. This is called by the node or owning user.'},
   getNodePolicy: {name: 'Get Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'GET', type: 'nodePolicy', run: true},
   deleteNodePolicy: {name: 'Delete Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'DELETE', type: 'nodePolicy', run: true},
 
@@ -252,6 +252,7 @@ export const JsonSchema = {
   patchService: {name: 'Add Service Json', file: 'assets/templates/service.patch.json'},
   addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
+  addNodePolicy: {name: 'Add Node Policy Json', file: 'assets/templates/node.policy.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
   getOrgNodesHealth: {name: 'Org Nodes Health Json', file: 'assets/templates/org.nodes.health.json'},
