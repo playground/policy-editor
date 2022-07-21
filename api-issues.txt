@@ -1,0 +1,6 @@
+When call http://192.168.86.45:3090/v1/orgs/myorg/services/chunk-saved-model-service_1.0.0_arm/keys/ieam.public.key
+if key exist, it returns the key but errors out
+
+http://192.168.86.45:3090/v1/orgs/myorg/services/chunk-saved-model-service_1.0.0_arm/keys/ieam.public.key
+PUT swagger example is wrong
+{key: ''}, should be plain/text
