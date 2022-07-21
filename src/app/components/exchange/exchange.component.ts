@@ -274,7 +274,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           let tokenInput: any[] = []
           tokens.forEach((t) => {
             let key = t.replace(/\$|{|}/g, '')
-            let name = key == 'orgId' ? this.ieamService.selectedOrg : ''
+            let name = ''
+            if(key == 'orgId') { name = this.ieamService.selectedOrg }
+            else if(key == 'nodeId') { name = this.ieamService.nodeId }
             tokenInput.push({key: key, name: name, placeholder: key})
           })
           if(tokenInput.length > 0) {

@@ -101,6 +101,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
         case Enum.NETWORK:
           this.ieamService.offline = msg.payload;
           break;
+        case Enum.LOGGED_IN:
         case Enum.CONFIG_LOADED:
           this.populateOrgs()
           break;
