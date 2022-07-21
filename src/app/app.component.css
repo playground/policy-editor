@@ -53,23 +53,20 @@ mat-sidenav-content {
 }
 
 .mat-drawer {
-  /* height: fit-content; */
-  height: auto;
+  height: fit-content;
   background-color: white;
 }
 
 mat-sidenav {
   margin: 16px;
-  margin-left: -44px;
-  width: 242px;
+  width: 200px;
   border-right: none;
   background-color: #23232e;
   color: var(--text-theme-secondary);
   font-weight: bold;
   border-radius: 10px;
-  padding: 16px 0 0 69px;
+  padding: 16px 0 0 0;
   text-align: center;
-  border-radius: 25px;
 }
 
 .content {

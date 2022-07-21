@@ -336,9 +336,10 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   refresh() {
-    this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
+    // this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
     this.exchangeCalls = this.ieamService.getExchange()
     this.setExchangeOptions()
+    this.ieamService.resetToOriginal()
     this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
   }
   setValue() {

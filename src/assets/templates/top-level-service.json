@@ -11,8 +11,8 @@
     {
       "org": "$HZN_ORG_ID",
       "url": "$SERVICE_NAME",
-      "version": "$SERVICE_VERSION_RANGE_UPPER",
-      "versionRange": "$SERVICE_VERSION_RANGE_LOWER",
+      "version": "$SERVICE_VERSION",
+      "versionRange": "1.0.0",
       "arch": "$ARCH"
     }
   ],

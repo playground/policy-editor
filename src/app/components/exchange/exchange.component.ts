@@ -76,8 +76,13 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
             this.showContent()
           }
         } else if(msg.type == Enum.EXCHANGE_CALL_REFRESH) {
-          this.content = {}
-          this.ieamService.editable = false
+          this.content = this.ieamService.getContent()
+          let exchange = Exchange[this.ieamService.currentWorkingFile]
+          if(exchange && exchange.editable) {
+            this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+          } else {
+            this.ieamService.editable = false
+          }
         } else if(msg.type == Enum.LOAD_CONFIG) {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({

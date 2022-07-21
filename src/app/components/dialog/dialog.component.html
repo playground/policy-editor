@@ -38,9 +38,9 @@
       </mat-form-field>
       </div>
   </div>
-</div>
-<div mat-dialog-actions>
-  <button mat-raised-button class="device-form-button" (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
-  <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
-</div>
+  <div mat-dialog-actions>
+    <button mat-raised-button class="device-form-button" (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
+    <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
+  </div>
+  </div>
 </form>

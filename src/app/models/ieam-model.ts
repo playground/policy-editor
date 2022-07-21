@@ -272,12 +272,12 @@ export const JsonToken = {
 export const TemplateToken = {
   $ARCH: {name: 'Architecture'},
   $HZN_ORG_ID: {name: 'Org Id'},
+  $MMS_SERVICE_NAME: {name: 'Top Level Service Name'},
+  $MMS_SERVICE_VERSION: {name: 'Top Level Service version'},
+  $MMS_CONTAINER_NAME: {name: 'Top Level Service container name'},
   $SERVICE_NAME: {name: 'Service name'},
   $SERVICE_VERSION: {name: 'Service version'},
   $SERVICE_CONTAINER_NAME: {name: 'Service container name'},
   $MMS_SHARED_VOLUME: {name: 'Shared volume name'},
-  $MMS_SERVICE_NAME: {name: 'Service Name'},
-  $MMS_SERVICE_VERSION: {name: 'Service version'},
-  $MMS_CONTAINER_NAME: {name: 'Service container name'},
   $VOLUME_MOUNT: {name: 'Volume mount name'}
 }

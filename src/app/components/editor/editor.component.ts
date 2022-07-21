@@ -8,7 +8,6 @@ import { JsonEditorComponent, JsonEditorOptions } from '../../../../ang-jsonedit
 import { DialogComponent } from '../dialog/dialog.component';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { IEnvVars } from 'src/app/interface';
-import { ThisReceiver } from '@angular/compiler';
 
 @Component({
   selector: 'app-editor',
@@ -272,7 +271,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       let envVars: IEnvVars = this.ieamService.configJson[org].envVars;
       let policy = JSON.stringify(this.data)
       let tokenInput: any[] = []
-      let name = '', arch = '', dockerId = ''
+      let name = '', arch = '', dockerId = '', version = ''
       if(policy.indexOf('CONTAINER_NAME') > 0) {
         tokenInput.push({key: '$DOCKER_ID', name: this.ieamService.selectedDockerHubId || '', placeholder: 'Docker Id'})
       }
@@ -298,17 +297,19 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.ieamService.selectedDockerHubId = dockerId = op[i].name;
               } else if(op[i].key == '$SERVICE_CONTAINER_NAME') {
                 let key = op[i].key.replace('$', '')
-                let container = `${dockerId}/${op[i].name}_${arch}:${envVars['SERVICE_VERSION']}`
+                let container = `${dockerId}/${op[i].name}_${arch}:${version}`
                 // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
                 policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), container)
               } else if(op[i].key == '$MMS_CONTAINER_NAME') {
                 let key = op[i].key.replace('$', '')
-                let container = `${dockerId}/${op[i].name}_${arch}:${envVars['MMS_SERVICE_VERSION']}`
+                let container = `${dockerId}/${op[i].name}_${arch}:${version}`
                 // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
                 policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), container)
               } else {
                 if(op[i].key == '$ARCH') {
                   this.ieamService.selectedArch = arch = op[i].name;
+                } else if(op[i].key.indexOf('_VERSION') > 0) {
+                  version = op[i].name
                 }
                 policy = policy.replace(new RegExp(`\\${op[i].key}`, 'g'), op[i].name)
               }
@@ -577,6 +578,8 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     delete this.dialogRef;
     if (this.psAgent) {
       this.psAgent.unsubscribe();
+    }
+    if(this.editor) {
       this.editor.destroy()
     }
     this.routeObserver.unsubscribe();
