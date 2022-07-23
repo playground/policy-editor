@@ -58,11 +58,11 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
     )
     this.setExchangeOptions()
 
-    this.routeObserver = this.route.data.subscribe((data) => {
-      if('/editor' == this.router.routerState.snapshot.url) {
-        this.populateOrgs()
-      }
-    })
+    // this.routeObserver = this.route.data.subscribe((data) => {
+    //   if('/editor' == this.router.routerState.snapshot.url) {
+    //     this.populateOrgs()
+    //   }
+    // })
 
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
@@ -101,6 +101,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
         case Enum.NETWORK:
           this.ieamService.offline = msg.payload;
           break;
+        case Enum.NAVIGATE:
         case Enum.LOGGED_IN:
         case Enum.CONFIG_LOADED:
           this.populateOrgs()

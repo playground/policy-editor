@@ -138,7 +138,7 @@ export const Exchange = {
   addService: {name: 'Add/Update Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   addTopLevelService: {name: 'Add/Update Top Level Service', path: 'publishService', method: 'POST', type: 'service|topLevelService', callHzn: true, editable: true, template: true, run: true},
   getService: {name: 'Get Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'GET', type: 'service|topLevelService', run: true, editable: true},
-  getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true},
+  getServices: {name: 'Get All Services', path: 'orgs/${orgId}/services', method: 'GET', type: 'service|topLevelService', run: true, description: 'Returns all service definitions in this organization. Can be run by any user, node, or agbot.'},
   patchService: {name: 'Patch Service', path: 'orgs/${orgId}/services/${service}', method: 'PATCH', type: 'service|topLevelService', run: true, editable: true, template: true},
   deleteService: {name: 'Delete Service By Name', path: 'orgs/${orgId}/services/${service}', method: 'DELETE', type: 'service|topLevelService', run: true},
 

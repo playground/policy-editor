@@ -1,0 +1,16 @@
+{
+  "userInput": [
+    {
+      "serviceOrgid": "IBM",
+      "serviceUrl": "ibm.cpu2msghub",
+      "serviceArch": "",
+      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "inputs": [
+        {
+          "name": "foo",
+          "value": "bar"
+        }
+      ]
+    }
+  ]
+}
