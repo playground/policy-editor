@@ -58,6 +58,17 @@
   font-size: 12px;
 }
 ::ng-deep mat-icon.mat-icon-refresh {
-  margin-left: -8px;
+  margin-left: -2px;
   cursor: pointer;
 }
+::ng-deep span.mat-icon-vertical {
+  display: inline-grid;
+  vertical-align: middle;
+  overflow: hidden;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin-left: -4px;
+  margin-bottom: 12px;
+}
+

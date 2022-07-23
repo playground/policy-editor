@@ -164,20 +164,20 @@ export const Exchange = {
   getManagementPolicies: {name: 'Get All Mgmt Policies', path: 'orgs/${orgId}/managementpolicies', method: 'GET', type: 'managementPolicy', run: true},
   deleteManagementPolicy: {name: 'Delete Mgmt Policy By Name', path: 'orgs/${orgId}/managementpolicies/${managementPolicy}', method: 'DELETE', type: 'managementPolicy'},
 
-  addDeploymentPolicy: {name: 'Add/Update Deployment Policy', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'POST', type: 'deploymentPolicy', callB4: 'getDeploymentPolicy', description: 'Creates a deployment policy resource. A deployment policy resource specifies the service that should be deployed based on the specified properties and constraints. This can only be called by a user.'},
+  addDeploymentPolicy: {name: 'Add/Update Deployment Policy', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'POST', type: 'deploymentPolicy', editable: true, template: true, run: true, callB4: 'getDeploymentPolicy', description: 'Creates a deployment policy resource. A deployment policy resource specifies the service that should be deployed based on the specified properties and constraints. This can only be called by a user.'},
   getDeploymentPolicy: {name: 'Get Deployment Policy By Name', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'GET', type: 'deploymentPolicy', description: 'Returns the deployment policy with the specified id. Can be run by a user, node, or agbot.'},
   getDeploymentPolicies: {name: 'Get All Deployment Policies', path: 'orgs/${orgId}/business/policies', method: 'GET', type: 'deploymentPolicy', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
   deleteDeploymentPolicy: {name: 'Delete Deployment Policy By Name', path: 'orgs/${orgId}/business/${deploymentPolicy}', method: 'DELETE', type: 'deploymentPolicy', description: ''},
 
-  addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
+  addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', template: true, editable: true, description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
   getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},
   deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', description: 'Deletes the policy of a service. Can be run by the owning user.'},
 
   addPattern: {name: 'Add Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
   getPattern: {name: 'Get Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true},
   addTopLevelPattern: {name: 'Add Top Level Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
-  patchPattern: {name: 'Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
-  getPatterns: {name: 'Get All Patterns', path: 'orgs/${orgId}/patterns', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
+  patchPattern: {name: 'Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, template: true, editable: true, description: 'Updates one attribute of a pattern. This can only be called by the user that originally created this pattern resource.'},
+  getPatterns: {name: 'Get All Patterns', path: 'orgs/${orgId}/patterns', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Returns all pattern definitions in this organization. Can be run by any user, node, or agbot.'},
   deletePattern: {name: 'Delete Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'DELETE', type: 'servicePattern|topLevelServicePattern', run: true, description: ''},
   updatePattern: {name: 'Update Pattern Attribute', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Updates one attribute of a pattern. This can only be called by the user that originally created this pattern resource.'},
   getPatternNodes: {name: 'Get All Nodes of Pattern', path: 'orgs/${orgId}/patterns/${pattern}/search', method: 'POST', type: 'servicePattern|topLevelServicePattern', description: 'Returns the matching nodes that are using this pattern and do not already have an agreement for the specified service. Can be run by a user or agbot (but not a node).'},
@@ -250,11 +250,13 @@ export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
   addService: {name: 'Add Service Json', file: 'assets/templates/service.json'},
+  addServicePolicy: {name: 'Add Service Policy', file: 'assets/templates/service.policy.json'},
+  addDeploymentPolicy: {name: 'Add Deployment Policy', file: 'assets/templates/deployment.policy.json'},
   addTopLevelService: {name: 'Add Service Json', file: 'assets/templates/top-level-service.json'},
   patchService: {name: 'Add Service Json', file: 'assets/templates/service.patch.json'},
   addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
-  patchPattern: {name: 'Patch Pattern', attributes: 'patternLabel|patternServices'},
+  patchPattern: {name: 'Patch Pattern', attributes: 'patternLabel|patternServices|patternDesc|patternPublic|patternInput|patternSecret|patternAgreement'},
   addNodePolicy: {name: 'Add Node Policy Json', file: 'assets/templates/node.policy.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
@@ -265,7 +267,12 @@ export const JsonSchema = {
 
 export const AttributeMap = {
   patternServices: {name: 'Services', file: 'assets/templates/pattern.services.json'},
-  patternLabel: {name: 'Label', file: 'assets/templates/pattern.label.json'}
+  patternLabel: {name: 'Label', file: 'assets/templates/pattern.label.json'},
+  patternDesc: {name: 'Description', file: 'assets/templates/pattern.description.json'},
+  patternPublic: {name: 'Public', file: 'assets/templates/pattern.public.json'},
+  patternInput: {name: 'User Input', file: 'assets/templates/pattern.userinput.json'},
+  patternSecret: {name: 'Secret Binding', file: 'assets/templates/pattern.secretbinding.json'},
+  patternAgreement: {name: 'Agreement Protocols', file: 'assets/templates/pattern.agreementprotocols.json'}
 }
 export const JsonToken = {
   orgId: '${orgId}',

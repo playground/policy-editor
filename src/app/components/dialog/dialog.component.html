@@ -22,7 +22,7 @@
     </div>
     <div *ngSwitchCase="'loader'">
       <mat-form-field appearance="outline" class="mat-dialog-input">
-        <mat-label>Type</mat-label>
+        <mat-label>{{data.options.placeholder || 'Type'}}</mat-label>
         <input
           type="text"
           matInput

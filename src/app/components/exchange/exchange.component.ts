@@ -128,7 +128,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       tokenInput.push({key: key, name: AttributeMap[key].name, id: key})
     })
     if(tokenInput.length > 0) {
-      this.ieamService.promptDialog('What would you like to update?', 'loader', {loaders: tokenInput})
+      this.ieamService.promptDialog('What would you like to update?', 'loader', {loaders: tokenInput, placeholder: 'Attributes'})
       .then((resp: any) => {
         if(resp) {
           let file = AttributeMap[resp.options.selectedOption].file
@@ -145,6 +145,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   showContent() {
     if(this.ieamService.selectedCall) {
       this.content = this.ieamService.getContent()
+      if(Object.keys(this.content).length == 0) {
+        this.content = this.ieamService.tempContent
+      }
       this.ieamService.editable = Exchange[this.ieamService.selectedCall].editable
 
       // this.content = this.ieamService.showJsonTree(json.content)
@@ -445,7 +448,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           html = res
         }
         console.log(html)
-        this.content = html ? html : {};
+        this.ieamService.tempContent = this.content = html ? html : {};
         this.ieamService.editable = exchange.editable == true
         if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
           this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')

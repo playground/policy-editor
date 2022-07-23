@@ -342,6 +342,14 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ieamService.resetToOriginal()
     this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
   }
+  help() {
+    let msg = this.ieamService.selectedCall ? Exchange[this.ieamService.selectedCall].description :
+      'Select a task you would like to perform'
+    if(!msg || msg.length == 0) {
+      msg = 'Info not available!'
+    }
+    this.ieamService.showMessage(msg);
+  }
   setValue() {
     const exchange = Exchange[this.ieamService.selectedCall]
     if(exchange) {

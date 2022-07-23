@@ -37,3 +37,7 @@
 ::ng-deep ul.active {
   display: block;
 }
+
+::ng-deep mat-card {
+  min-height: -webkit-fill-available;
+}
