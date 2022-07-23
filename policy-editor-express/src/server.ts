@@ -307,7 +307,9 @@ export class Server {
         next: (params: Params) => {
           let service = params.body.service
           service.json = `${JSON.stringify(service.json)}`
-
+          let envVar = service.env
+          console.log('envvar', envVar)
+          Object.keys(envVar).forEach((key) => process.env[key] = envVar[key])
           anax.publishService(service)
           .subscribe({
             // next: (data: any) => res.send({signature: data, deployment: deployment}),

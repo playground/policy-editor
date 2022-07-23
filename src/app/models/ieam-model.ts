@@ -173,9 +173,10 @@ export const Exchange = {
   getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},
   deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', description: 'Deletes the policy of a service. Can be run by the owning user.'},
 
-  addPattern: {name: 'Add/Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
+  addPattern: {name: 'Add Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
   getPattern: {name: 'Get Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true},
   addTopLevelPattern: {name: 'Add Top Level Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
+  patchPattern: {name: 'Update Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
   getPatterns: {name: 'Get All Patterns', path: 'orgs/${orgId}/patterns', method: 'GET', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
   deletePattern: {name: 'Delete Pattern By Name', path: 'orgs/${orgId}/patterns/${pattern}', method: 'DELETE', type: 'servicePattern|topLevelServicePattern', run: true, description: ''},
   updatePattern: {name: 'Update Pattern Attribute', path: 'orgs/${orgId}/patterns/${pattern}', method: 'PATCH', type: 'servicePattern|topLevelServicePattern', run: true, description: 'Updates one attribute of a pattern. This can only be called by the user that originally created this pattern resource.'},
@@ -243,6 +244,7 @@ export interface IJsonSchema {
   file?: string;
   contentNode: string;
   policy?: string;
+  attributes?: string;
 }
 export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
@@ -252,6 +254,7 @@ export const JsonSchema = {
   patchService: {name: 'Add Service Json', file: 'assets/templates/service.patch.json'},
   addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
+  patchPattern: {name: 'Patch Pattern', attributes: 'patternLabel|patternServices'},
   addNodePolicy: {name: 'Add Node Policy Json', file: 'assets/templates/node.policy.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   addOrg: {name: 'Add Org Json', file: 'assets/templates/addorg.json'},
@@ -260,6 +263,10 @@ export const JsonSchema = {
   getNodeAgreement: {name: 'Agreement Json', file: 'assets/templates/agreement.add.json', contentNode: 'agreements.${agId}'}
 } as const;
 
+export const AttributeMap = {
+  patternServices: {name: 'Services', file: 'assets/templates/pattern.services.json'},
+  patternLabel: {name: 'Label', file: 'assets/templates/pattern.label.json'}
+}
 export const JsonToken = {
   orgId: '${orgId}',
   service: '${service}',

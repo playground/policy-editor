@@ -537,7 +537,8 @@ export class IeamService implements HttpInterceptor {
           json: payload,
           credentials: this.configJson[orgId]['envVars']['SERVICE_CONTAINER_CREDS'],
           org: this.orgId.length > 0 ? this.orgId : orgId,
-          userPw: credential['HZN_EXCHANGE_USER_AUTH']
+          userPw: credential['HZN_EXCHANGE_USER_AUTH'],
+          env: {HZN_EXCHANGE_URL: credential['HZN_EXCHANGE_URL']}
         }
       }
     } else {
@@ -628,10 +629,10 @@ export class IeamService implements HttpInterceptor {
   checkType(type: string, filter: string) {
     return (new RegExp(`^${filter}$`)).exec(type)
   }
-  getLoader(): IOption[] {
+  getLoader(loader = Loader): IOption[] {
     let loaders: IOption[] = [];
-    Object.keys(Loader).forEach((key) => {
-      loaders.push({name: Loader[key].name, id: key})
+    Object.keys(loader).forEach((key) => {
+      loaders.push({name: loader[key].name, id: key})
     })
     return loaders;
   }

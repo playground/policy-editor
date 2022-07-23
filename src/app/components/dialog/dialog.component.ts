@@ -12,6 +12,7 @@ export class Option {
   cancelButton: string;
   extra: IExtra[];
   loaders: IOption[];
+  selectedOption: string;
 }
 
 interface IExtra {
@@ -50,6 +51,11 @@ export class DialogComponent implements OnInit {
   }
   ok() {
     this.dialogRef.close(this.data);
+  }
+  onOptionChange(evt: any) {
+    if(evt.isUserInput) {
+      this.data.options.selectedOption = evt.source.value.id
+    }
   }
   ngOnInit() {
     this.loaders = this.data.options.loaders;
