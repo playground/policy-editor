@@ -786,7 +786,7 @@ export class IeamService implements HttpInterceptor {
     let config = new MatSnackBarConfig();
     config.verticalPosition = this.verticalPosition;
     config.horizontalPosition = this.horizontalPosition;
-    config.duration = 3000;
+    config.duration = 5000;
     this.snackBar.open(msg, action, config);
   }
   isMobile() {

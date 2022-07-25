@@ -1,10 +1,10 @@
 {
   "userInput": [
     {
-      "serviceOrgid": "IBM",
-      "serviceUrl": "ibm.cpu2msghub",
-      "serviceArch": "",
-      "serviceVersionRange": "[0.0.0,INFINITY)",
+      "serviceOrgid": "$HZN_ORG_ID",
+      "serviceUrl": "$SERVICE_NAME",
+      "serviceArch": "$ARCH",
+      "serviceVersionRange": "$SERVICE_VERSION",
       "inputs": [
         {
           "name": "foo",

@@ -1,0 +1,10 @@
+{
+  "userInput": [
+    {
+      "name": "foo",
+      "label": "The Foo Value",
+      "type": "string",
+      "defaultValue": "bar"
+    }
+  ]
+}

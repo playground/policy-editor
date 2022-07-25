@@ -1,0 +1,6 @@
+{
+  "orgid": "$HZN_ORG_ID",
+  "serviceURL": "$SERVICE_NAME",
+  "serviceVersion": "$SERVICE_VERSION",
+  "serviceArch": "$ARCH"
+}

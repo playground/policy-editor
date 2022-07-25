@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "record_id": "string",
+      "message": "string",
+      "event_code": "string",
+      "hidden": false
+    }
+  ]
+}

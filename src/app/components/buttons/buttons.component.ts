@@ -58,11 +58,8 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
     )
     this.setExchangeOptions()
 
-    // this.routeObserver = this.route.data.subscribe((data) => {
-    //   if('/editor' == this.router.routerState.snapshot.url) {
-    //     this.populateOrgs()
-    //   }
-    // })
+    this.routeObserver = this.route.data.subscribe((data) => {
+    })
 
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
     .subscribe((event: any) => {
