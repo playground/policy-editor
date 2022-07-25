@@ -13,7 +13,7 @@ CD into policy-editor-express and run `npm run watch:deploy`.  The application w
 Run `npm run dev:servers` will start both frontend and backend servers.  Navigate to `https://localhost:3000`.  Both frontend and backend  will automatically reload if you change any of the source files. 
 
 ## Docker image
-Containerized version is available here docker pull playbox21/policy-editor:1.0.0
+Containerized version is available here docker pull playbox21/policy-editor-express_[amd64|arm]:1.0.0
 
 ## Build Docker image
 CD into policy-editor-express and run 
