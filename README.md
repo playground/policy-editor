@@ -1,6 +1,6 @@
 # PolicyEditor
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.5.
+The goal of this project is to create an user friendly UI to streamline the process of managing different tasks that one can perform on any nodes in different organization or even on a different exchange.
 
 ## Development server
 ### Frontend server
