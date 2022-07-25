@@ -1,6 +1,9 @@
-FROM arm32v7/node:16.3.0
+FROM ubuntu:20.04
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 RUN apt-get update -y && apt-get install -y apt-utils curl vim sudo
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get -y install nodejs
 
 WORKDIR /server
 
