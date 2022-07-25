@@ -1,0 +1,10 @@
+{
+  "requiredServices": [
+    {
+      "org": "$HZN_ORG_ID",
+      "url": "$SERVICE_NAME",
+      "version": "$SERVICE_VERSION",
+      "arch": "$ARCH"
+    }
+  ]
+}

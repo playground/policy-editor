@@ -1,6 +1,6 @@
 {
-  "label": "$SERVICE_NAME Deployment Policy",
-  "description": "A super-simple sample Horizon Deployment Policy",
+  "label": "$SERVICE_NAME Policy",
+  "description": "A $SERVICE_NAME Policy",
   "properties": [
   ],
   "constraints": [

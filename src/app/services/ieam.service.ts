@@ -7,7 +7,7 @@ import { Enum, Navigate, EnumClass, HeaderOptions, IExchange, IEditorStorage, Lo
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DialogComponent } from '../components/dialog/dialog.component';
 import shajs from 'sha.js';
-import { Content } from '@angular/compiler/src/render3/r3_ast';
+import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition, MatSnackBarConfig } from '@angular/material/snack-bar';
 
 declare const window: any;
 
@@ -62,6 +62,9 @@ export class IeamService implements HttpInterceptor {
   agId = '';
   service = '';
   jsonTree = {html: '', nested: 0}
+  tempContent: any = {};
+  horizontalPosition: MatSnackBarHorizontalPosition = 'center';
+  verticalPosition: MatSnackBarVerticalPosition = 'top';
 
   currentWorkingFile = '';
   titleText = 'IEAM';
@@ -71,6 +74,7 @@ export class IeamService implements HttpInterceptor {
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
+    private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
     const backendUrl = isDevMode() ? 'http://192.168.86.250:3000' : '';
@@ -89,7 +93,9 @@ export class IeamService implements HttpInterceptor {
       publishService: `${backendUrl}/publish_service`,
       post: 'post'
     };
-
+    if(this.isMobile()) {
+      this.verticalPosition ='bottom'
+    }
     this.fileType = new EnumClass(['DIRECTORY', 'FILE']);
 
     if(this.isMetaMaskInstalled()) {
@@ -537,7 +543,8 @@ export class IeamService implements HttpInterceptor {
           json: payload,
           credentials: this.configJson[orgId]['envVars']['SERVICE_CONTAINER_CREDS'],
           org: this.orgId.length > 0 ? this.orgId : orgId,
-          userPw: credential['HZN_EXCHANGE_USER_AUTH']
+          userPw: credential['HZN_EXCHANGE_USER_AUTH'],
+          env: {HZN_EXCHANGE_URL: credential['HZN_EXCHANGE_URL']}
         }
       }
     } else {
@@ -596,6 +603,9 @@ export class IeamService implements HttpInterceptor {
   getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key]
   }
+  resetToOriginal(current = this.currentWorkingFile) {
+    this.editorStorage[current] = this.editorStorage.original[current]
+  }
   getContent(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key] ? this.editorStorage[key].content : {}
   }
@@ -625,10 +635,10 @@ export class IeamService implements HttpInterceptor {
   checkType(type: string, filter: string) {
     return (new RegExp(`^${filter}$`)).exec(type)
   }
-  getLoader(): IOption[] {
+  getLoader(loader = Loader): IOption[] {
     let loaders: IOption[] = [];
-    Object.keys(Loader).forEach((key) => {
-      loaders.push({name: Loader[key].name, id: key})
+    Object.keys(loader).forEach((key) => {
+      loaders.push({name: loader[key].name, id: key})
     })
     return loaders;
   }
@@ -770,5 +780,16 @@ export class IeamService implements HttpInterceptor {
       ok(x).length === ok(y).length &&
         ok(x).every(key => this.deepEqual(x[key], y[key]))
     ) : (x === y);
+  }
+
+  showMessage(msg: string, action: string = 'OK') {
+    let config = new MatSnackBarConfig();
+    config.verticalPosition = this.verticalPosition;
+    config.horizontalPosition = this.horizontalPosition;
+    config.duration = 5000;
+    this.snackBar.open(msg, action, config);
+  }
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, NavigationEnd} from '@angular/router';
-import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction, IOption, Loader } from '../../models/ieam-model';
+import { Enum, Navigate, Exchange, IExchange, UrlToken, JsonSchema, ActionMap, NextAction, IOption, Loader, IJsonSchema, AttributeMap } from '../../models/ieam-model';
 import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
@@ -56,28 +56,45 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.run(msg.payload)
         } else if(msg.type == Enum.EXCHANGE_SELECTED) {
           let exchange = Exchange[this.ieamService.selectedCall]
-          if(exchange.template && !this.ieamService.hasContent()) {
+          if(exchange.template) {
             let schema = JsonSchema[this.ieamService.currentWorkingFile]
-            this.ieamService.get(schema.file)
-            .subscribe((res) => {
-              if(exchange.editable) {
-                let json = this.ieamService.getNodeContent(res)
-                this.ieamService.setActiveExchangeFile(json).subscribe(() => {
-                  let actionMap = ActionMap[this.ieamService.selectedCall]
-                  if(actionMap) {
-                    this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
-                  }
-                  this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
-                })
-              }
-            })
+            if(schema.attributes) {
+              this.parseAttributes(exchange, schema)
+            } else if(exchange.template && !this.ieamService.hasContent()) {
+              let schema = JsonSchema[this.ieamService.currentWorkingFile]
+              this.getSchemaFile(exchange, schema.file)
+            } else {
+              this.showContent()
+            }
+          }
+          else if(exchange.template && !this.ieamService.hasContent()) {
+            let schema = JsonSchema[this.ieamService.currentWorkingFile]
+            this.getSchemaFile(exchange, schema.file)
+            // this.ieamService.get(schema.file)
+            // .subscribe((res) => {
+            //   if(exchange.editable) {
+            //     let json = this.ieamService.getNodeContent(res)
+            //     this.ieamService.setActiveExchangeFile(json).subscribe(() => {
+            //       let actionMap = ActionMap[this.ieamService.selectedCall]
+            //       if(actionMap) {
+            //         this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+            //       }
+            //       this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+            //     })
+            //   }
+            // })
           }
           else {
             this.showContent()
           }
         } else if(msg.type == Enum.EXCHANGE_CALL_REFRESH) {
-          this.content = {}
-          this.ieamService.editable = false
+          this.content = this.ieamService.getContent()
+          let exchange = Exchange[this.ieamService.currentWorkingFile]
+          if(exchange && exchange.editable) {
+            this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+          } else {
+            this.ieamService.editable = false
+          }
         } else if(msg.type == Enum.LOAD_CONFIG) {
           this.ieamService.loadFile(msg.payload, msg.type)
           .subscribe({
@@ -89,6 +106,37 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     })
   }
+  getSchemaFile(exchange: IExchange, file: string) {
+    this.ieamService.get(file)
+    .subscribe((res) => {
+      if(exchange.editable) {
+        let json = this.ieamService.getNodeContent(res)
+        this.ieamService.setActiveExchangeFile(json).subscribe(() => {
+          let actionMap = ActionMap[this.ieamService.selectedCall]
+          if(actionMap) {
+            this.ieamService.addEditorStorage(json, actionMap.mapTo, actionMap.mapTo)
+          }
+          this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.EDIT_EXCHANGE_FILE})
+        })
+      }
+    })
+  }
+  parseAttributes(exchange: IExchange, schema: IJsonSchema) {
+    let tokenInput: any[] = []
+    let attributes = schema.attributes?.split('|')
+    attributes?.forEach((key) => {
+      tokenInput.push({key: key, name: AttributeMap[key].name, id: key})
+    })
+    if(tokenInput.length > 0) {
+      this.ieamService.promptDialog('What would you like to update?', 'loader', {loaders: tokenInput, placeholder: 'Attributes'})
+      .then((resp: any) => {
+        if(resp) {
+          let file = AttributeMap[resp.options.selectedOption].file
+          this.getSchemaFile(exchange, file)
+        }
+      })
+    }
+  }
   ngOnDestroy() {
     if (this.psAgent) {
       this.psAgent.unsubscribe();
@@ -97,6 +145,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   showContent() {
     if(this.ieamService.selectedCall) {
       this.content = this.ieamService.getContent()
+      if(Object.keys(this.content).length == 0) {
+        this.content = this.ieamService.tempContent
+      }
       this.ieamService.editable = Exchange[this.ieamService.selectedCall].editable
 
       // this.content = this.ieamService.showJsonTree(json.content)
@@ -274,7 +325,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           let tokenInput: any[] = []
           tokens.forEach((t) => {
             let key = t.replace(/\$|{|}/g, '')
-            let name = key == 'orgId' ? this.ieamService.selectedOrg : ''
+            let name = ''
+            if(key == 'orgId') { name = this.ieamService.selectedOrg }
+            else if(key == 'nodeId') { name = this.ieamService.nodeId }
             tokenInput.push({key: key, name: name, placeholder: key})
           })
           if(tokenInput.length > 0) {
@@ -339,57 +392,6 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     })
   }
-  hasServiceName2(path: string, exchange: IExchange, content: IService, useThis = {}) {
-    let serviceName = ''
-    if(exchange.run || this.ieamService.hasServiceName(content)) {
-      if(/{nodeId}|{agId}|{pattern}/.exec(path)) {
-        if(path.indexOf('${nodeId}') >= 0) {
-          this.ieamService.promptDialog(`What is the Node Id?`, 'folder', {placeholder: 'Node Id'})
-          .then((resp: any) => {
-            const nodeId = this.ieamService.nodeId = resp.options.name;
-            path = path.replace(UrlToken['nodeId'], nodeId)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-        if(path.indexOf('${agId}') >= 0) {
-          this.ieamService.promptDialog(`What is the Agreement Id?`, 'folder', {placeholder: 'Agreement Id'})
-          .then((resp: any) => {
-            const agId = resp.options.name;
-            path = path.replace(UrlToken['agId'], agId)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-        if(path.indexOf('${pattern}') >= 0) {
-          this.ieamService.promptDialog(`What is the Pattern Name`, 'folder', {placeholder: 'Pattern Name'})
-          .then((resp: any) => {
-            const pattern = resp.options.name;
-            path = path.replace(UrlToken['pattern'], pattern)
-            this.confirmB4Calling(path, exchange, content, useThis)
-          })
-        }
-      }
-      else {
-        this.confirmB4Calling(path, exchange, content, useThis)
-      }
-    } else {
-      this.ieamService.promptDialog(`What is the archecture?`, 'folder', {placeholder: 'Architecture', name: this.ieamService.selectedArch})
-      .then((resp: any) => {
-        if (resp) {
-          const arch = this.ieamService.selectedArch = resp.options.name;
-          const org = this.ieamService.getOrg()
-          if(/service$|servicePolicy$|servicePattern$/.exec(exchange.type) && this.ieamService.selectedLoader !== 'topLevelService') {
-            this.tempName = `${org.envVars.SERVICE_NAME}_${org.envVars.SERVICE_VERSION}_${arch}`
-            // path = path.replace(UrlToken[exchange.type], this.tempName)
-          } else if(/deploymentPolicy$|topLevelService$|topLevelServicePattern$/.exec(exchange.type)) {
-            this.tempName = `${org.envVars.MMS_SERVICE_NAME}_${org.envVars.MMS_SERVICE_VERSION}_${arch}`
-            // path = path.replace(UrlToken[exchange.type], this.tempName)
-          }
-          this.confirmB4Calling(path, exchange, content, useThis)
-        } else {
-        }
-      })
-    }
-  }
   tokenReplace(path: string, content: IService, orgId = this.ieamService.selectedOrg) {
     let value = '';
     Object.keys(UrlToken).forEach((key) => {
@@ -446,7 +448,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
           html = res
         }
         console.log(html)
-        this.content = html ? html : {};
+        this.ieamService.tempContent = this.content = html ? html : {};
         this.ieamService.editable = exchange.editable == true
         if(exchange.method.toUpperCase() == 'GET' && exchange.editable) {
           this.ieamService.setActiveExchangeFile(this.ieamService.getNodeContent(res)).subscribe(() => '')

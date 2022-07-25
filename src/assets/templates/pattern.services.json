@@ -1,0 +1,44 @@
+{
+  "services": [
+    {
+      "serviceUrl": "$SERVICE_NAME",
+      "serviceOrgid": "$HZN_ORG_ID",
+      "serviceArch": "$ARCH",
+      "agreementLess": false,
+      "serviceVersions": [
+        {
+          "version": "$SERVICE_VERSION",
+          "deployment_overrides": "",
+          "deployment_overrides_signature": "",
+          "priority": {
+            "priority_value": 50,
+            "retries": 1,
+            "retry_durations": 3600,
+            "verified_durations": 52
+          },
+          "upgradePolicy": {
+            "lifecycle": "immediate",
+            "time": "01:00AM"
+          }
+        }
+      ],
+      "dataVerification": {
+        "enabled": true,
+        "URL": "",
+        "user": "",
+        "password": "",
+        "interval": 480,
+        "check_rate": 15,
+        "metering": {
+          "tokens": 1,
+          "per_time_unit": "min",
+          "notification_interval": 30
+        }
+      },
+      "nodeHealth": {
+        "missing_heartbeat_interval": 600,
+        "check_agreement_status": 120
+      }
+    }
+  ]
+}

@@ -8,19 +8,21 @@
           <mat-radio-button value="absolute">Absolute</mat-radio-button>
       </mat-radio-group> -->
       <mat-form-field appearance="outline" class="mat-dialog-input">
+        <mat-label>{{data.options.placeholder}}</mat-label>
         <input matInput class="full-width" placeholder="{{data.options.placeholder}}" (ngModelChange)="isOK($event)"
         name="name" [(ngModel)]="data.options.name">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'multiple'">
-      <mat-form-field *ngFor="let option of data.options.extra" appearance="outline" class="mat-dialog-input">
+      <mat-form-field *ngFor="let option of data.options.extra; let i = index" appearance="outline" class="mat-dialog-input">
+        <mat-label>{{option.placeholder}}</mat-label>
         <input matInput class="full-width" placeholder="{{option.placeholder}}" (ngModelChange)="isOK($event)"
-        name="name" [(ngModel)]="option.name">
+        [(ngModel)]="option.name" [value]="option.name" [ngModelOptions]="{standalone: true}">
       </mat-form-field>
     </div>
     <div *ngSwitchCase="'loader'">
       <mat-form-field appearance="outline" class="mat-dialog-input">
-        <mat-label>Type</mat-label>
+        <mat-label>{{data.options.placeholder || 'Type'}}</mat-label>
         <input
           type="text"
           matInput
@@ -29,16 +31,16 @@
           [formControl]="loaderControl"
           [matAutocomplete]="auto">
         <mat-autocomplete #auto="matAutocomplete" [displayWith]="ieamService.optionDisplayFn">
-          <mat-option *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="ieamService.onOptionChange($event)">
+          <mat-option *ngFor="let option of filteredOptions | async" [value]="option" (onSelectionChange)="onOptionChange($event)">
             {{option.name}}
           </mat-option>
         </mat-autocomplete>
       </mat-form-field>
       </div>
   </div>
-</div>
-<div mat-dialog-actions>
-  <button mat-raised-button class="device-form-button" (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
-  <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
-</div>
+  <div mat-dialog-actions>
+    <button mat-raised-button class="device-form-button" (click)="ok()" [disabled]="notOK" cdkFocusInitial>{{data.options.okButton}}</button>
+    <button mat-raised-button (click)="onNoClick()">{{data.options.cancelButton}}</button>
+  </div>
+  </div>
 </form>

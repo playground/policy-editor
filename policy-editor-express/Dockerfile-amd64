@@ -1,4 +1,5 @@
-FROM node:16.15.1
+FROM ubuntu:20.04
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # RUN apk add --no-cache --update nodejs-current npm curl bash procps
 # RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg -y && apt-get install mpg123 -y && apt-get install vim -y
@@ -12,6 +13,9 @@ RUN apt-get update -y && apt-get install -y apt-utils vim curl sudo
 
 # RUN ["ls", "-l", "./input.sh"]
 # ENTRYPOINT ["sh", "./input.sh"]
+
+RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
+RUN apt-get -y install nodejs
 
 WORKDIR /server
 

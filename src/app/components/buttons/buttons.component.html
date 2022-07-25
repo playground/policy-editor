@@ -77,7 +77,10 @@
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
-    <mat-icon class="mat-icon-refresh" (click)="refresh()">refresh</mat-icon>
+    <span class="mat-icon-vertical">
+      <mat-icon class="mat-icon-refresh" (click)="refresh()">refresh</mat-icon>
+      <mat-icon class="mat-icon-refresh" (click)="help()">help_outline</mat-icon>
+    </span>
   </form>
   <button mat-raised-button color="publish" type="button" (click)="edit()" [disabled]="shouldNotEdit()">
     <mat-icon>edit</mat-icon>

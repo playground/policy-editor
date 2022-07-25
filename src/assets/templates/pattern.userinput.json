@@ -1,0 +1,16 @@
+{
+  "userInput": [
+    {
+      "serviceOrgid": "$HZN_ORG_ID",
+      "serviceUrl": "$SERVICE_NAME",
+      "serviceArch": "$ARCH",
+      "serviceVersionRange": "$SERVICE_VERSION",
+      "inputs": [
+        {
+          "name": "foo",
+          "value": "bar"
+        }
+      ]
+    }
+  ]
+}

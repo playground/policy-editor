@@ -59,9 +59,6 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.setExchangeOptions()
 
     this.routeObserver = this.route.data.subscribe((data) => {
-      if('/editor' == this.router.routerState.snapshot.url) {
-        this.populateOrgs()
-      }
     })
 
     this.routerObserver = this.router.events.pipe(filter((event: any) => event instanceof NavigationEnd))
@@ -101,6 +98,8 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
         case Enum.NETWORK:
           this.ieamService.offline = msg.payload;
           break;
+        case Enum.NAVIGATE:
+        case Enum.LOGGED_IN:
         case Enum.CONFIG_LOADED:
           this.populateOrgs()
           break;
@@ -335,10 +334,19 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   refresh() {
-    this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
+    // this.ieamService.selectedCall = this.ieamService.selectedLoader = ''
     this.exchangeCalls = this.ieamService.getExchange()
     this.setExchangeOptions()
+    this.ieamService.resetToOriginal()
     this.broadcast(Enum.EXCHANGE_CALL_REFRESH, this.ieamService.selectedCall);
+  }
+  help() {
+    let msg = this.ieamService.selectedCall ? Exchange[this.ieamService.selectedCall].description :
+      'Select a task you would like to perform'
+    if(!msg || msg.length == 0) {
+      msg = 'Info not available!'
+    }
+    this.ieamService.showMessage(msg);
   }
   setValue() {
     const exchange = Exchange[this.ieamService.selectedCall]

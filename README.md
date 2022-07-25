@@ -20,7 +20,7 @@ CD into policy-editor-express and run
 `docker build -t playbox21/policy-editor-express:1.0.0 -f Dockerfile-amd64 .`
 
 ## Run Docker image
-docker run -it --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -p 3000:3000 playbox21/policy-editor-express:1.0.0.  Navigate to `http://localhost:3000`
+docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -p 3000:3000 playbox21/policy-editor-express:1.0.0.  Navigate to `http://localhost:3000`
 
 ## Handy config file
 Create a config file name env-hzn.json with the following structure.  You can have as many org's as you want.

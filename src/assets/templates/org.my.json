@@ -1,0 +1,14 @@
+[
+  {
+    "id": "$HZN_ORG_ID",
+    "name": "MyOrg",
+    "description": "String Description for Account",
+    "createdOn": "2020-09-15T00:20:43.853Z"
+  },
+  {
+    "id": "orgid2",
+    "name": "otherOrg",
+    "description": "String Description for Account",
+    "createdOn": "2020-09-15T00:20:43.853Z"
+  }
+]

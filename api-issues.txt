@@ -1,0 +1,14 @@
+When call http://192.168.86.45:3090/v1/orgs/myorg/services/chunk-saved-model-service_1.0.0_arm/keys/ieam.public.key
+if key exist, it returns the key but errors out
+
+http://192.168.86.45:3090/v1/orgs/myorg/services/chunk-saved-model-service_1.0.0_arm/keys/ieam.public.key
+PUT swagger example is wrong
+{key: ''}, should be plain/text
+
+Should a new agreement be formed when node policy gets updated?
+  "2022-07-21 10:21:58:   Start re-registering node after pattern changed to exchange-api/pattern-chunk-mms-service-amd64.",
+  "2022-07-21 10:21:58:   Error getting service references for pattern pattern-chunk-mms-service-amd64. Dependent services [exchange-api/chunk-saved-model-service_1.0.0_amd64] for exchange-api/chunk-mms-service_1.0.0_amd64 require privileged mode, but the node does not have openhorizon.allowPrivileged property set to true.",
+  "2022-07-21 10:21:58:   Encountered error while re-registering node with new pattern exchange-api/pattern-chunk-mms-service-amd64. Dependent services [exchange-api/chunk-saved-model-service_1.0.0_amd64] for exchange-api/chunk-mms-service_1.0.0_amd64 require privileged mode, but the node does not have openhorizon.allowPrivileged property set to true.",
+  "2022-07-21 10:21:58:   Complete re-registering node after pattern changed to exchange-api/pattern-chunk-mms-service-amd64.",
+  "2022-07-21 11:25:37:   Node policy updated with the Exchange copy: map[constraints:[] deployment:map[properties:[map[name:homehub value:Home Automation]] constraints:<nil>] management:map[properties:<nil> constraints:<nil>] properties:[map[name:openhorizon.allowPrivileged value:true] map[name:openhorizon.hardwareId value:c262e3bf42ce7a5ceaf3346c05a200631e46f7c4] map[name:openhorizon.operatingSystem value:ubuntu] map[value:false name:openhorizon.containerized] map[name:openhorizon.cpu value:2] map[name:openhorizon.arch value:amd64] map[name:openhorizon.memory value:3,931]]]"
+
