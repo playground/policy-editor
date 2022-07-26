@@ -1,0 +1,42 @@
+{
+  "Welcome": "To the Policy Editor.  This UI works with the modified exchange-api codebase and enables you to edit/update service definitions, policies, patterns & etc.  You can manage and publish them to any nodes in any organziation and on different exchanges.  To start, select a task want to perform from the Exchange dropdown box",
+  "Example": "Key in services and select \"Get All Services\", this will prompt you to load in a configuration file.  Here is an example of the env-hzn.json file.  If you don't have one already, you can create one with the following structure:",
+  "env-hzn.json": {
+   "myorg": {
+     "envVars": {
+       "SERVICE_NAME": "chunk-saved-model-service",
+       "SERVICE_CONTAINER_NAME": "chunk-saved-model-service",
+       "SERVICE_VERSION": "1.0.0",
+       "SERVICE_VERSION_RANGE_UPPER": "1.0.0",
+       "SERVICE_VERSION_RANGE_LOWER": "1.0.0",
+       "SERVICE_CONTAINER_CREDS": "-k ~/.ssh/ieam_private -K ~/.ssh/ieam_public -v",
+       "VOLUME_MOUNT": "/mms-shared",
+       "MMS_SHARED_VOLUME": "mms_shared_volume",
+       "MMS_OBJECT_TYPE": "object_detection",
+       "MMS_OBJECT_ID": "config.json",
+       "MMS_OBJECT_FILE": "config/config.json",
+       "MMS_CONTAINER_CREDS": "-k ~/.ssh/ieam_private -K ~/.ssh/ieam_public -v",
+       "MMS_CONTAINER_NAME": "chunk-mms-service",
+       "MMS_SERVICE_NAME": "chunk-mms-service",
+       "MMS_SERVICE_VERSION": "1.0.0",
+       "MMS_SERVICE_FALLBACK_VERSION": "1.0.0",
+       "UPDATE_FILE_NAME": "model.zip"
+     },
+     "credential": {
+       "HZN_EXCHANGE_USER_AUTH": "**************************",
+       "HZN_EXCHANGE_URL": "http://mgmt-hub-ip:3090/v1",
+       "HZN_FSS_CSSURL": "http://mgmt-hub-ip:9443/",
+       "ANAX": "https://github.com/open-horizon/anax/releases/latest/download",
+       "HUB_ADMIN": "root/jeff:jeff"
+     },
+     "metaVars": {}
+   }
+  },
+  "NOTES": "For testing purpose, \"exchange-api1.fyre.ibm.com\" is setup as Manage Hub with the modified exchang-api that enables communication between Policy-editor and this Manage Hub via HTTP requests.  If you would like to setup your own exchange, you can do so with the following setup:",
+  "step1": "sudo -i",
+  "step2": "export HZN_TRANSPORT=http",
+  "step3": "export HZN_LISTEN_IP=<ip of the device>",
+  "step4": "export EXCHANGE_USER_ORG=<name of org>",
+  "step5": "export EXCHANGE_IMAGE_NAME=playbox21/exchange-api",
+  "step6": "curl -sSL https://raw.githubusercontent.com/open-horizon/devops/master/mgmt-hub/deploy-mgmt-hub.sh | bash"
+}
