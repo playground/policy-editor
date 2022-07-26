@@ -30,6 +30,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   psAgent!: { unsubscribe: () => void; };
   method: IMethod;
   tempName: string = '';
+  htmlContent = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -156,6 +157,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     } else if(this.ieamService.selectedLoader) {
       this.content = this.ieamService.getContent()
       this.ieamService.editable = true
+    } else {
+      this.ieamService.get('assets/templates/instructions.json')
+      .subscribe((res) => this.content = res)
     }
     this.ieamService.setTitleText();
   }

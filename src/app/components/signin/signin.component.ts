@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { IeamService } from '../../services/ieam.service';
-import { Enum } from '../../models/ieam-model';
+import { Enum, Navigate } from '../../models/ieam-model';
 import MetaMaskOnboarding from '@metamask/onboarding';
 
 @Component({
@@ -23,7 +23,9 @@ export class SigninComponent implements OnInit, OnDestroy {
     this.hasMetaMask()
     this.psAgent = this.ieamService.broadcastAgent.subscribe((data: any) => {
       if(data.type == Enum.LOGGED_IN) {
-
+        setTimeout(() => {
+          this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.exchange})
+        }, 2000)
       } else if(data.type == Enum.LOGGED_OUT) {
 
       } else if(data.type == Enum.INSTALL_METAMASK) {

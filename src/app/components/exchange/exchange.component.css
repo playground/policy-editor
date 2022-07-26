@@ -41,3 +41,7 @@
 ::ng-deep mat-card {
   min-height: -webkit-fill-available;
 }
+
+html-content {
+  margin: 20px;
+}

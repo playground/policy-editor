@@ -25,7 +25,7 @@
             <mat-icon>home</mat-icon>
             <span>Home</span>
         </button>
-        <button mat-button class="menu-button" (click)="navigate(to.bucket)" [disabled]="!ieamService.loggedIn">
+        <button mat-button class="menu-button" (click)="navigate(to.bucket)" [disabled]="!ieamService.loggedIn || true">
           <mat-icon>folder</mat-icon>
           <span>Bucket</span>
         </button>
@@ -37,7 +37,7 @@
           <mat-icon>settings_inpuut-antenna</mat-icon>
           <span>Exchange</span>
         </button>
-        <button mat-button class="menu-button" (click)="navigate(to.active)" [disabled]="!ieamService.loggedIn">
+        <button mat-button class="menu-button" (click)="navigate(to.active)" [disabled]="!ieamService.loggedIn || true">
           <mat-icon>insert_drive_file</mat-icon>
           <span>Active Files</span>
         </button>
