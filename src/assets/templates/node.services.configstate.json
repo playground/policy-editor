@@ -1,0 +1,6 @@
+{
+  "org": "$HZN_ORG_ID",
+  "url": "$SERVICE_NAME",
+  "configState": "suspended",
+  "version": "$SERVICE_VERSION"
+}
