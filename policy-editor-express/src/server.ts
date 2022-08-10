@@ -18,6 +18,7 @@ declare const process: any;
 
 // set env vars
 const env = process.env.npm_config_env || 'prod';
+let port = parseInt(process.env.npm_config_port) || 3000;
 
 export class Server {
   params: Params = <Params>{};
@@ -413,8 +414,14 @@ export class Server {
     app.get("*",  (req, res) => {
       res.redirect(301, '/')
     })
-    app.listen(3000, () => {
-      console.log('Started on 3000');
+    this.serverListen(app, port)
+  }
+  serverListen(app: any, port) {
+    app.listen(port, () => {
+      console.log(`Started on ${port}`);
+    }).on('error', (err) => {
+      // console.log(`error: ${port}`, err)
+      this.serverListen(app, ++port)
     });
   }
 }
