@@ -134,11 +134,11 @@ export const Exchange = {
   addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true, editable: true},
   getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
   getNodes: {name: 'Get All Nodes', path: 'orgs/${orgId}/nodes', method: 'GET', type: 'node', run: true},
-  patchNode: {name: 'Patch Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node', run: true, editable: true},
+  patchNode: {name: 'Patch Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node', run: true, editable: true, template: true, description: 'Updates some attributes of a node. This can be called by the user or the node.'},
   deleteNode: {name: 'Delete Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'DELETE', type: 'node', run: true},
   getNodeDetail: {name: 'Get All Nodes Details', path: 'orgs/${orgId}/node-details', method: 'GET', type: 'node', run: true},
-  getNodeHeartbeat: {name: 'Get Node Heartbeat', path: 'orgs/${orgId}/nodes/${nodeId}/heartbeat', method: 'POST', type: 'node'},
-  setNodeConfig: {name: 'Change Node Config State', path: 'orgs/${orgId}/nodes/${nodeId}/services_configstate', method: 'POST', type: 'node'},
+  getNodeHeartbeat: {name: 'Send Node Heartbeat', path: 'orgs/${orgId}/nodes/${nodeId}/heartbeat', method: 'POST', type: 'node', run: true, description: 'Lets the exchange know this node is still active so it is still a candidate for contracting. Can be run by the owning user or the node.'},
+  setNodeConfig: {name: 'Change Service Config State', path: 'orgs/${orgId}/nodes/${nodeId}/services_configstate', method: 'POST', type: 'node', run: true, description: 'Suspends (or resumes) 1 or more services on this edge node. Can be run by the node owner or the node.'},
   updateNode: {name: 'Update Node Attribute', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node'},
 
   // addService: {name: 'Add/Update Service', path: 'orgs/${orgId}/services', method: 'POST', type: 'service|topLevelService', signature: 'signDeployment', editable: true, template: true, callB4: 'getService', nextAction: NextAction.RELOAD},
@@ -261,6 +261,7 @@ export interface IJsonSchema {
 }
 export const JsonSchema = {
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
+  patchNode: {name: 'Patch Node Json', attributes: 'nodeName|nodeType|nodePattern|nodeArch|nodeRegServices|nodeInput|nodeMsgEndPoint|nodeSoftwareVersion|nodePublicKey|nodeHeartbeat'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
   addService: {name: 'Add Service Json', file: 'assets/templates/service.json'},
   addServicePolicy: {name: 'Add Service Policy', file: 'assets/templates/service.policy.json'},
@@ -284,6 +285,16 @@ export const JsonSchema = {
 } as const;
 
 export const AttributeMap = {
+  nodeName: {name: 'Name', file: 'assets/templates/node.name.json'},
+  nodeType: {name: 'Type', file: 'assets/templates/node.type.json'},
+  nodePattern: {name: 'Pattern', file: 'assets/templates/node.pattern.json'},
+  nodeArch: {name: 'Architecture', file: 'assets/templates/node.arch.json'},
+  nodeRegServices: {name: 'Registered Services', file: 'assets/templates/node.registered.services.json'},
+  nodeInput: {name: 'User Input', file: 'assets/templates/node.userinput.json'},
+  nodeMsgEndPoint: {name: 'Message End Point', file: 'assets/templates/node.msg.endpoint.json'},
+  nodeSoftwareVersion: {name: 'Software Version', file: 'assets/templates/node.software.version.json'},
+  nodePublicKey: {name: 'Public Key', file: 'assets/templates/node.public.key.json'},
+  nodeHeartbeat: {name: 'Heartbeat Intervals', file: 'assets/templates/node.heartbeat.intervals.json'},
   serviceLabel: {name: 'Label', file: 'assets/templates/service.label.json'},
   serviceServices: {name: 'Required Services', file: 'assets/templates/service.required.services.json'},
   serviceDesc: {name: 'Description', file: 'assets/templates/service.description.json'},

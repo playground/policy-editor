@@ -1,0 +1,15 @@
+[
+  {
+    "url": "$HZN_ORG_ID/$SERVICE_NAME",
+    "numAgreements": 1,
+    "policy": "{}",
+    "properties": [
+      {
+        "name": "arch",
+        "value": "$ARCH",
+        "propType": "string",
+        "op": "="
+      }
+    ]
+  }
+]
