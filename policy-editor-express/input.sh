@@ -32,7 +32,7 @@ else
  FILE="horizon-agent-linux-deb-amd64.tar.gz"
 fi
 
-export HORIZON_URL="http://host.docker.internal:8510"
+export HORIZON_URL="http://host.docker.internal:8081"
 
 echo ${version}
 echo ${css}
