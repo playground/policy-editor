@@ -77,7 +77,7 @@ export class IeamService implements HttpInterceptor {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    const backendUrl = isDevMode() ? 'http://192.168.86.250:3000' : '';
+    const backendUrl = isDevMode() ? 'http://localhost:3000' : '';
     this.method = {
       list: `${backendUrl}/list`,
       mkdir: `${backendUrl}/mkdir`,
@@ -91,6 +91,9 @@ export class IeamService implements HttpInterceptor {
       signDeploymentWithHash: `${backendUrl}/sign_deployment_hash`,
       getPublicKey: `${backendUrl}/get_public_key`,
       publishService: `${backendUrl}/publish_service`,
+      loadFile: `${backendUrl}/load_file`,
+      loadConfig: `${backendUrl}/load_config`,
+      saveConfig: `${backendUrl}/save_config`,
       post: 'post'
     };
     if(this.isMobile()) {
@@ -105,6 +108,11 @@ export class IeamService implements HttpInterceptor {
       this.broadcast({type: Enum.INSTALL_METAMASK, payload: {}})
     }
     this.signIn()
+    this.loadConfig()
+    .subscribe(() => {
+      console.log('config loaded')
+      this.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
+    })
   }
   listenEthereum() {
     (window as any).ethereum.on('accountsChanged', () => {
@@ -333,7 +341,49 @@ export class IeamService implements HttpInterceptor {
       this.router.navigateByUrl(url, state)
     }
   }
+  saveConfig(filename: string, content: any) {
+    let headers = new HttpHeaders ()
+    headers = headers.append('Accept', 'application/json');
+    this.http.post(this.method.saveConfig, content, {headers: headers})
+    .subscribe({
+      next: (res: any) => {
+        this.showMessage(res.msg)
+        this.configJson = this.getContent()
+        this.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
+      },
+      error: (err) => this.showMessage(err.error)
+    })
+  }
+  loadConfig() {
+    return new Observable((observer) => {
+      this.get(`${this.method.loadConfig}?filename=.env-hzn.json`)
+      .subscribe((res) => {
+        this.configFilename = 'hznConfig'
+        this.configJson = res;
+        this.addEditorStorage(res, 'hznConfig', 'hznConfig')
+        observer.next()
+        observer.complete()
+      })
+    })
+  }
   loadFile(payload: any, type: Enum) {
+    return new Observable((observer) => {
+      if(type == Enum.LOAD_CONFIG) {
+        this.loadConfig()
+        .subscribe(() => {
+            this.broadcast({type: Enum.CONFIG_LOADED, payload: payload});
+
+            observer.next()
+            observer.complete()
+        })
+      } else if(type == Enum.LOAD_POLICY) {
+        // this.currentFilename = key
+        // this.addEditorStorage(JSON.parse(res[key]), key, this.currentWorkingFile)
+      }
+
+    })
+  }
+  loadFile2(payload: any, type: Enum) {
     return new Observable((observer) => {
       let $upload: any = {};
       let $files: any = {};
@@ -393,7 +443,7 @@ export class IeamService implements HttpInterceptor {
       })()
     })
   }
-  saveFile(filename: string, content: string) {
+  saveFileToLocal(filename: string, content: string) {
     var element = window.document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
     element.setAttribute('download', filename);

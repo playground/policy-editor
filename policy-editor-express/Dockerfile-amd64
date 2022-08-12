@@ -14,10 +14,11 @@ RUN apt-get update -y && apt-get install -y apt-utils vim curl sudo
 # RUN ["ls", "-l", "./input.sh"]
 # ENTRYPOINT ["sh", "./input.sh"]
 
+
 RUN curl -sL https://deb.nodesource.com/setup_16.x  | bash -
 RUN apt-get -y install nodejs
 RUN npm install -g npm
-RUN npm install -g hzn-cli
+RUN npm install --unsafe-perm -g hzn-cli
 
 WORKDIR /server
 
@@ -31,5 +32,6 @@ RUN ["chmod", "+x", "./agent-install.sh"]
 
 #VOLUME /mms_shared_volume
 # CMD [ "npm", "start" ]
+VOLUME /mms_shared
 EXPOSE 3000
 ENTRYPOINT ["sh", "./input.sh"]

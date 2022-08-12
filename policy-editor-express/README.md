@@ -10,7 +10,7 @@ curl -sSL https://github.com/open-horizon/anax/releases/download/v2.30.0-902/hor
 
 ### Run policy-editor-express
 ```
-docker run -d -it --rm --detach-keys="Ctrl-d,d" --name policy-editor -v /var/run/docker.sock:/var/run/docker.sock  -v /var/run/docker.sock:/var/run/docker.sock \
+docker run -d -it --rm --detach-keys="Ctrl-d,d" --name policy-editor -v /var/run/docker.sock:/var/run/docker.sock  -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd)/mms-shared:/mms-shared \
 -e HZN_ORG_ID=myorg \ 
 -e HZN_EXCHANGE_USER_AUTH=************************ \
 -e HZN_FSS_CSSURL=http://xxx.xxx.xxx.xxx:9443/ \

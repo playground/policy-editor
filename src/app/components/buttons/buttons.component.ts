@@ -210,6 +210,17 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   loadConfig(payload:any = {}) {
     let json = this.ieamService.getEditorStorage('hznConfig');
+    if(!json) {
+      this.ieamService.loadConfig()
+      .subscribe(() => {
+        this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.CONFIG_LOADED})
+      })
+    } else {
+      this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.CONFIG_LOADED})
+    }
+  }
+  loadConfig2(payload:any = {}) {
+    let json = this.ieamService.getEditorStorage('hznConfig');
     if(this.ieamService.isJsonModified) {
       this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {

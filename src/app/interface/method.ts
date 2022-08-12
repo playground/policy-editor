@@ -11,5 +11,8 @@ export interface IMethod {
   signDeploymentWithHash: string;
   getPublicKey: string;
   publishService: string;
+  loadFile: string;
+  loadConfig: string;
+  saveConfig: string;
   post: string;
 }

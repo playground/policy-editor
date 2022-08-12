@@ -1,6 +1,6 @@
 {
   "name": "policy-editor",
-  "version": "0.0.0",
+  "version": "1.0.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -11,6 +11,7 @@
     "dev:frontend": "npm run start & npm run watch:deploy",
     "dev:backend": "cd policy-editor-express && npm run dev:backend",
     "dev:servers": "npm run dev:frontend & npm run dev:backend",
+    "build:docker": "cd policy-editor-express && docker build -t playbox21/policy-editor-express_%npm_config_arch%:%npm_config_version% -f Dockerfile-amd64 .",
     "test": "ng test"
   },
   "private": true,

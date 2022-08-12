@@ -124,8 +124,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           this.originalJson = this.showData = this.data = this.editJson.content;
           this.ieamService.broadcast({type: Enum.CONFIG_LOADED, payload: {}});
           break;
+        case Enum.CONFIG_LOADED:
+          this.ieamService.currentWorkingFile = 'hznConfig'
+          this.loadWorkingFile()
+          break;
         case Enum.LOAD_CONFIG:
-          this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
+            this.ieamService.editingConfig = msg.payload.toEditor ? false : true;
+          this.ieamService.currentWorkingFile = 'hznConfig'
           this.loadFile(msg.payload, Enum.LOAD_CONFIG)
           break;
         case Enum.LOAD_EXISTING_POLICY:
@@ -147,12 +152,9 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
           })
           break;
         case Enum.ORG_SELECTED:
-          if(this.ieamService.isModified()) {
-            const resp:any = await this.ieamService.promptDialog('Would you to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
-            if(resp) {
-              this.ieamService.selectedOrg = msg.payload;
-              this.updateEditorData(this.ieamService.selectedOrg)
-            }
+          if(this.ieamService.isModified() && this.ieamService.currentWorkingFile == 'hznConfig') {
+            this.save()
+            this.ieamService.selectedOrg = msg.payload;
           } else {
             this.ieamService.selectedOrg = msg.payload;
             this.updateEditorData(this.ieamService.selectedOrg)
@@ -200,33 +202,10 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   editExchangeFile(type: number) {
     switch(type) {
-      // case Enum.EDIT_EXCHANGE_FILE:
-      //   let json = this.ieamService.activeExchangeFile ? Object.assign({}, this.ieamService.activeExchangeFile) : this.ieamService.getContent()
-      //   let schema = JsonSchema[this.ieamService.selectedCall]
-      //   let exchange = Exchange[this.ieamService.selectedCall]
-      //   this.ieamService.activeExchangeFile = null
-      //   if(exchange && !exchange.template && schema && schema.file && schema.file.length > 0) {
-      //     this.ieamService.get(schema.file)
-      //     .subscribe((res) => {
-      //       this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-      //       json = this.populateJson(json, res)
-      //       this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
-      //       this.editJson = this.ieamService.getEditorStorage()
-      //       if(this.editJson) {
-      //         this.showData = this.data = this.editJson.content;
-      //         this.shouldLoadConfig().then(() => '')
-      //       } else {
-      //         console.log('file not found');
-      //       }
-      //     })
-      //   } else {
-      //     this.ieamService.currentWorkingFile = this.ieamService.selectedCall
-      //     this.ieamService.addEditorStorage(json, this.ieamService.selectedCall)
-      //     this.editJson = this.ieamService.getEditorStorage()
-      //     this.showData = this.data = this.editJson.content;
-      //     this.shouldLoadConfig().then(() => '')
-      //   }
-      //   break;
+      case Enum.CONFIG_LOADED:
+        this.ieamService.currentWorkingFile = 'hznConfig'
+        this.loadWorkingFile()
+        break;
       case Enum.EDIT_EXCHANGE_FILE:
       default:
         this.editJson = this.ieamService.getEditorStorage()
@@ -336,51 +315,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         })
       }
 
-      // policy = policy.replace(new RegExp(`\\$HZN_ORG_ID`, 'g'), org)
-      // Object.keys(envVars).forEach((key) => {
-      //   policy = policy.replace(new RegExp(`"\\$${key}"`, 'g'), `"${envVars[key]}"`)
-      //   if(key === 'VOLUME_MOUNT') {
-      //     policy = policy.replace(new RegExp(`\\$MMS_SHARED_VOLUME:\\$${key}`, 'g'), `${envVars['MMS_SHARED_VOLUME']}:${envVars[key]}`)
-      //   }
-      // })
-      // Object.keys(envVars).forEach((key) => {
-      //   policy = policy.replace(new RegExp(`\\$${key}`, 'g'), envVars[key])
-      // })
-      // if(policy.indexOf('$ARCH') >= 0) {
-      //   const arch:any = await this.ieamService.promptDialog('What platform?', 'folder', {placeholder: 'Architecture type', name: this.ieamService.selectedArch})
-      //   if(arch) {
-      //     this.ieamService.setArch(arch.options.name)
-      //     this.ieamService.selectedArch = arch.options.name;
-      //     policy = policy.replace(new RegExp(`\\$ARCH`, 'g'), arch.options.name)
-      //     if(policy.indexOf('$MMS_CONTAINER') > 0) {
-      //       const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
-      //       if(answer) {
-      //         this.ieamService.selectedDockerHubId = answer.options.name;
-      //         let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}:${envVars['MMS_SERVICE_VERSION']}`
-      //         // let container = `${answer.options.name}/${envVars['MMS_CONTAINER_NAME']}_${arch.options.name}`
-      //         policy = policy.replace(new RegExp(`\\$MMS_CONTAINER`, 'g'), container)
-      //       }
-      //     }
-      //     if(policy.indexOf('$SERVICE_CONTAINER') > 0) {
-      //       const answer:any = await this.ieamService.promptDialog('Please enter docker id', 'folder', {placeholder: 'Your Docker Id', name: this.ieamService.selectedDockerHubId})
-      //       if(answer) {
-      //         this.ieamService.selectedDockerHubId = answer.options.name;
-      //         let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}:${envVars['SERVICE_VERSION']}`
-      //         // let container = `${answer.options.name}/${envVars['SERVICE_CONTAINER_NAME']}_${arch.options.name}`
-      //         policy = policy.replace(new RegExp(`\\$SERVICE_CONTAINER`, 'g'), container)
-      //       }
-      //     }
-      //   }
-      // }
-      // this.massageContent(JSON.parse(policy))
-      // .subscribe((json) => {
-      //   // this.originalJson = this.showData;
-      //   this.showData = json
-      //   console.log(this.showData)
-      //   this.editor.getEditor().set(this.showData)
-      //   this.isModified()
-      //   // this.editor.collapseAll()
-      // })
     }
   }
   massageContent(json: any) {
@@ -435,6 +369,13 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
 
     })
   }
+  loadWorkingFile() {
+    this.editJson = this.ieamService.getEditorStorage()
+    if(this.editJson) {
+      this.showData = this.data = this.editJson.content;
+      this.originalJson = this.showData;
+    }
+  }
   loadFile(payload: any, type: Enum) {
     this.ieamService.loadFile(payload, type)
     .subscribe({
@@ -469,8 +410,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
       reader.readAsDataURL(file);
     });
   }
-  save() {
-    this.ieamService.saveFile(this.ieamService.getCurrentFilename(), JSON.stringify(this.editor.get()))
+  async save() {
+    const resp:any = await this.ieamService.promptDialog('Would you to save your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
+    if(resp) {
+      this.ieamService.saveConfig(this.ieamService.getCurrentFilename(), this.editor.get())
+      this.ieamService.setModify(false)
+    }
   }
   changeLog(event = null) {
     console.log(event);
@@ -523,15 +468,6 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editor.setOptions(this.editorOptions);
   }
 
-  // setAce() {
-  //   const aceEditor = (<any>window).ace.edit(document.querySelector('#a' + this.editor.id + '>div'));
-  //   // custom your ace here
-  //   aceEditor.setReadOnly(true);
-  //   aceEditor.setFontSize('110pt');
-  //   this.editorOptions.ace = aceEditor;
-  //   this.editor.setOptions(this.editorOptions);
-  // }
-
   toggleNav() {
     this.editorOptions.navigationBar = !this.editorOptions.navigationBar;
     this.editor.setOptions(this.editorOptions);
@@ -565,7 +501,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     /**
    * Example on how get the json changed from the jsoneditor
    */
-    getData() {
+  getData() {
     const changedJson = this.editor.get();
     console.log(changedJson);
   }

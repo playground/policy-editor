@@ -10,12 +10,19 @@ const ifs: any = os.networkInterfaces();
 import * as jsonfile from 'jsonfile';
 import * as bcrypt from 'bcrypt';
 import * as cp from 'child_process';
-import { hasUncaughtExceptionCaptureCallback } from 'process';
 const exec = cp.exec;
+
+export const mmsPath = '/mms-shared';
 
 export const util: any = {
   passPhrase: 'iEAM&openHoriZon',
   sessionToken: 'geTSesSiontOkEnfOrvAliDation',
+  homePath: process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'],
+  initialize: () => {
+    if(!existsSync(`${util.homePath}/hzn-config`)) {
+      mkdirSync(`${util.homePath}/hzn-config`)
+    }
+  },
   encrypt: (text: string) => {
     return cryptoJS.enc.Base64.stringify(cryptoJS.enc.Utf8.parse(text));
   },
@@ -46,6 +53,59 @@ export const util: any = {
   },
   bcryptValidate: (params: Params) => {
     return bcrypt.compare(params.message, params.hash)
+  },
+  loadFile: (params: Params) => {
+    const hznFile = `${util.homePath}/hzn-config/${params.filename}`;
+    console.log(hznFile, process.cwd())
+    let hznJson = {}
+    try {
+      if(existsSync(hznFile)) {
+        hznJson = JSON.parse(readFileSync(hznFile).toString());
+      } else if(existsSync(`${mmsPath}/${params.filename}`)) {
+          hznJson = JSON.parse(readFileSync(`${mmsPath}/${params.filename}`).toString());
+      } else {
+        let template = `${process.cwd()}/assets/env-hzn.json`
+        hznJson = JSON.parse(readFileSync(template).toString());
+        jsonfile.writeFileSync(hznFile, hznJson, {spaces: 2});
+      }
+      return hznJson
+    } catch(e) {
+      return hznJson
+    }
+  },
+  loadConfig: (params: Params) => {
+    const hznFile = `${util.homePath}/hzn-config/${params.filename}`;
+    console.log(hznFile, process.cwd())
+    let hznJson = {}
+    try {
+      if(existsSync(hznFile)) {
+        hznJson = JSON.parse(readFileSync(hznFile).toString());
+      } else if(existsSync(`${mmsPath}/${params.filename}`)) {
+        hznJson = JSON.parse(readFileSync(`${mmsPath}/${params.filename}`).toString());
+        jsonfile.writeFileSync(hznFile, hznJson, {spaces: 2});
+      } else {
+        let template = `${process.cwd()}/assets/env-hzn.json`
+        hznJson = JSON.parse(readFileSync(template).toString());
+        jsonfile.writeFileSync(hznFile, hznJson, {spaces: 2});
+      }
+      return hznJson
+    } catch(e) {
+      return hznJson
+    }
+  },
+  saveConfig: (params: Params) => {
+    return new Observable((observer) => {
+      const hznFile = `${util.homePath}/hzn-config/${params.filename}`;
+      jsonfile.writeFile(`${util.homePath}/hzn-config/.env-hzn.json`, params.body, {spaces: 2}, (err) => {
+        if(err) {
+          observer.error({error: err})
+        } else {
+          copyFileSync(`${util.homePath}/hzn-config/.env-hzn.json`, `${mmsPath}/.env-hzn.json`)
+          observer.next({msg: 'saved successfully'})
+          observer.complete()
+        }
+      });
+    })
   },
   signature: (params: Params) => {
     return new Observable((observer) => {
