@@ -15,5 +15,5 @@ docker run -d -it --rm --detach-keys="Ctrl-d,d" --name policy-editor -v /var/run
 -e HZN_EXCHANGE_USER_AUTH=************************ \
 -e HZN_FSS_CSSURL=http://xxx.xxx.xxx.xxx:9443/ \
 -e HZN_EXCHANGE_URL=http://xxx.xxx.xxx.xxx:3090/v1 \
--e HORIZON_URL=http://host.docker.internal:8081 -p 8082:3000 \playbox21/policy-editor-express_amd64:1.0.1
+-e HORIZON_URL=http://host.docker.internal:8081 -p 8082:3000 \playbox21/policy-editor-express_amd64:1.0.2
 ```
