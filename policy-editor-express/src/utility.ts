@@ -98,9 +98,13 @@ export const util: any = {
       const hznFile = `${util.homePath}/hzn-config/${params.filename}`;
       jsonfile.writeFile(`${util.homePath}/hzn-config/.env-hzn.json`, params.body, {spaces: 2}, (err) => {
         if(err) {
-          observer.error({error: err})
+          console.log(err)
+          observer.error({error: err.msg})
         } else {
-          copyFileSync(`${util.homePath}/hzn-config/.env-hzn.json`, `${mmsPath}/.env-hzn.json`)
+          if(existsSync(`${mmsPath}`)) {
+            copyFileSync(`${util.homePath}/hzn-config/.env-hzn.json`, `${mmsPath}/.env-hzn.json`)
+          }
+          console.log('saved successfully')
           observer.next({msg: 'saved successfully'})
           observer.complete()
         }

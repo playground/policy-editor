@@ -1,0 +1,14 @@
+{
+  "services": [
+    {
+      "orgid": "$HZN_ORG_ID",
+      "url": "$SERVICE_NAME"
+    }
+  ],
+  "agreementService": {
+    "orgid": "$HZN_ORG_ID",
+    "pattern": "$HZN_ORG_ID/$PATTERN_NAME",
+    "url": "$HZN_ORG_ID/$MMS_SERVICE_NAME"
+  },
+  "state": "negotiating"
+}
