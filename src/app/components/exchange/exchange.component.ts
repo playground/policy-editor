@@ -6,6 +6,8 @@ import { IeamService } from 'src/app/services/ieam.service';
 import prettyHtml from 'json-pretty-html';
 import { IDeploymentPolicy, IMethod, IService } from 'src/app/interface';
 import { Observable } from 'rxjs/internal/Observable';
+import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { ThemePalette } from '@angular/material/core';
 
 @Pipe({
   name: 'sanitizeHtml'
@@ -31,6 +33,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
   method: IMethod;
   tempName: string = '';
   htmlContent = '';
+  mode: ProgressSpinnerMode = 'indeterminate';
+  color: ThemePalette = 'primary';
+  showSpinner = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -441,6 +446,7 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
     // let content: IService = json.content;
     // let org: any = this
     // this.checkIfHashNeeded(body)
+    this.showSpinner = true;
     this.ieamService.callExchange(path, exchange, body)
     .subscribe({
       next: (res: any) => {
@@ -459,7 +465,9 @@ export class ExchangeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         console.log(res)
         // setTimeout(() => this.toggleTree(), 500)
-      }, error: (err) => console.log(err)
+      },
+      complete: () => this.showSpinner = false,
+      error: (err) => { this.showSpinner = false; console.log(err) }
     })
   }
   ngAfterViewInit() {

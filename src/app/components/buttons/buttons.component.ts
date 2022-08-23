@@ -254,7 +254,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   shouldDisenable() {
-    return !this.ieamService.isModified()  //|| this.ieamService.editingConfig
+    return !this.ieamService.isModified() && !this.ieamService.editingConfig
   }
 
   shouldNotPublish() {

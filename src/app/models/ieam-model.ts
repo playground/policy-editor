@@ -131,8 +131,8 @@ export const Exchange = {
   getOrgChanges: {name: 'Get Org Max Resouce Changes', path: 'changes/maxchangeid', method: 'GET', type: 'organization', role: Role.user, run: true, description: 'Returns the max changeid of the resource changes. Can be run by any user, node, or agbot.'},
   validAgreement: {name: 'Confirm Org Agbot Agreement', path: 'orgs/${orgId}/agreements/confirm', method: 'POST', type: 'organization', role: Role.user, run: true, editable: true, template: true, description: 'Confirms whether or not this agreement id is valid, is owned by an agbot owned by this same username, and is a currently active agreement. Can only be run by an agbot or user.'},
 
-  addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true, editable: true},
-  getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true},
+  addNode: {name: 'Add/Update Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PUT', type: 'node', run: true, editable: true, template: true, description: 'Adds a new edge node, or updates an existing node. This must be called by the user to add a node, and then can be called by that user or node to update itself.'},
+  getNode: {name: 'Get Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'GET', type: 'node', run: true, editable: true, description: 'Returns the node (edge device) with the specified id. Can be run by that node, a user, or an agbot.'},
   getNodes: {name: 'Get All Nodes', path: 'orgs/${orgId}/nodes', method: 'GET', type: 'node', run: true},
   patchNode: {name: 'Patch Node', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'PATCH', type: 'node', run: true, editable: true, template: true, description: 'Updates some attributes of a node. This can be called by the user or the node.'},
   deleteNode: {name: 'Delete Node By Name', path: 'orgs/${orgId}/nodes/${nodeId}', method: 'DELETE', type: 'node', run: true},
@@ -161,10 +161,14 @@ export const Exchange = {
   getNodePolicy: {name: 'Get Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'GET', type: 'nodePolicy', run: true, description: 'Returns the node run time policy. Can be run by a user or the node.'},
   deleteNodePolicy: {name: 'Delete Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'DELETE', type: 'nodePolicy', run: true, description: 'Deletes the policy of a node. Can be run by the owning user or the node.'},
 
-  addNodeAgreement: {name: 'Add/Update Node Agreement', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'PUT', type: 'nodeAgreement', run: true, editable: true, description: 'Adds a new agreement of a node, or updates an existing agreement. This is called by the node or owning user to give their information about the agreement.'},
-  getNodeAgreement: {name: 'Get Node Agreement By Name', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'GET', type: 'nodeAgreement', run: true, editable: true, description: 'Returns the agreement with the specified agid for the specified node id. Can be run by a user or the node.'},
+  getNodeStatus: {name: 'Get Node Status', path: 'orgs/${orgId}/nodes/${nodeId}/status', method: 'GET', type: 'nodeStatus', run: true, editable: true, description: 'Returns the node run time status, for example service container status. Can be run by a user or the node.'},
+  putNodeStatus: {name: 'Add/Update Node Status', path: 'orgs/${orgId}/nodes/${nodeId}/status', method: 'PUT', type: 'nodeStatus', run: true, editable: true, description: 'Adds or updates the run time status of a node. This is called by the node or owning user.'},
+  deleteNodeStatus: {name: 'Delete Node Status', path: 'orgs/${orgId}/nodes/${nodeId}/status', method: 'DELETE', type: 'nodeStatus', run: true, description: 'Deletes the status of a node. Can be run by the owning user or the node.'},
+
+  addNodeAgreement: {name: 'Add/Update Node Agreement', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'PUT', type: 'nodeAgreement', editable: true, template: true, run: true, description: 'Adds a new agreement of a node, or updates an existing agreement. This is called by the node or owning user to give their information about the agreement.'},
+  getNodeAgreement: {name: 'Get Node Agreement By Id', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'GET', type: 'nodeAgreement', run: true, editable: true, description: 'Returns the agreement with the specified agid for the specified node id. Can be run by a user or the node.'},
   getNodeAgreements: {name: 'Get Node Agreements', path: 'orgs/${orgId}/nodes/${nodeId}/agreements', method: 'GET', type: 'nodeAgreement', run: true, description: 'Returns all agreements that this node is part of. Can be run by a user or the node.'},
-  deleteNodeAgreement: {name: 'Delete Node Agreement By Name', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'DELETE', type: 'nodeAgreement', run: true, description: 'Deletes an agreement of a node. Can be run by the owning user or the node.'},
+  deleteNodeAgreement: {name: 'Delete Node Agreement By Id', path: 'orgs/${orgId}/nodes/${nodeId}/agreements/${agId}', method: 'DELETE', type: 'nodeAgreement', run: true, description: 'Deletes an agreement of a node. Can be run by the owning user or the node.'},
   deleteNodeAgreements: {name: 'Delete All Node Agreements', path: 'orgs/${orgId}/nodes/${nodeId}/agreements', method: 'DELETE', type: 'nodeAgreement', run: true, description: 'Deletes all of the current agreements of a node. Can be run by the owning user or the node.'},
 
   getNodeError: {name: 'Get Node Errors', path: 'orgs/${orgId}/nodes/${nodeId}/errors', method: 'GET', type: 'nodeError', run: true, description: 'Returns any node errors. Can be run by any user or the node.'},
@@ -181,7 +185,7 @@ export const Exchange = {
   getDeploymentPolicies: {name: 'Get All Deployment Policies', path: 'orgs/${orgId}/business/policies', method: 'GET', type: 'deploymentPolicy', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
   deleteDeploymentPolicy: {name: 'Delete Deployment Policy By Name', path: 'orgs/${orgId}/business/${deploymentPolicy}', method: 'DELETE', type: 'deploymentPolicy', description: ''},
 
-  addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', template: true, editable: true, description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
+  addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', template: true, editable: true, run: true, description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
   getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', description: 'Returns the service policy. Can be run by a user, node or agbot.'},
   deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', description: 'Deletes the policy of a service. Can be run by the owning user.'},
 
@@ -236,7 +240,7 @@ export const ActionMap = {
   getNodeAgreement: {mapTo: 'addNodeAgreement'}
 }
 export const JsonKeyMap = {
-  agreementService: {mapTo: 'agrService'}
+  // agreementService: {mapTo: 'agrService'}
 }
 export const UrlToken = {
   orgId: '${orgId}',
@@ -255,11 +259,12 @@ export const UrlToken = {
 export interface IJsonSchema {
   name: string;
   file?: string;
-  contentNode: string;
+  contentNode?: string;
   policy?: string;
   attributes?: string;
 }
 export const JsonSchema = {
+  addNode: {name: 'Add Service Json', file: 'assets/templates/node.json'},
   getNode: {name: 'Node Json', file: 'assets/templates/node.patch.json', policy: 'assets/templates/policy.string.json', contentNode: 'nodes.${orgId}/${nodeId}'},
   patchNode: {name: 'Patch Node Json', attributes: 'nodeName|nodeType|nodePattern|nodeArch|nodeRegServices|nodeInput|nodeMsgEndPoint|nodeSoftwareVersion|nodePublicKey|nodeHeartbeat'},
   getService: {name: 'Service Json', file: 'assets/templates/service.json', contentNode: 'services.${orgId}/${service}'},
@@ -272,6 +277,7 @@ export const JsonSchema = {
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
   patchPattern: {name: 'Patch Pattern', attributes: 'patternLabel|patternServices|patternDesc|patternPublic|patternInput|patternSecret|patternAgreement'},
   addNodePolicy: {name: 'Add Node Policy Json', file: 'assets/templates/node.policy.json'},
+  addNodeAgreement: {name: 'Add Node Agreement Json', file: 'assets/templates/node.agreement.json'},
   addNodeError: {name: 'Add/Update Node Json', file: 'assets/templates/node.error.json'},
   getOrg: {name: 'Org Json', contentNode: 'orgs.${orgId}'},
   getMyOrgs: {name: 'Add My Org Json', file: 'assets/templates/org.my.json'},
@@ -345,5 +351,6 @@ export const TemplateToken = {
   $SERVICE_CONTAINER_NAME: {name: 'Service container name'},
   $MMS_SHARED_VOLUME: {name: 'Shared volume name'},
   $VOLUME_MOUNT: {name: 'Volume mount name'},
-  $AGREEMENT_ID: {name: 'Agreement Id'}
+  $AGREEMENT_ID: {name: 'Agreement Id'},
+  $PATTERN_NAME: {name: 'Pattern name'}
 }
