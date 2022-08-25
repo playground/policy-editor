@@ -68,8 +68,8 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
       this.noneSelected = true;
       this.notExchange = true;
       this.ieamService.signIn()
+      this.populateOrgs()
       if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
-        this.populateOrgs()
         this.notEditor = false;
       } else if(this.router.routerState.snapshot.url.indexOf('/bucket') == 0) {
         this.noBucket = false;

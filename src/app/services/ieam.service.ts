@@ -66,7 +66,7 @@ export class IeamService implements HttpInterceptor {
   horizontalPosition: MatSnackBarHorizontalPosition = 'center';
   verticalPosition: MatSnackBarVerticalPosition = 'top';
 
-  currentWorkingFile = '';
+  currentWorkingFile = 'hznConfig';
   titleText = 'IEAM';
   nodeLevel: number;
 

@@ -95,6 +95,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
     //   this.originalJson = this.showData = this.data = this.template;
     // }
 
+    this.loadWorkingFile()
     this.psAgent = this.ieamService.broadcastAgent.subscribe(async (msg: any) => {
       this.ieamService.editingConfig = false;
       this.ieamService.setTitleText();
