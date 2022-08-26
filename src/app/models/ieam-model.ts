@@ -158,7 +158,7 @@ export const Exchange = {
   deleteServiceCerts: {name: 'Delete All Service Certs', path: 'orgs/${orgId}/services/${service}/keys', method: 'DELETE', type: 'serviceCert', run: true, description: 'Deletes all of the current keys/certs for this service. This can only be run by the service owning user.'},
 
   addNodePolicy: {name: 'Add/Update Node Policy', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'PUT', type: 'nodePolicy', editable: true, template: true, run: true, description: 'Adds or updates the policy of a node. This is called by the node or owning user.'},
-  getNodePolicy: {name: 'Get Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'GET', type: 'nodePolicy', run: true, description: 'Returns the node run time policy. Can be run by a user or the node.'},
+  getNodePolicy: {name: 'Get Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'GET', type: 'nodePolicy', run: true, editable: true, description: 'Returns the node run time policy. Can be run by a user or the node.'},
   deleteNodePolicy: {name: 'Delete Node Policy By Name', path: 'orgs/${orgId}/nodes/${nodeId}/policy', method: 'DELETE', type: 'nodePolicy', run: true, description: 'Deletes the policy of a node. Can be run by the owning user or the node.'},
 
   getNodeStatus: {name: 'Get Node Status', path: 'orgs/${orgId}/nodes/${nodeId}/status', method: 'GET', type: 'nodeStatus', run: true, editable: true, description: 'Returns the node run time status, for example service container status. Can be run by a user or the node.'},
@@ -183,10 +183,10 @@ export const Exchange = {
   addDeploymentPolicy: {name: 'Add/Update Deployment Policy', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'POST', type: 'deploymentPolicy', editable: true, template: true, run: true, callB4: 'getDeploymentPolicy', description: 'Creates a deployment policy resource. A deployment policy resource specifies the service that should be deployed based on the specified properties and constraints. This can only be called by a user.'},
   getDeploymentPolicy: {name: 'Get Deployment Policy By Name', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'GET', type: 'deploymentPolicy', run: true, description: 'Returns the deployment policy with the specified id. Can be run by a user, node, or agbot.'},
   getDeploymentPolicies: {name: 'Get All Deployment Policies', path: 'orgs/${orgId}/business/policies', method: 'GET', type: 'deploymentPolicy', run: true, description: 'Returns all deployment policy definitions in this organization. Can be run by any user, node, or agbot.'},
-  deleteDeploymentPolicy: {name: 'Delete Deployment Policy By Name', path: 'orgs/${orgId}/business/${deploymentPolicy}', method: 'DELETE', type: 'deploymentPolicy', run: true, description: ''},
+  deleteDeploymentPolicy: {name: 'Delete Deployment Policy By Name', path: 'orgs/${orgId}/business/policies/${deploymentPolicy}', method: 'DELETE', type: 'deploymentPolicy', run: true, description: ''},
 
   addServicePolicy: {name: 'Add/Update Service Policy', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'PUT', type: 'servicePolicy', template: true, editable: true, run: true, description: 'Adds or updates the policy of a service. This can be called by the owning user.'},
-  getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', run: true, description: 'Returns the service policy. Can be run by a user, node or agbot.'},
+  getServicePolicy: {name: 'Get Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'GET', type: 'servicePolicy', template: true, editable: true, run: true, description: 'Returns the service policy. Can be run by a user, node or agbot.'},
   deleteServicePolicy: {name: 'Delete Service Policy By Name', path: 'orgs/${orgId}/services/${servicePolicy}/policy', method: 'DELETE', type: 'servicePolicy', run: true, description: 'Deletes the policy of a service. Can be run by the owning user.'},
 
   addPattern: {name: 'Add Pattern', path: 'orgs/${orgId}/patterns/${pattern}', method: 'POST', type: 'servicePattern|topLevelServicePattern', template: true, editable: true, description: 'Creates a pattern resource. A pattern resource specifies all of the services that should be deployed for a type of node. When a node registers with Horizon, it can specify a pattern name to quickly tell Horizon what should be deployed on it. This can only be called by a user.'},
@@ -234,7 +234,7 @@ export const ActionMap = {
   topLevelService: {mapTo: 'addService'},
   deploymentPolicy: {mapTo: 'addDeploymentPolicy'},
   servicePolicy: {mapTo: 'addServicePolicy'},
-  nodePolicy: {mapTo: 'addNodePolicy'},
+  getNodePolicy: {mapTo: 'addNodePolicy'},
   getPattern: {mapTo: 'addPattern'},
   getServiceCert: {mapTo: 'putServiceCert'},
   getNodeAgreement: {mapTo: 'addNodeAgreement'}
@@ -276,6 +276,7 @@ export const JsonSchema = {
   addPattern: {name: 'Add Service Pattern', file: 'assets/templates/service.pattern.json'},
   addTopLevelPattern: {name: 'Add Top Level Service Pattern', file: 'assets/templates/top-level-service.pattern.json'},
   patchPattern: {name: 'Patch Pattern', attributes: 'patternLabel|patternServices|patternDesc|patternPublic|patternInput|patternSecret|patternAgreement'},
+  getNodePolicy: {name: 'Node Policy Json', file: 'assets/templates/node.policy.json'},
   addNodePolicy: {name: 'Add Node Policy Json', file: 'assets/templates/node.policy.json'},
   addNodeAgreement: {name: 'Add Node Agreement Json', file: 'assets/templates/node.agreement.json'},
   addNodeError: {name: 'Add/Update Node Json', file: 'assets/templates/node.error.json'},

@@ -107,6 +107,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.loadConfig(msg.payload)
           break;
         case Enum.SET_EXCHANGE_CALL:
+          this.populateOrgs()
           this.setValue()
           break;
         }
@@ -254,7 +255,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   shouldDisenable() {
-    return !this.ieamService.isModified() && !this.ieamService.editingConfig
+    return !this.ieamService.isModified()
   }
 
   shouldNotPublish() {

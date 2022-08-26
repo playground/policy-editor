@@ -648,7 +648,9 @@ export class IeamService implements HttpInterceptor {
     if(!this.editorStorage['original']) {
       this.editorStorage['original'] = {}
     }
-    this.editorStorage['original'][key] = {content: content, name: name}
+    if(!this.editorStorage['original'][key]) {
+      this.editorStorage['original'][key] = {content: content, name: name}
+    }
   }
   getEditorStorage(key: string = this.currentWorkingFile): IEditorStorage {
     return this.editorStorage[key]
