@@ -18,6 +18,7 @@ declare const process: any;
 
 // set env vars
 const env = process.env.npm_config_env || 'prod';
+let port = parseInt(process.env.npm_config_port) || 3000;
 
 export class Server {
   params: Params = <Params>{};
@@ -48,7 +49,7 @@ export class Server {
       })
       .on('close', () => {
         try {
-          console.log(body)
+          // console.log(body)
           let data = JSON.parse(body);
           if(!parse) {
             params.body = data
@@ -66,6 +67,7 @@ export class Server {
     })
   }
   initialise() {
+    util.initialize()
     if(this.localJson[env]['access_key_id']) {
       this.params.accessKeyId = this.localJson[env]['access_key_id'];
       this.params.secretAccessKey = this.localJson[env]['secret_access_key'];
@@ -410,11 +412,40 @@ export class Server {
           next(err)
       })
     })
+    app.get('/load_file', (req: express.Request, res: express.Response, next) => {
+      console.log('load file...')
+      let params = this.getParams(req.query as unknown as Params);
+      res.send(util.loadFile(params))
+    })
+    app.get('/load_config', (req: express.Request, res: express.Response, next) => {
+      console.log('load config...')
+      let params = this.getParams(req.query as unknown as Params);
+      res.send(util.loadConfig(params))
+    })
+    app.post('/save_config', (req: express.Request, res: express.Response, next) => {
+      console.log('save config...')
+      this.streamData(req, res, false)
+      .subscribe({
+        next: (params: Params) => {
+          util.saveConfig(params)
+          .subscribe({
+            next: (result) => res.send(result),
+            error: (err) => next(err)
+          })
+        }, error: (err) => next(err)
+      })
+    })
     app.get("*",  (req, res) => {
       res.redirect(301, '/')
     })
-    app.listen(3000, () => {
-      console.log('Started on 3000');
+    this.serverListen(app, port)
+  }
+  serverListen(app: any, port) {
+    app.listen(port, () => {
+      console.log(`Started on ${port}`);
+    }).on('error', (err) => {
+      // console.log(`error: ${port}`, err)
+      this.serverListen(app, ++port)
     });
   }
 }

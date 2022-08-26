@@ -45,3 +45,7 @@
 html-content {
   margin: 20px;
 }
+
+.spinner-margin {
+  margin: 0 auto;
+}

@@ -1,4 +1,6 @@
 {
+  "label": "name of policy",
+  "description": "policy description",
   "properties": [
     {
       "name": "homehub",

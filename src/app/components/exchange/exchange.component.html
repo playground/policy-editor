@@ -2,5 +2,10 @@
   <mat-card-content>
     <ngx-json-viewer [json]="content" [depth]="2" [expanded]="true"></ngx-json-viewer>
     <div class="html-content" [innerHTML]="htmlContent"></div>
+    <mat-progress-spinner *ngIf="showSpinner"
+      class="spinner-margin"
+      [color]="color"
+      [mode]="mode">
+    </mat-progress-spinner>
   </mat-card-content>
 </mat-card>

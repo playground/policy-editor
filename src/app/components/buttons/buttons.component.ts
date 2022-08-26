@@ -68,8 +68,8 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
       this.noneSelected = true;
       this.notExchange = true;
       this.ieamService.signIn()
+      this.populateOrgs()
       if(this.router.routerState.snapshot.url.indexOf('/editor') == 0) {
-        this.populateOrgs()
         this.notEditor = false;
       } else if(this.router.routerState.snapshot.url.indexOf('/bucket') == 0) {
         this.noBucket = false;
@@ -107,6 +107,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.loadConfig(msg.payload)
           break;
         case Enum.SET_EXCHANGE_CALL:
+          this.populateOrgs()
           this.setValue()
           break;
         }
@@ -210,6 +211,17 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   loadConfig(payload:any = {}) {
     let json = this.ieamService.getEditorStorage('hznConfig');
+    if(!json) {
+      this.ieamService.loadConfig()
+      .subscribe(() => {
+        this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.CONFIG_LOADED})
+      })
+    } else {
+      this.ieamService.broadcast({type: Enum.NAVIGATE, to: Navigate.editor, payload: Enum.CONFIG_LOADED})
+    }
+  }
+  loadConfig2(payload:any = {}) {
+    let json = this.ieamService.getEditorStorage('hznConfig');
     if(this.ieamService.isJsonModified) {
       this.ieamService.promptDialog('Would you like to discard your changes?', '', {okButton: 'Yes', cancelButton: 'No'})
       .then((answer) => {
@@ -243,7 +255,7 @@ export class ButtonsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   shouldDisenable() {
-    return !this.ieamService.isModified()  //|| this.ieamService.editingConfig
+    return !this.ieamService.isModified()
   }
 
   shouldNotPublish() {

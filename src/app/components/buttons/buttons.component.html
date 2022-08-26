@@ -24,7 +24,7 @@
         </mat-option>
       </mat-select>
     </mat-form-field>
-    <mat-form-field appearance="fill" class="device-form-field">
+    <!-- <mat-form-field appearance="fill" class="device-form-field">
       <mat-label>Load</mat-label>
       <input
         type="text"
@@ -38,12 +38,12 @@
           {{option.name}}
         </mat-option>
       </mat-autocomplete>
-    </mat-form-field>
+    </mat-form-field> -->
   </form>
     <!-- <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadRemotePolicy()">Remote Policy</button>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="policy" (click)="loadLocalPolicy()">Local Policy</button>
     <button mat-raised-button *ngIf="ieamService.loggedIn" color="config" (click)="loadConfig()">Config</button> -->
-    <button mat-raised-button color="save" type="button" (click)="save()" [disabled]="shouldDisenable()">Save</button>
+    <button mat-raised-button color="save" type="button" *ngIf="this.ieamService.currentWorkingFile == 'hznConfig'" (click)="save()" [disabled]="shouldDisenable()">Save</button>
     <button mat-raised-button color="publish" type="button" (click)="publish()" [disabled]="shouldNotPublish()">Publish</button>
   </div>
 </div>

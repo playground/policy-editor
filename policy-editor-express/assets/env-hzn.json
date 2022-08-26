@@ -1,0 +1,86 @@
+{
+  "biz": {
+    "envVars": {
+      "SERVICE_NAME": "chunk-saved-model-service",
+      "SERVICE_CONTAINER_NAME": "chunk-saved-model-service",
+      "SERVICE_VERSION": "1.0.0",
+      "SERVICE_VERSION_RANGE_UPPER": "1.0.0",
+      "SERVICE_VERSION_RANGE_LOWER": "1.0.0",
+      "SERVICE_CONTAINER_CREDS": "",
+      "VOLUME_MOUNT": "/mms-shared",
+      "MMS_SHARED_VOLUME": "mms_shared_volume",
+      "MMS_OBJECT_TYPE": "chunk_object_detection",
+      "MMS_OBJECT_ID": "chunk_config.json",
+      "MMS_OBJECT_FILE": "config/config.json",
+      "MMS_CONTAINER_CREDS": "",
+      "MMS_CONTAINER_NAME": "chunk-mms-service",
+      "MMS_SERVICE_NAME": "chunk-mms-service",
+      "MMS_SERVICE_VERSION": "1.0.1",
+      "MMS_SERVICE_FALLBACK_VERSION": "1.0.0",
+      "UPDATE_FILE_NAME": "model.zip"
+    },
+    "credential": {
+      "HZN_EXCHANGE_USER_AUTH": "**********",
+      "HZN_EXCHANGE_URL": "",
+      "HZN_FSS_CSSURL": "",
+      "ANAX": "api/v1/objects/IBM/agent_files/agent-install.sh/data"
+    },
+    "metaVars": {}
+  },
+  "demo": {
+    "envVars": {
+      "SERVICE_NAME": "chunk-saved-model-service",
+      "SERVICE_CONTAINER_NAME": "chunk-saved-model-service",
+      "SERVICE_VERSION": "1.0.0",
+      "SERVICE_VERSION_RANGE_UPPER": "1.0.0",
+      "SERVICE_VERSION_RANGE_LOWER": "1.0.0",
+      "SERVICE_CONTAINER_CREDS": "",
+      "VOLUME_MOUNT": "/mms-shared",
+      "MMS_SHARED_VOLUME": "mms_shared_volume",
+      "MMS_OBJECT_TYPE": "chunk_object_detection",
+      "MMS_OBJECT_ID": "chunk_config.json",
+      "MMS_OBJECT_FILE": "config/config.json",
+      "MMS_CONTAINER_CREDS": "",
+      "MMS_CONTAINER_NAME": "chunk-mms-service",
+      "MMS_SERVICE_NAME": "chunk-mms-service",
+      "MMS_SERVICE_VERSION": "1.0.0",
+      "MMS_SERVICE_FALLBACK_VERSION": "1.0.0",
+      "UPDATE_FILE_NAME": "model.zip"
+    },
+    "credential": {
+      "HZN_EXCHANGE_USER_AUTH": "***************",
+      "HZN_EXCHANGE_URL": "",
+      "HZN_FSS_CSSURL": "",
+      "ANAX": "api/v1/objects/IBM/agent_files/agent-install.sh/data"
+    },
+    "metaVars": {}
+  },
+  "myorg": {
+    "envVars": {
+      "SERVICE_NAME": "saved-model-service",
+      "SERVICE_CONTAINER_NAME": "saved-model-service",
+      "SERVICE_VERSION": "1.0.0",
+      "SERVICE_VERSION_RANGE_UPPER": "1.0.0",
+      "SERVICE_VERSION_RANGE_LOWER": "1.0.0",
+      "SERVICE_CONTAINER_CREDS": "",
+      "VOLUME_MOUNT": "/mms-shared",
+      "MMS_SHARED_VOLUME": "mms_shared_volume",
+      "MMS_OBJECT_TYPE": "object_detection",
+      "MMS_OBJECT_ID": "config.json",
+      "MMS_OBJECT_FILE": "config/config.json",
+      "MMS_CONTAINER_CREDS": "",
+      "MMS_CONTAINER_NAME": "mms-service",
+      "MMS_SERVICE_NAME": "mms-service",
+      "MMS_SERVICE_VERSION": "1.0.0",
+      "MMS_SERVICE_FALLBACK_VERSION": "1.0.0",
+      "UPDATE_FILE_NAME": "model.zip"
+    },
+    "credential": {
+      "HZN_EXCHANGE_USER_AUTH": "",
+      "HZN_EXCHANGE_URL": "",
+      "HZN_FSS_CSSURL": "",
+      "ANAX": "https://github.com/open-horizon/anax/releases/download"
+    },
+    "metaVars": {}
+  }
+}

@@ -1814,7 +1814,7 @@ function debian_device_install_prereqs() {
             fi
         fi
     fi
-
+    # comment out "systemctl start cron", if only installing the cli, do we need to run this command?
     # start cron service if not, cron is used by the agent auto upgrade process
     # systemctl start cron
 
