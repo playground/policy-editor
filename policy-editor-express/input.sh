@@ -15,7 +15,10 @@ then
   read css_url
   export HZN_FSS_CSSURL=${css_url}
 fi
-
+if [ "${HZN_ORG_ID}" = "" ]
+then
+  export HZN_ORG_ID=${HZN_ORGANIZATION}
+fi
 ARCH=$(uname -m)
 echo $ARCH
 FILE="horizon-agent-linux-deb-amd64.tar.gz"
