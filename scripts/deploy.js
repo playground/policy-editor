@@ -5,6 +5,7 @@ const cp = require('child_process'),
 exec = cp.exec;
 
 const task = process.env.npm_config_task || 'deploy';
+process.env.NODE_OPTIONS = '--max-old-space-size=4096';
 
 let build = {
   deploy: () => {
