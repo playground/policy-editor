@@ -1,6 +1,6 @@
 # PolicyEditor
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.3.5.
+The goal of this project is to create an user friendly UI to streamline the process of managing different tasks that one can perform on any nodes in different organization or even on a different exchange.
 
 ## Development server
 ### Frontend server
@@ -11,6 +11,9 @@ CD into policy-editor-express and run `npm run watch:deploy`.  The application w
 
 ### Run all servers at once
 Run `npm run dev:servers` will start both frontend and backend servers.  Navigate to `https://localhost:3000`.  Both frontend and backend  will automatically reload if you change any of the source files. 
+
+## Docker image
+Containerized version is available here docker pull playbox21/policy-editor-express_[amd64|arm]:1.0.0
 
 ## Build Docker image
 CD into policy-editor-express and run 
