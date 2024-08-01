@@ -3,7 +3,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # RUN apk add --no-cache --update nodejs-current npm curl bash procps
 # RUN apt-get update -y && apt-get install -y apt-utils tzdata && apt-get install fswebcam ffmpeg -y && apt-get install mpg123 -y && apt-get install vim -y
-RUN apt-get update -y && apt-get install -y apt-utils vim curl sudo
+RUN apt-get update -y && apt-get install -y jq curl apt-utils vim curl sudo
 
 # COPY "input.sh" .
 # RUN ["chmod", "+x", "./input.sh"]
